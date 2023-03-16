@@ -1,0 +1,18 @@
+{
+	"extension": {
+		"version": "0.4.1",
+		"json": 1
+	},
+	"project": {
+		"name": "BURT_V2",
+		"description": "Bestie Bot RETURNS",
+		"creationDate": "3/15/2023, 8:15:25 PM",
+		"platform": "V5",
+		"language": "cpp",
+		"slot": 1,
+		"sdkVersion": "V5_20220726_10_00_00",
+		"cpp": {
+			"includePath": []
+		}
+	}
+}
