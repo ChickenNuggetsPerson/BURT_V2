@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
-/*    Author:       hayde                                                     */
+/*    Author:       hayden                                                    */
 /*    Created:      3/15/2023, 8:15:25 PM                                     */
 /*    Description:  V5 project                                                */
 /*                                                                            */

@@ -14,6 +14,10 @@ extern motor rightMotorA;
 extern motor rightMotorB;
 extern motor_group RightDriveSmart;
 
-extern drivetrain Drivetrain;
+extern smartdrive Drivetrain;
 
 extern controller mainController;
+
+extern inertial inertialSensor;
+
+extern bool autonRunning;
