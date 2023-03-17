@@ -1,16 +1,16 @@
 
 #include "vex.h"
-#include "tasks.h"
+#include "robotConfig.h"
 
 using namespace vex;
 
+competition Competition;
 brain Brain;
-
+ai botAI = ai();
 
 // Drivetrain
 
 inertial inertialSensor = inertial(PORT15);
-
 
 motor leftMotorA = motor(PORT11, ratio18_1, true);
 motor leftMotorB = motor(PORT12, ratio18_1, true);
@@ -22,11 +22,9 @@ motor_group RightDriveSmart = motor_group(rightMotorA, rightMotorB);
 
 smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSensor, 319.19, 254, 254, mm, 1);
 
-
 controller mainController = controller(primary);
+controller altController = controller(partner);
 
-bool autonRunning = false;
-
-void initBot( void ) {
+void startTasks( void ) {
     task mainControllerTask(controllerTask);
 }

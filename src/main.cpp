@@ -10,11 +10,7 @@
 #include "vex.h"
 #include "robotConfig.h"
 
-
 using namespace vex;
-
-competition Competition;
-
 
 int main() {
 
@@ -22,6 +18,8 @@ int main() {
   Competition.drivercontrol(usercontrol);
 
   pre_auton();
+
+  whenStarted();
 
   // Prevent main from exiting with an infinite loop.
   while (true) {

@@ -8,33 +8,47 @@
 using namespace vex;
 
 
+void debugDisable() {Competition.test_disable();};
+void debugDriver() {Competition.test_driver();};
+void debugAuton() {Competition.test_auton();};
+
 void pre_auton(void) {
-    initBot();
+
+  altController.ButtonDown.pressed(debugDisable);
+  altController.ButtonLeft.pressed(debugAuton);
+  altController.ButtonRight.pressed(debugDriver);
+
+  botAI.init();
+  startTasks();
 }
 
 
 void autonomous(void) {
-
+  brainDebug("Auton Started");
 }
 
 
 void usercontrol(void) {
-  wait(1, seconds);
+  brainDebug("UserControl Started");
 }
 
 
-// Controller Stuff
+void whenStarted(void){
+  controllerDisplay();
+}
 
+
+
+
+// Controller Stuff
 
 int motorFL = 0;
 int motorFR = 0;
 int motorBL = 0;
 int motorBR = 0;
 
-int strafeFBL = 0;
-int strafeFBR = 0;
-int strafeLRL = 0;
-int strafeLRR = 0;
+int leftFB = 0;
+int rightFB = 0;
 
 int controllerTask() {
 
@@ -53,20 +67,21 @@ int controllerTask() {
 
 
   while(true) {
-    if(!autonRunning) {
+
+    if(Competition.isDriverControl()) {
 
       if (!inertialSensor.isCalibrating()) {
-        strafeFBL = mainController.Axis3.position();
-        strafeFBR = mainController.Axis2.position();
+        leftFB = mainController.Axis3.position();
+        rightFB = mainController.Axis2.position();
       }
 
     }
 
-    motorFL = strafeFBL;
-    motorFR = strafeFBR;
+    motorFL = leftFB;
+    motorFR = rightFB;
 
-    motorBL = strafeFBL;
-    motorBR = strafeFBR;
+    motorBL = leftFB;
+    motorBR = rightFB;
 
     if ( !Drivetrain.isMoving() ) {
 
