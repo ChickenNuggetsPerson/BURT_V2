@@ -26,4 +26,6 @@ int main() {
     wait(100, msec);
   }
   // Conflicting changes on the master branch :)
+
+  // eVen MoRe cOnFlicTs
 }
