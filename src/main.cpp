@@ -28,4 +28,6 @@ int main() {
   // Conflicting changes on the master branch :)
 
   // eVen MoRe cOnFlicTs
+
+  // Main changes
 }
