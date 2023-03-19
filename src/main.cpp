@@ -26,28 +26,4 @@ int main() {
     wait(100, msec);
   }
 
-  // Testy test test
-  // more changes 
-
-  // Branch off of branchy poo
-
-  // Branchception changes
-  
-  // Testy test test
-  // more changes 
-  // more branchypoo changes
-
-  // Conflicting changes on the master branch :)
-
-  // eVen MoRe cOnFlicTs
-
-  // Main changes
-
-  // Testy test test
-  // more changes 
-
-  // Branch off of branchy poo
-
-  // Branchception changes
-
 }
