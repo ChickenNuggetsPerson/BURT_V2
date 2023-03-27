@@ -25,6 +25,15 @@ smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSens
 controller mainController = controller(primary);
 controller altController = controller(partner);
 
+
+
 void startTasks( void ) {
+
     task mainControllerTask(controllerTask);
+    
+    task brainDisplayerTask(brainDisplayer);
+    task controllerDisplayerTask(controllerDisplay);
+
+    brainDebugColor("Tasks Started", vex::color::yellow);
+
 }

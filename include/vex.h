@@ -11,9 +11,6 @@
 #include <iostream>
 
 
-#include "robotConfig.h"
-
-
 #define waitUntil(condition)                                                   \
   do {                                                                         \
     wait(5, msec);                                                             \

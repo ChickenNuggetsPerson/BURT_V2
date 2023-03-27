@@ -1,11 +1,11 @@
 
 #include "auton.h"
-#include "vex.h"
+#include "robotConfig.h"
 
 using namespace vex;
 
 void ai::init() {
 
-    brainDebug("Auton Initialized");
+    brainDebugColor("Auton Initialized", cyan);
 
 };

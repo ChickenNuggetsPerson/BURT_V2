@@ -1,7 +1,11 @@
 
+#include "vex.h"
+
 #include "tasks.h"
 #include "displayer.h"
 #include "auton.h"
+#include "mainController.h"
+#include "altController.h"
 #include "misc.h"
 
 using namespace vex;
@@ -26,3 +30,6 @@ extern controller mainController;
 extern controller altController;
 
 extern inertial inertialSensor;
+
+
+

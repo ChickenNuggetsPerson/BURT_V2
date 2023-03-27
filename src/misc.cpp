@@ -1,5 +1,5 @@
 
-#include "vex.h"
+#include "robotConfig.h"
 #include "misc.h"
 
 unsigned int readFile(const char* fileName) {
