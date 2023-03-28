@@ -13,6 +13,8 @@ using namespace vex;
 // Make the brain show usefull info besides just the debug and error messages
 
 
+// A base log message class
+// It contains the actual text of the log and the display color
 class LogMessage {
     private:
 
@@ -23,28 +25,90 @@ class LogMessage {
         LogMessage(std::string message = "", vex::color messageColor = vex::color::white) {
             text = message;
             displayColor = messageColor;
-
-            
         };
 };
 
+// The main class for controlling logging for the robot
+// Handles displaying the logs on the screen and writing them to file
+class Logger {
+    private:
 
-int brainLogMaxRows = 11;
-LogMessage brainLog[11];
-int brainLogCurrentLine;
+        int xPos;
+        int yPos;
 
+        int maxRows;
+        int currentLine;
+
+        LogMessage brainLog[11];
+
+        bool savingLogs;
+
+        void brainLogShift() {
+            for (int i=0; i < maxRows - 1; i++) {
+                brainLog[i] = brainLog[i + 1];
+            }
+        };
+
+        bool initFileWriter() {
+            if (!Brain.SDcard.isInserted()) { return false; }
+
+            // Todo: Check for last log -> Arhive it ( somehow )
+            //       Somehow create file write stream 
+
+            return true;
+        };
+
+        void writeLog(const char* message) {
+            if (!savingLogs) { return; }
+            // Todo: Figure out how to append files correctly
+        };
+
+    public:
+        Logger(int renderX, int renderY, int maxLogs = 11) {
+            xPos = renderX;
+            yPos = renderY;
+            maxRows = maxLogs;
+            savingLogs = initFileWriter();
+        };
+
+        void newLog(const char* message, vex::color messageColor) {
+            if (currentLine == maxRows) {
+                brainLogShift();
+                currentLine = maxRows - 1;
+            }
+
+            LogMessage messageOBJ(message, messageColor);
+
+            brainLog[currentLine] = messageOBJ;
+            currentLine ++;
+
+            writeLog(message);
+        };
+
+        void render() {
+            
+             // Display Log Messages
+            for (int i = 0; i < maxRows; i++) {
+                Brain.Screen.setCursor(i + yPos, xPos);
+                Brain.Screen.setPenColor(brainLog[i].displayColor);
+                Brain.Screen.print(brainLog[i].text.c_str());     
+                Brain.Screen.setPenColor(vex::color::white);
+            }
+        };
+
+};
+
+
+Logger BrainLogs(1, 1);
+
+// Main Loop For Rendering the Brain Display
 int brainDisplayer() {
     while(true) {
 
         Brain.Screen.clearScreen();
 
-        for (int i = 0; i < brainLogMaxRows; i++) {
-            Brain.Screen.setCursor(i + 1, 1);
-            Brain.Screen.setPenColor(brainLog[i].displayColor);
-            Brain.Screen.print(brainLog[i].text.c_str());     
-            Brain.Screen.setPenColor(vex::color::white);
-        }
-
+        // Render the logs to the screen
+        BrainLogs.render();
 
         // Battery Level Meter
         Brain.Screen.printAt(230, 15, "Battery Level: %d%%", Brain.Battery.capacity());
@@ -61,6 +125,7 @@ int brainDisplayer() {
         Brain.Screen.drawRectangle(230, 20, Brain.Battery.capacity()*2.5, 30);
         Brain.Screen.setFillColor(vex::color::black);
 
+
         // Render the screen
         Brain.Screen.render();
 
@@ -69,7 +134,7 @@ int brainDisplayer() {
     return 1;
 }
 
-
+// Main Loop For Rendering the Controllers
 int controllerDisplay() {
     while (true){
         
@@ -104,26 +169,10 @@ int controllerDisplay() {
     return 1;
 }
 
-void brainLogShift() {
-    for (int i=0; i < brainLogMaxRows - 1; i++) {
-        brainLog[i] = brainLog[i + 1];
-    }
-}
-
-
-
 // Displays error on brain screen
 void brainError(const char* message) {
   
-    if (brainLogCurrentLine == brainLogMaxRows) {
-        brainLogShift();
-        brainLogCurrentLine = brainLogMaxRows - 1;
-    }
-
-    LogMessage messageOBJ(message, vex::color::red);
-
-    brainLog[brainLogCurrentLine] = messageOBJ;
-    brainLogCurrentLine ++;
+    BrainLogs.newLog(message, vex::color::red);
 
     cout << "ERROR: " << message << endl;
 }
@@ -131,16 +180,7 @@ void brainError(const char* message) {
 // Displays debug message on brain screen
 void brainDebug(const char* message) {
   
-  
-    if (brainLogCurrentLine == brainLogMaxRows) {
-        brainLogShift();
-        brainLogCurrentLine = brainLogMaxRows - 1;
-    }
-
-    LogMessage messageOBJ(message, vex::color::purple);
-
-    brainLog[brainLogCurrentLine] = messageOBJ;
-    brainLogCurrentLine ++;
+    BrainLogs.newLog(message, vex::color::purple);
 
     cout << "DEBUG: " << message << endl;
 }
@@ -148,16 +188,7 @@ void brainDebug(const char* message) {
 // Displays debug message on brain screen
 void brainDebugColor(const char* message, vex::color messageColor) {
   
-  
-    if (brainLogCurrentLine == brainLogMaxRows) {
-        brainLogShift();
-        brainLogCurrentLine = brainLogMaxRows - 1;
-    }
-
-    LogMessage messageOBJ(message, messageColor);
-
-    brainLog[brainLogCurrentLine] = messageOBJ;
-    brainLogCurrentLine ++;
+    BrainLogs.newLog(message, messageColor);
 
     cout << "DEBUG: " << message << endl;
 }
