@@ -9,4 +9,5 @@ void brainError(const char* message);
 
 void brainDebug(const char* message);
 
-void brainDebugColor(const char* message, vex::color messageColor);
+void brainFancyDebug(const char* message, vex::color messageColor);
+void brainFancyDebug(const char* message, vex::color messageColor, int data);

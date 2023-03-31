@@ -7,11 +7,17 @@
 
 using namespace vex;
 
+void test(){
+    brainFancyDebug("YEET %d", green, rand());
+};
+
 void pre_auton(void) {
 
   altController.ButtonDown.pressed(debugDisable);
   altController.ButtonLeft.pressed(debugAuton);
   altController.ButtonRight.pressed(debugDriver);
+
+  altController.ButtonR2.pressed(test);
 
   startTasks();
   botAI.init();
@@ -19,12 +25,12 @@ void pre_auton(void) {
 
 
 void autonomous(void) {
-  brainDebugColor("Auton Started", vex::color::cyan);
+  brainFancyDebug("Auton Started", vex::color::cyan);
 }
 
 
 void usercontrol(void) {
-  brainDebugColor("UserControl Started", vex::color::green);
+  brainFancyDebug("UserControl Started", vex::color::green);
 }
 
 

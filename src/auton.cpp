@@ -6,6 +6,5 @@ using namespace vex;
 
 void ai::init() {
 
-    brainDebugColor("Auton Initialized", cyan);
-
+    brainFancyDebug("Auton Initialized ", cyan);
 };
