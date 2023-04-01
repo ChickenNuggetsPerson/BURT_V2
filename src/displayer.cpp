@@ -159,7 +159,7 @@ class colorRange {
 };
 
 // The main element for drawing graphs and progress bars
-class Drawer {
+class ProgressBarDrawer {
     private:
 
         // Used for custom color ranges
@@ -176,7 +176,7 @@ class Drawer {
 
     public:
 
-        Drawer(int test) {};
+        ProgressBarDrawer(int test) {};
 
         // Draws a horizontal progress bar on the screen
         // Defaults to the battery percent color array unless declared by the user
@@ -239,7 +239,6 @@ class Drawer {
         };
 };
 
-
 // Handles generating smooth color gradients
 class Gradient {
     private:
@@ -293,8 +292,123 @@ class Gradient {
         }
 };
 
+// Handles displaying data over time on the screen
+class Graph {
+    private:
+        int type;
+        int x;
+        int y;
+        int width;
+        int height;
+        const char* name;
+        double middle = 1;
 
-Drawer mainDrawer(1);
+        int dataPoints[100] = {0};
+        int maxPoints;
+        int currentDataPoint = 0;
+        int recentPoint = 0;
+
+        void shiftDataPoints() {
+            for (int i=0; i < maxPoints - 1; i++) {
+                dataPoints[i] = dataPoints[i + 1];
+            }
+        };
+        
+        vex::color determinColorFromRange(int value, colorRange ranges[], int rangeSize) {
+            for (int i = 0; i < rangeSize; i++) {
+                if (ranges[i].inRange(value)) {
+                    return ranges[i].displayColor;
+                }
+            }
+            return vex::color::white;
+        }
+
+
+    public:
+
+        // Graph Types:
+        //      1. Line Graph 
+        Graph(int graphType, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, int maxDataPoints = 10) {
+            type = graphType;
+            x = xPos;
+            y = yPos;
+            width = graphWidth;
+            height = graphHeight;
+            name = graphName;
+            maxPoints = maxDataPoints;
+            if (maxPoints > 50) {maxPoints = 50;}
+            if (drawMiddle) {
+                middle = 0.5;
+            }
+        };
+
+        void addPoint(int point) {
+            if (currentDataPoint == maxPoints) {
+                shiftDataPoints();
+                currentDataPoint = maxPoints - 1;
+            }
+            dataPoints[currentDataPoint] = point;
+            currentDataPoint ++;
+
+            recentPoint = point;
+        };
+
+        void draw(colorRange ranges[] = nullptr, int rangeSize = 0) {
+
+            Brain.Screen.printAt(x, y, name, recentPoint);
+            Brain.Screen.drawRectangle(x, y + 5, width, height);
+
+            double xScale = width / maxPoints;
+            double yScale = height / 10;
+
+
+            // Draw Vertical Axis
+            for (int i = 0; i < 10; i++) {
+                Brain.Screen.drawLine(x, y + 5 + (i * yScale), x + 5, y + 5 + (i * yScale));
+            };
+
+            // Adjusted to handle negative values
+
+            // Draw X Axis
+            Brain.Screen.drawLine(x, y + 5 + height*middle, x + width, y + 5 + height*middle);
+            if (middle == 1) {
+                for (int i = 0; i < maxPoints; i++) {
+                    Brain.Screen.drawLine(x + (xScale * i), y + 5 + height, x + (xScale * i), y + 1 + height);
+                };
+            } else {
+                for (int i = 0; i < maxPoints; i++) {
+                    Brain.Screen.drawLine(x + (xScale * i), y + 4 + height*middle, x + (xScale * i), y + 6 + height*middle);
+                };
+            }
+
+            // Draw Lines
+            for (int i = 0; i < maxPoints; i++) {
+                
+                if (i + 1 != currentDataPoint) {
+                    Brain.Screen.drawLine(x + (xScale * i), y + 5 + height*middle - ((dataPoints[i] / 100.00) * height)*middle, x + (xScale * (i + 1)), y + 5 + height*middle - ((dataPoints[i + 1] / 100.00) * height*middle));
+                } else {
+                    Brain.Screen.drawCircle(x + (xScale * i), y + 5 + height*middle - ((dataPoints[i] / 100.00) * height)*middle, 3);
+                }
+
+                if (xScale > 20.00) {
+                    Brain.Screen.drawCircle(x + (xScale * i), y + 5 + height*middle - ((dataPoints[i] / 100.00) * height)*middle, 3);
+                }
+
+                if (ranges && rangeSize != 0 && i != 0) {
+                    Brain.Screen.setPenColor(determinColorFromRange(dataPoints[i], ranges, rangeSize));
+                }
+
+                Brain.Screen.drawLine(x + (xScale * i), y + 5 + height*middle - ((dataPoints[i] / 100.00) * height)*middle, x + (xScale * i), y + 5 + height*middle);
+                Brain.Screen.setPenColor(vex::color::white);
+            };
+
+            
+
+        };
+};
+
+
+ProgressBarDrawer progressDrawer(1);
 Logger BrainLogs(1, 1);
 
 
@@ -306,17 +420,22 @@ int brainDisplayer() {
     Brain.Screen.print("Building Gradients");
     Brain.Screen.newLine();
 
-
+    // Making the color gradients
     Brain.Screen.print(".");
     Gradient batteryGradient(1, 100, 15, 70);
     batteryGradient.build();
 
     Brain.Screen.print(".");
-    Gradient testGradient(0, 300, 10, 100);
+    Gradient testGradient(300, 0, -90, 100);
     testGradient.build();
 
 
+    // Make a test graph
+    Graph testGraph(1, "Graphypoo %d%%", 230, 100, 150, 75, true, 50);
+
+
     double deltaTime = 0.00;
+    int frameCounter = 0;
 
     while(true) {
 
@@ -330,17 +449,30 @@ int brainDisplayer() {
         BrainLogs.render();
         
         // Battery Level Meter
-        mainDrawer.drawHorizontalProgressBar(325, 15, 150, 30, "Battery: %d%%", Brain.Battery.capacity(), false, batteryGradient.finalGradient, 100);
+        progressDrawer.drawHorizontalProgressBar(325, 15, 150, 30, "Battery: %d%%", Brain.Battery.capacity(), false, batteryGradient.finalGradient, 100);
 
-        // Test Vertical Meter
-        mainDrawer.drawVerticalProgressbar(325, 75, 30, 100, "FL", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 1) * 100, true);
-        mainDrawer.drawVerticalProgressbar(365, 75, 30, 100, "FR", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 2) * 100, true);
-        mainDrawer.drawVerticalProgressbar(405, 75, 30, 100, "BL", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 3) * 100, true);
-        mainDrawer.drawVerticalProgressbar(445, 75, 30, 100, "BR", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 4) * 100, true);
+        progressDrawer.drawVerticalProgressbar(230, 15, 30, 60, "%d%%", mainController.Axis3.position(), true, batteryGradient.finalGradient, 200);
+        progressDrawer.drawVerticalProgressbar(270, 15, 30, 60, "%d%%", (sin((Brain.timer(vex::timeUnits::msec) / 1000) + 6) * 100), true, testGradient.finalGradient, 200);
 
-        mainDrawer.drawVerticalProgressbar(230, 15, 30, 200, "%d%%", mainController.Axis3.position(), false, batteryGradient.finalGradient, 100);
-        mainDrawer.drawVerticalProgressbar(270, 15, 30, 200, "%d%%", fabs(sin((Brain.timer(vex::timeUnits::msec) / 1000) + 6) * 100), false, testGradient.finalGradient, 100);
-        
+
+        testGraph.draw(testGradient.finalGradient, 201);
+
+
+        frameCounter++;
+        if (frameCounter == 2) {
+            frameCounter = 0;
+
+            //double time = Brain.timer(vex::timeUnits::msec) / 1000;
+
+            //double value = int(sin(tan(time)) * sin(time) * 100);
+            //double value = int(tan(time) * 100);
+
+            //testGraph.addPoint((value));
+            testGraph.addPoint(mainController.Axis3.position());
+        };
+
+
+        // Calculate the fps
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime));
     
         // Render the screen
