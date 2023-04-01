@@ -30,6 +30,11 @@ using namespace vex;
  *      the renderer will automatically choose the correct color for the item being displayed based on the input
  *      value and the ColorRange array passed into it
  * 
+ * Gradient Class
+ *      This class helps handle automatically creating a smooth color gradient for the display bars. When created,
+ *      it is given two points [-100, 100] and two colors. Since going through and building the gradient can take a bit, 
+ *      the .build() method needs to be ran first. Before building the gradient, it will just display as a black bar. 
+ * 
  * Drawer Class
  *      This class is what contains all of the fancy rendering fucntions. At the moment of writing this, it can 
  *      only render horizontal and vertical progress bars with ColorRange Arrays. 
@@ -37,6 +42,8 @@ using namespace vex;
  * The Error and Debug Functions at the end of the file
  *      These funcitons are what are shown to the rest of the program. Anywere in the code, those functions will
  *      be called and the LogMessage Class will handle everything else for displaying the info in the logs.
+ * 
+ * 
 */
 
 
@@ -131,10 +138,11 @@ class Logger {
 // Stores a color and the range it is acceptable in
 class colorRange {
     private:
+    
+    public:
+
         int start;
         int end;
-        
-    public:
 
         vex::color displayColor;
 
@@ -232,43 +240,62 @@ class Drawer {
 };
 
 
+// Handles generating smooth color gradients
+class Gradient {
+    private:
+        double startHue;
+        double endHue;
+        int rangeStart;
+        int rangeEnd;
+        bool built = false;
+    public:
+
+        colorRange finalGradient[200];
+
+        Gradient(double startColor, double endColor, int startOfRange, int endOfRange) {
+            startHue = startColor;
+            endHue = endColor;
+            rangeStart = startOfRange;
+            rangeEnd = endOfRange;     
+        };
+
+        void build() {
+
+            if (built) { return; }
+    
+            int steps = rangeEnd - rangeStart;
+
+            double hueStep = (endHue - startHue) / steps;
+            double hueTemp = startHue;
+    
+            vex::color tempColor;
+
+            // Set the starting point
+            tempColor.hsv(startHue, 1, 1);
+            finalGradient[0] = colorRange(-10000, rangeStart, tempColor);   
+
+            int i = 1;
+            // Loop through everything in the middle 
+            for (i = 1; i < steps; i++) {
+
+                hueTemp = hueTemp + hueStep;
+                tempColor.hsv(hueTemp, 1, 1);
+                finalGradient[i] = colorRange(rangeStart + i, rangeStart + i, tempColor);
+
+                vex::wait(0.01, seconds);
+            }
+
+            // Set the ending point
+            tempColor.hsv(endHue, 1, 1);
+            finalGradient[i] = colorRange(rangeEnd, 10000, tempColor);
+
+            built = true;
+        }
+};
+
+
 Drawer mainDrawer(1);
 Logger BrainLogs(1, 1);
-
-
-
-colorRange* gradientBuilder(double startHue, double endHue, int rangeStart, int rangeEnd, colorRange* finalGradient) {
-    
-    int steps = rangeEnd - rangeStart;
-
-    double hueStep = (endHue - startHue) / steps;
-    double hueTemp = startHue;
-
-    
-    vex::color tempColor;
-
-    // Set the starting point
-    tempColor.hsv(startHue, 1, 1);
-    finalGradient[0] = colorRange(-10000, rangeStart, tempColor);   
-
-    // Loop through everything in the middle 
-    for (int i = 1; i < steps; i++) {
-
-        hueTemp = hueTemp + hueStep;
-        tempColor.hsv(hueTemp, 1, 1);
-        finalGradient[i] = colorRange(rangeStart + i, rangeStart + i, tempColor);
-
-        vex::wait(0.01, seconds);
-    }
-
-    // Set the ending point
-    tempColor.hsv(endHue, 1, 1);
-    finalGradient[199] = colorRange(rangeEnd, 10000, tempColor);
-
-    return finalGradient;
-}
-
-
 
 
 // Main Loop For Rendering the Brain Display
@@ -277,32 +304,45 @@ int brainDisplayer() {
     Brain.Screen.clearScreen();
     Brain.Screen.newLine();
     Brain.Screen.print("Building Gradients");
-    
-    colorRange batteryGradient[200];    gradientBuilder(1, 100, 15, 70, batteryGradient);
-    colorRange testGradient[200];       gradientBuilder(300, 180, -100, 100, testGradient);
-    colorRange othertestGradient[200];  gradientBuilder(1, 240, -100, 100, othertestGradient);
+    Brain.Screen.newLine();
+
+
+    Brain.Screen.print(".");
+    Gradient batteryGradient(1, 100, 15, 70);
+    batteryGradient.build();
+
+    Brain.Screen.print(".");
+    Gradient testGradient(0, 300, 10, 100);
+    testGradient.build();
+
+
+    double deltaTime = 0.00;
 
     while(true) {
 
+        double startTime = Brain.timer(msec);
+
         Brain.Screen.clearScreen();
+
+        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime));
 
         // Render the logs to the screen
         BrainLogs.render();
         
         // Battery Level Meter
-        mainDrawer.drawHorizontalProgressBar(230, 15, 150, 30, "Battery: %d%%", Brain.Battery.capacity(), false, batteryGradient, 100);
+        mainDrawer.drawHorizontalProgressBar(325, 15, 150, 30, "Battery: %d%%", Brain.Battery.capacity(), false, batteryGradient.finalGradient, 100);
 
         // Test Vertical Meter
-        mainDrawer.drawVerticalProgressbar(230, 75, 30, 100, "FL", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 1) * 100, true);
-        mainDrawer.drawVerticalProgressbar(270, 75, 30, 100, "FR", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 2) * 100, true);
-        mainDrawer.drawVerticalProgressbar(310, 75, 30, 100, "BL", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 3) * 100, true);
-        mainDrawer.drawVerticalProgressbar(350, 75, 30, 100, "BR", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 4) * 100, true);
+        mainDrawer.drawVerticalProgressbar(325, 75, 30, 100, "FL", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 1) * 100, true);
+        mainDrawer.drawVerticalProgressbar(365, 75, 30, 100, "FR", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 2) * 100, true);
+        mainDrawer.drawVerticalProgressbar(405, 75, 30, 100, "BL", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 3) * 100, true);
+        mainDrawer.drawVerticalProgressbar(445, 75, 30, 100, "BR", sin((Brain.timer(vex::timeUnits::msec) / 1000) + 4) * 100, true);
 
-        mainDrawer.drawVerticalProgressbar(400, 15, 30, 200, "%d%%", fabs(sin((Brain.timer(vex::timeUnits::msec) / 1000) + 5)) * 100, false, batteryGradient, 100);
-        mainDrawer.drawVerticalProgressbar(440, 15, 30, 200, "%d%%", fabs(sin((Brain.timer(vex::timeUnits::msec) / 1000) + 6)) * 100, false, testGradient, 100);
-
-        mainDrawer.drawHorizontalProgressBar(230, 200, 150, 30, "Test: %d%%", sin(Brain.timer(vex::timeUnits::msec) / 1000) * 100, true, othertestGradient, 200);
-
+        mainDrawer.drawVerticalProgressbar(230, 15, 30, 200, "%d%%", mainController.Axis3.position(), false, batteryGradient.finalGradient, 100);
+        mainDrawer.drawVerticalProgressbar(270, 15, 30, 200, "%d%%", fabs(sin((Brain.timer(vex::timeUnits::msec) / 1000) + 6) * 100), false, testGradient.finalGradient, 100);
+        
+        deltaTime = 1000 / (round(Brain.timer(msec) - startTime));
+    
         // Render the screen
         Brain.Screen.render();
 

@@ -13,7 +13,14 @@
 using namespace vex;
 
 
+using std::cout;
+using std::endl;
+
+
+
 int main() {
+
+  cout << endl << endl << endl;
 
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);
