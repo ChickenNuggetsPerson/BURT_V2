@@ -2,6 +2,7 @@
 #include "vex.h"
 
 int controllerDisplay();
+int debugDataUpdater();
 
 int brainDisplayer();
 

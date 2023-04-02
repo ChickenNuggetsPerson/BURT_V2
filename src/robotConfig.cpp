@@ -32,6 +32,7 @@ void startTasks( void ) {
     task mainControllerTask(controllerTask);
     
     task brainDisplayerTask(brainDisplayer);
+    task debugDataUpdaterTask(debugDataUpdater);
     task controllerDisplayerTask(controllerDisplay);
 
     brainFancyDebug("Tasks Started", vex::color::yellow);

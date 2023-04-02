@@ -281,7 +281,7 @@ class Gradient {
                 tempColor.hsv(hueTemp, 1, 1);
                 finalGradient[i] = colorRange(rangeStart + i, rangeStart + i, tempColor);
 
-                vex::wait(0.01, seconds);
+                //vex::wait(0.01, seconds);
             }
 
             // Set the ending point
@@ -308,6 +308,9 @@ class Graph {
         int currentDataPoint = 0;
         int recentPoint = 0;
 
+        colorRange ranges[202];
+        int rangeSize = 0;
+
         void shiftDataPoints() {
             for (int i=0; i < maxPoints - 1; i++) {
                 dataPoints[i] = dataPoints[i + 1];
@@ -328,7 +331,8 @@ class Graph {
 
         // Graph Types:
         //      1. Line Graph 
-        Graph(int graphType, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, int maxDataPoints = 10) {
+
+        void build(int graphType, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, colorRange colorRanges[] = nullptr, int sizeOfRange = 0, int maxDataPoints = 10) {
             type = graphType;
             x = xPos;
             y = yPos;
@@ -336,6 +340,12 @@ class Graph {
             height = graphHeight;
             name = graphName;
             maxPoints = maxDataPoints;
+
+            rangeSize = sizeOfRange;
+            for (int i = 0; i < sizeOfRange; i++) {
+                ranges[i] = colorRanges[i];
+            }
+
             if (maxPoints > 50) {maxPoints = 50;}
             if (drawMiddle) {
                 middle = 0.5;
@@ -353,14 +363,18 @@ class Graph {
             recentPoint = point;
         };
 
-        void draw(colorRange ranges[] = nullptr, int rangeSize = 0) {
-
+        void draw() {
+            
             Brain.Screen.printAt(x, y, name, recentPoint);
             Brain.Screen.drawRectangle(x, y + 5, width, height);
 
             double xScale = width / maxPoints;
             double yScale = height / 10;
 
+            //brainFancyDebug("x: %d", x);
+            //brainFancyDebug("y: %d", y);
+            //brainFancyDebug("w: %d", width);
+            //brainFancyDebug("h: %d", height);
 
             // Draw Vertical Axis
             for (int i = 0; i < 10; i++) {
@@ -394,7 +408,7 @@ class Graph {
                     Brain.Screen.drawCircle(x + (xScale * i), y + 5 + height*middle - ((dataPoints[i] / 100.00) * height)*middle, 3);
                 }
 
-                if (ranges && rangeSize != 0 && i != 0) {
+                if (rangeSize != 0 && i != 0) {
                     Brain.Screen.setPenColor(determinColorFromRange(dataPoints[i], ranges, rangeSize));
                 }
 
@@ -408,34 +422,54 @@ class Graph {
 };
 
 
+
+// Define all elements 
+
 ProgressBarDrawer progressDrawer(1);
 Logger BrainLogs(1, 1);
 
+double graphUpdateRate = 0.02;
+
+// Gradients
+Gradient batteryGradient = Gradient(1, 100, 15, 70);
+Gradient testGradient = Gradient(0, 360, -100, 100);
+
+Gradient graphGradient = Gradient(10, 240, -90, 90);
+Gradient rainbowGradient = Gradient(0, 360, -100, 100);
+
+
+// Graphs
+Graph testGraph;
+
+
+int debugDataUpdater() {
+
+    batteryGradient.build();
+    testGradient.build();
+    graphGradient.build();
+    rainbowGradient.build();
+
+    testGraph.build(1, "Graphypoo %d%%", 325, 80, 150, 150, true, graphGradient.finalGradient, 202, 50);
+
+    while(true) {
+
+        double time = Brain.timer(vex::timeUnits::msec) / 1000;
+
+        double value = int(sin(tan(time)) * sin(time) * 100);
+
+        testGraph.addPoint(value);
+        //testGraph.addPoint(mainController.Axis3.position());
+
+        wait(graphUpdateRate, seconds);
+    }
+
+    return 1;
+};
 
 // Main Loop For Rendering the Brain Display
 int brainDisplayer() {
 
-    Brain.Screen.clearScreen();
-    Brain.Screen.newLine();
-    Brain.Screen.print("Building Gradients");
-    Brain.Screen.newLine();
-
-    // Making the color gradients
-    Brain.Screen.print(".");
-    Gradient batteryGradient(1, 100, 15, 70);
-    batteryGradient.build();
-
-    Brain.Screen.print(".");
-    Gradient testGradient(300, 0, -90, 100);
-    testGradient.build();
-
-
-    // Make a test graph
-    Graph testGraph(1, "Graphypoo %d%%", 230, 100, 150, 75, true, 50);
-
-
     double deltaTime = 0.00;
-    int frameCounter = 0;
 
     while(true) {
 
@@ -451,30 +485,19 @@ int brainDisplayer() {
         // Battery Level Meter
         progressDrawer.drawHorizontalProgressBar(325, 15, 150, 30, "Battery: %d%%", Brain.Battery.capacity(), false, batteryGradient.finalGradient, 100);
 
+        // Two test meters
         progressDrawer.drawVerticalProgressbar(230, 15, 30, 60, "%d%%", mainController.Axis3.position(), true, batteryGradient.finalGradient, 200);
         progressDrawer.drawVerticalProgressbar(270, 15, 30, 60, "%d%%", (sin((Brain.timer(vex::timeUnits::msec) / 1000) + 6) * 100), true, testGradient.finalGradient, 200);
 
+        progressDrawer.drawHorizontalProgressBar(230, 100, 85, 30, "X: %d", mainController.Axis4.position(), true, rainbowGradient.finalGradient, 201);
 
-        testGraph.draw(testGradient.finalGradient, 201);
-
-
-        frameCounter++;
-        if (frameCounter == 2) {
-            frameCounter = 0;
-
-            //double time = Brain.timer(vex::timeUnits::msec) / 1000;
-
-            //double value = int(sin(tan(time)) * sin(time) * 100);
-            //double value = int(tan(time) * 100);
-
-            //testGraph.addPoint((value));
-            testGraph.addPoint(mainController.Axis3.position());
-        };
+        // Draw the graph
+        testGraph.draw();
 
 
         // Calculate the fps
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime));
-    
+        
         // Render the screen
         Brain.Screen.render();
 
@@ -483,6 +506,7 @@ int brainDisplayer() {
     return 1;
 }
 
+ 
 // Main Loop For Rendering the Controllers
 int controllerDisplay() {
     while (true){
@@ -521,7 +545,6 @@ int controllerDisplay() {
     }
     return 1;
 }
-
 
 
 // Displays error on brain screen
