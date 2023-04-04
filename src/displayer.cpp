@@ -35,10 +35,6 @@ using namespace vex;
  *      it is given two points [-100, 100] and two colors. Since going through and building the gradient can take a bit, 
  *      the .build() method needs to be ran first. Before building the gradient, it will just display as a black bar. 
  * 
- * Drawer Class
- *      This class is what contains all of the fancy rendering fucntions. At the moment of writing this, it can 
- *      only render horizontal and vertical progress bars with ColorRange Arrays. 
- * 
  * The Error and Debug Functions at the end of the file
  *      These funcitons are what are shown to the rest of the program. Anywere in the code, those functions will
  *      be called and the LogMessage Class will handle everything else for displaying the info in the logs.
@@ -138,15 +134,12 @@ class Logger {
 // Stores a color and the range it is acceptable in
 class colorRange {
     private:
-    
-    public:
-
         int start;
-        int end;
-
+        int end;    
+    public:
         vex::color displayColor;
 
-        colorRange(int rangeStart = 0, int rangeEnd = 0, vex::color showColor = vex::color::black) {
+        colorRange(int rangeStart = NAN, int rangeEnd = NAN, vex::color showColor = vex::color::black) {
             start = rangeStart;
             end = rangeEnd;
             displayColor = showColor;
@@ -156,109 +149,70 @@ class colorRange {
         bool inRange(int value) {
             return (value >= start && value <= end);
         }
+
+        bool isDefault() {
+            return start == NAN && end == NAN;
+        }
 };
 
-// The main element for drawing graphs and progress bars
-class ProgressBarDrawer {
+class rgbColor {
     private:
+    public:
+        int r = 0;
+        int g = 0;
+        int b = 0;
 
-        // Used for custom color ranges
-        // Returns the corresponding color based on the input value and the ranges array
-        // Make sure to also pass in the size of the array, C++ is annoying and arrays decay to pointers once inputed into a function
-        vex::color determinColorFromRange(int value, colorRange ranges[], int rangeSize) {
-            for (int i = 0; i < rangeSize; i++) {
-                if (ranges[i].inRange(value)) {
-                    return ranges[i].displayColor;
-                }
-            }
-            return vex::color::black;
+        rgbColor(int red, int green, int blue) {
+            r = red;
+            g = green;
+            b = blue;
         }
 
-    public:
-
-        ProgressBarDrawer(int test) {};
-
-        // Draws a horizontal progress bar on the screen
-        // Defaults to the battery percent color array unless declared by the user
-        // If you want the name to display the value also use "%d" in the name
-        void drawHorizontalProgressBar(int x, int y, int width, int height, const char* name, double value, bool middle = false, colorRange ranges[] = nullptr, int rangeSize = 0) {
-
-            Brain.Screen.printAt(x, y, name, int(value));
-            Brain.Screen.drawRectangle(x, y + 5, width, height);
-
-            if (ranges && rangeSize != 0) {
-                Brain.Screen.setFillColor(determinColorFromRange(value, ranges, rangeSize));
-            } else {
-                // Default Battery Color Range
-                colorRange defaultRanges[3];
-                defaultRanges[0] = colorRange(0, 20, red);
-                defaultRanges[1] = colorRange(21, 35, yellow);
-                defaultRanges[2] = colorRange(36, 100, green);
-
-                Brain.Screen.setFillColor(determinColorFromRange(fabs(value), defaultRanges, 3));
+        rgbColor(const char* colorName) {
+            if (strcmp(colorName, "red") == 0)    {
+                r = 255; g = 0; b = 0;
             }
-            
-
-            if (middle) {
-                Brain.Screen.drawRectangle(x + (width / 2), y + 5, (value / 100 ) * (width / 2), height); // Middle Draw
-            } else {
-                Brain.Screen.drawRectangle(x, y + 5, (value / 100) *width, height); // Normal Draw
+            if (strcmp(colorName, "orange") == 0) {
+                r = 255; g = 166; b = 0;
             }
-            Brain.Screen.setFillColor(vex::color::black);
-        };
-
-
-        // Draws a vertical progress bar on the screen
-        // Defaults to the temperature color array unless declared by the user
-        // If you want the name to display the value also use "%d" in the name
-        void drawVerticalProgressbar(int x, int y, int width, int height, const char* name, double value, bool middle = false, colorRange ranges[] = nullptr, int rangeSize = 0) {
-
-            Brain.Screen.printAt(x, y, name, int(value));
-            Brain.Screen.drawRectangle(x, y + 5, width, height);
-            
-            if (ranges && rangeSize != 0) {
-                Brain.Screen.setFillColor(determinColorFromRange(value, ranges, rangeSize));
-            } else {
-                // Default Heat Color Range
-                colorRange defaultRanges[3];
-                defaultRanges[0] = colorRange(0, 60, green);
-                defaultRanges[1] = colorRange(61, 80, yellow);
-                defaultRanges[2] = colorRange(81, 100, red);
-
-                Brain.Screen.setFillColor(determinColorFromRange(fabs(value), defaultRanges, 3));
+            if (strcmp(colorName, "yellow") == 0) {
+                r = 255; g = 255; b = 0;
             }
-
-
-            if (middle) {
-                Brain.Screen.drawRectangle(x, y + 5 + (height / 2), width, - (value / 100) * height / 2);
-            } else {
-                Brain.Screen.drawRectangle(x, y + 5 + height, width, - (value / 100) * height);
+            if (strcmp(colorName, "green") == 0)  {
+                r = 0; g = 255; b = 0;
             }
-    
-            Brain.Screen.setFillColor(vex::color::black);
-        };
+            if (strcmp(colorName, "blue") == 0)   {
+                r = 0; g = 0; b = 255;
+            }
+            if (strcmp(colorName, "purple") == 0) {
+                r = 130; g = 0; b = 255;
+            }
+            if (strcmp(colorName, "white") == 0)  {
+                r = 255; g = 255; b = 255;
+            }
+            if (strcmp(colorName, "black") == 0)  {
+                r = 0; g = 0; b = 0;
+            }
+    }
 };
 
 // Handles generating smooth color gradients
 class Gradient {
     private:
-        double startHue;
-        double endHue;
         int rangeStart;
         int rangeEnd;
         bool built = false;
     public:
 
-        colorRange finalGradient[200];
+        colorRange finalGradient[205];
+        int rangeSize = 200;
 
-        Gradient(double startColor, double endColor, int startOfRange, int endOfRange) {
-            startHue = startColor;
-            endHue = endColor;
+        Gradient(double startHue, double endHue, int startOfRange, int endOfRange) {
             rangeStart = startOfRange;
             rangeEnd = endOfRange;     
+            buildHSV(startHue, endHue);
         };
-
-        void build() {
+        void buildHSV(double startHue, double endHue) {
 
             if (built) { return; }
     
@@ -281,12 +235,62 @@ class Gradient {
                 tempColor.hsv(hueTemp, 1, 1);
                 finalGradient[i] = colorRange(rangeStart + i, rangeStart + i, tempColor);
 
-                //vex::wait(0.01, seconds);
+                //vex::wait(0.05, seconds);
             }
 
             // Set the ending point
             tempColor.hsv(endHue, 1, 1);
             finalGradient[i] = colorRange(rangeEnd, 10000, tempColor);
+
+            built = true;
+
+            rangeSize = i + 1;
+
+            //brainDebug("Gradint Built");
+        }
+
+        Gradient(rgbColor startColor, rgbColor endColor, int startOfRange, int endOfRange) {
+            rangeStart = startOfRange;
+            rangeEnd = endOfRange;
+            buildRGB(startColor, endColor);
+        };
+        void buildRGB(rgbColor startColor, rgbColor endColor) {
+
+            if (built) { return; }
+    
+            int steps = rangeEnd - rangeStart;
+    
+            double redTemp = startColor.r;
+            double greenTemp = startColor.g;
+            double blueTemp = startColor.b;
+
+            vex::color tempColor;
+
+            // Set the starting point
+            tempColor.rgb(redTemp, greenTemp, blueTemp);
+            finalGradient[0] = colorRange(-10000, rangeStart, tempColor);   
+
+            int i = 1;
+            // Loop through everything in the middle 
+            for (i = 1; i < steps; i++) {
+
+                double percent = double(i) / double(steps);
+
+                redTemp   = (endColor.r - startColor.r) * percent + startColor.r;
+                greenTemp = (endColor.g - startColor.g) * percent + startColor.g;
+                blueTemp  = (endColor.b - startColor.b) * percent + startColor.b;
+
+                tempColor.rgb(redTemp, greenTemp, blueTemp);
+                finalGradient[i] = colorRange(rangeStart + i, rangeStart + i, tempColor);
+
+                //vex::wait(0.05, seconds);
+            }
+
+            // Set the ending point
+            tempColor.rgb(endColor.r, endColor.g, endColor.b);
+            finalGradient[i] = colorRange(rangeEnd, 10000, tempColor);
+
+            rangeSize = i + 1;
 
             built = true;
         }
@@ -308,7 +312,7 @@ class Graph {
         int currentDataPoint = 0;
         int recentPoint = 0;
 
-        colorRange ranges[202];
+        colorRange ranges[205];
         int rangeSize = 0;
 
         void shiftDataPoints() {
@@ -317,13 +321,13 @@ class Graph {
             }
         };
         
-        vex::color determinColorFromRange(int value, colorRange ranges[], int rangeSize) {
-            for (int i = 0; i < rangeSize; i++) {
+        vex::color determinColorFromRange(int value, colorRange ranges[]) {
+            for (int i = 0; !ranges[i].isDefault(); i++) {
                 if (ranges[i].inRange(value)) {
                     return ranges[i].displayColor;
-                }
+                }  
             }
-            return vex::color::white;
+            return vex::color::black;
         }
 
 
@@ -332,7 +336,7 @@ class Graph {
         // Graph Types:
         //      1. Line Graph 
 
-        void build(int graphType, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, colorRange colorRanges[] = nullptr, int sizeOfRange = 0, int maxDataPoints = 10) {
+        void build(int graphType, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, colorRange colorRanges[] = nullptr, int maxDataPoints = 10) {
             type = graphType;
             x = xPos;
             y = yPos;
@@ -341,9 +345,10 @@ class Graph {
             name = graphName;
             maxPoints = maxDataPoints;
 
-            rangeSize = sizeOfRange;
-            for (int i = 0; i < sizeOfRange; i++) {
-                ranges[i] = colorRanges[i];
+            for (int i = 0; i < 206; i++) {
+                if (!ranges[i].isDefault()) {
+                   ranges[i] = colorRanges[i]; 
+                } else { break; }
             }
 
             if (maxPoints > 50) {maxPoints = 50;}
@@ -375,6 +380,8 @@ class Graph {
             //brainFancyDebug("y: %d", y);
             //brainFancyDebug("w: %d", width);
             //brainFancyDebug("h: %d", height);
+
+            
 
             // Draw Vertical Axis
             for (int i = 0; i < 10; i++) {
@@ -409,56 +416,241 @@ class Graph {
                 }
 
                 if (rangeSize != 0 && i != 0) {
-                    Brain.Screen.setPenColor(determinColorFromRange(dataPoints[i], ranges, rangeSize));
+                    Brain.Screen.setPenColor(determinColorFromRange(dataPoints[i], ranges));
                 }
 
                 Brain.Screen.drawLine(x + (xScale * i), y + 5 + height*middle - ((dataPoints[i] / 100.00) * height)*middle, x + (xScale * i), y + 5 + height*middle);
                 Brain.Screen.setPenColor(vex::color::white);
             };
 
+        };
+};
+
+struct progressBar {
+
+    const char* id;
+
+    bool vertical;
+    int x;
+    int y;
+    int width;
+    int height;
+    const char* name;
+    double value;
+    bool middle = false;
+    colorRange ranges[205];
+};
+
+class Page {
+    private:
+
+        progressBar barStorage[10];
+        int barsStored = 0;
+
+        Graph graphStorage[10];
+        const char* graphIdStorage[10];
+        int graphsStored = 0;
+
+        Logger* loggerStorage;
+        bool hasLogger = false;
+
+
+        vex::color determinColorFromRange(int value, colorRange ranges[]) {
+            for (int i = 0; !ranges[i].isDefault(); i++) {
+                if (ranges[i].inRange(value)) {
+                    return ranges[i].displayColor;
+                }  
+            }
+            return vex::color::black;
+        }
+        
+        void drawHorzProgressbar(progressBar bar) {
+            Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
+            Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
+
+            if (!bar.ranges[0].isDefault()) {
+                Brain.Screen.setFillColor(determinColorFromRange(bar.value, bar.ranges));
+            } else {
+                // Default Battery Color Range
+                colorRange defaultRanges[4];
+                defaultRanges[0] = colorRange(0, 20, red);
+                defaultRanges[1] = colorRange(21, 35, yellow);
+                defaultRanges[2] = colorRange(36, 100, green);
+
+                Brain.Screen.setFillColor(determinColorFromRange(fabs(bar.value), defaultRanges));
+            }
             
 
+            if (bar.middle) {
+                Brain.Screen.drawRectangle(bar.x + (bar.width / 2), bar.y + 5, (bar.value / 100 ) * (bar.width / 2), bar.height); // Middle Draw
+            } else {
+                Brain.Screen.drawRectangle(bar.x, bar.y + 5, (bar.value / 100) * bar.width, bar.height); // Normal Draw
+            }
+            Brain.Screen.setFillColor(vex::color::black);
         };
+        void drawVertProgressBar(progressBar bar) {
+            Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
+            Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
+            
+            if (!bar.ranges[0].isDefault()) {
+                Brain.Screen.setFillColor(determinColorFromRange(bar.value, bar.ranges));
+            } else {
+                // Default Heat Color Range
+                colorRange defaultRanges[4];
+                defaultRanges[0] = colorRange(0, 60, green);
+                defaultRanges[1] = colorRange(61, 80, yellow);
+                defaultRanges[2] = colorRange(81, 100, red);
+
+                Brain.Screen.setFillColor(determinColorFromRange(fabs(bar.value), defaultRanges));
+            }
+
+
+            if (bar.middle) {
+                Brain.Screen.drawRectangle(bar.x, bar.y + 5 + (bar.height / 2), bar.width, - (bar.value / 100) * bar.height / 2);
+            } else {
+                Brain.Screen.drawRectangle(bar.x, bar.y + 5 + bar.height, bar.width, - (bar.value / 100) * bar.height);
+            }
+    
+            Brain.Screen.setFillColor(vex::color::black);
+        };
+
+
+
+    public:
+        Page(int test) {};
+
+        void render() {
+
+            if (hasLogger) {
+                loggerStorage->render();
+            }
+
+            for (int i = 0; i < barsStored; i++) {
+                if (barStorage[i].vertical) {
+                    drawVertProgressBar(barStorage[i]);
+                } else {
+                    drawHorzProgressbar(barStorage[i]);
+                }
+            }
+
+            for (int i = 0; i < graphsStored; i++) {
+                graphStorage[i].draw();
+            }
+        };
+
+
+        void addLogger(Logger* loggerMemLocation) {
+            loggerStorage = loggerMemLocation;
+            hasLogger = true;
+        };
+        void addHorzProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool middle = false, colorRange ranges[] = nullptr) {
+            progressBar tempBar;
+            tempBar.x = x;
+            tempBar.y = y;
+            tempBar.width = width;
+            tempBar.height = height;
+            tempBar.name = name;
+            tempBar.middle = middle;
+            tempBar.vertical = false;
+            tempBar.id = barId;
+
+            for (int i = 0; i < 206; i++) {
+                if (!ranges[i].isDefault()) {
+                   tempBar.ranges[i] = ranges[i]; 
+                } else { break; }
+            }
+
+            barStorage[barsStored] = tempBar;
+            barsStored++;
+
+        };
+        void addVertProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool middle = false, colorRange ranges[] = nullptr) {
+            progressBar tempBar;
+            tempBar.x = x;
+            tempBar.y = y;
+            tempBar.width = width;
+            tempBar.height = height;
+            tempBar.name = name;
+            tempBar.middle = middle;
+            tempBar.vertical = true;
+            tempBar.id = barId;
+
+            for (int i = 0; i < 206; i++) {
+                if (!ranges[i].isDefault()) {
+                   tempBar.ranges[i] = ranges[i]; 
+                } else { break; }
+            }
+
+            barStorage[barsStored] = tempBar;
+            barsStored++;
+        };
+        void addLineGraph(const char* graphId, int graphType, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, colorRange colorRanges[] = nullptr, int maxDataPoints = 10) {
+            graphStorage[graphsStored] = Graph();
+            graphStorage[graphsStored].build(graphType, graphName, xPos, yPos, graphWidth, graphHeight, drawMiddle, colorRanges, maxDataPoints);
+            graphIdStorage[graphsStored] = graphId;
+            graphsStored++;
+        };
+
+        void setProgressBarValue(const char* barId, int value) {
+            for (int i = 0; i < barsStored; i++) {
+                if (strcmp(barId, barStorage[i].id) == 0) {
+                    barStorage[i].value = value;
+                }
+            }
+        };
+        void setLineGraphValue(const char* graphId, int value) {
+            for (int i = 0; i < graphsStored; i++) {
+                if (strcmp(graphId, graphIdStorage[i]) == 0) {
+                    graphStorage[i].addPoint(value);
+                }
+            }
+        };
+
+
+
 };
 
 
 
 // Define all elements 
 
-ProgressBarDrawer progressDrawer(1);
 Logger BrainLogs(1, 1);
+Page homePage(1);
+double graphUpdateRate = 0.05; // In Seconds
 
-double graphUpdateRate = 0.02;
-
-// Gradients
-Gradient batteryGradient = Gradient(1, 100, 15, 70);
-Gradient testGradient = Gradient(0, 360, -100, 100);
-
-Gradient graphGradient = Gradient(10, 240, -90, 90);
-Gradient rainbowGradient = Gradient(0, 360, -100, 100);
-
-
-// Graphs
-Graph testGraph;
 
 
 int debugDataUpdater() {
 
-    batteryGradient.build();
-    testGradient.build();
-    graphGradient.build();
-    rainbowGradient.build();
+    // Init Gradients
+    Gradient batteryGradient = Gradient(1, 100, 15, 70);
+    Gradient graphGradient = Gradient(10, 300, 10, 100);
+    Gradient rainbowGradient = Gradient(rgbColor(250, 100, 100), rgbColor(237, 212, 252), 0, 100);
 
-    testGraph.build(1, "Graphypoo %d%%", 325, 80, 150, 150, true, graphGradient.finalGradient, 202, 50);
+    homePage.addLogger(&BrainLogs);
+
+    homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
+    homePage.addVertProgressBar("testVert", 280, 15, 30, 100, "%d", false, batteryGradient.finalGradient);
+    homePage.addVertProgressBar("otherTestVert", 230, 15, 30, 100, "%d", false, rainbowGradient.finalGradient);
+
+    homePage.addLineGraph("test", 1, "Graphypoo %d%%", 325, 150, 150, 75, false, rainbowGradient.finalGradient, 50);
+    homePage.addLineGraph("othertest", 1, "Other Graph: %d%%", 150, 150, 150, 75, false, graphGradient.finalGradient, 50);
+
+
 
     while(true) {
 
+        // Update Data on screen
+
         double time = Brain.timer(vex::timeUnits::msec) / 1000;
+        double  value = int(sin(time)*50) + 50;
 
-        double value = int(sin(tan(time)) * sin(time) * 100);
+        homePage.setLineGraphValue("test", value);
+        homePage.setLineGraphValue("othertest", mainController.Axis3.position());
 
-        testGraph.addPoint(value);
-        //testGraph.addPoint(mainController.Axis3.position());
+        homePage.setProgressBarValue("battery", Brain.Battery.capacity());
+        homePage.setProgressBarValue("testVert", value);
+        homePage.setProgressBarValue("otherTestVert", 100 - value);
 
         wait(graphUpdateRate, seconds);
     }
@@ -469,38 +661,44 @@ int debugDataUpdater() {
 // Main Loop For Rendering the Brain Display
 int brainDisplayer() {
 
-    double deltaTime = 0.00;
 
-    while(true) {
+    double waitTime = 1; // Seconds    
 
-        double startTime = Brain.timer(msec);
-
+    double endTime = Brain.timer(vex::timeUnits::msec) + (waitTime * 1000);
+    while (endTime > Brain.timer(vex::timeUnits::msec)) {
         Brain.Screen.clearScreen();
-
-        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime));
-
-        // Render the logs to the screen
-        BrainLogs.render();
+        Brain.Screen.printAt(20, 40, "Calibrating... Do not touch the robot");
         
-        // Battery Level Meter
-        progressDrawer.drawHorizontalProgressBar(325, 15, 150, 30, "Battery: %d%%", Brain.Battery.capacity(), false, batteryGradient.finalGradient, 100);
+        char barArray[40];
+        int arrayLength = sizeof(barArray) / sizeof(char);
+        barArray[0] = '[';
+        barArray[arrayLength] = ']';
 
-        // Two test meters
-        progressDrawer.drawVerticalProgressbar(230, 15, 30, 60, "%d%%", mainController.Axis3.position(), true, batteryGradient.finalGradient, 200);
-        progressDrawer.drawVerticalProgressbar(270, 15, 30, 60, "%d%%", (sin((Brain.timer(vex::timeUnits::msec) / 1000) + 6) * 100), true, testGradient.finalGradient, 200);
+        double currentPercent = 1 - ((endTime - Brain.timer(msec)) / (waitTime * 1000));
 
-        progressDrawer.drawHorizontalProgressBar(230, 100, 85, 30, "X: %d", mainController.Axis4.position(), true, rainbowGradient.finalGradient, 201);
-
-        // Draw the graph
-        testGraph.draw();
-
-
+        for (int i = 1; i < arrayLength; i++) {
+            if ((double(i) / double(arrayLength)) < currentPercent) {
+                barArray[i] = '=';
+            } else {
+                barArray[i] = ' ';
+            }
+        }
+        Brain.Screen.printAt(20, 80, barArray);
+        Brain.Screen.render();
+    }
+    
+    
+    double deltaTime = 0.00;
+    while(true) {
+        double startTime = Brain.timer(msec);
+        Brain.Screen.clearScreen();
+        // Show the screen FPS
+        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime));
+        homePage.render();
         // Calculate the fps
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime));
-        
         // Render the screen
         Brain.Screen.render();
-
     }
 
     return 1;
