@@ -11,6 +11,13 @@ void test(){
     brainFancyDebug("YEET %d", green, rand());
 };
 
+void rightPressed() {
+  brainChangePage("main");
+};
+void leftPressed() {
+  brainChangePage("debug");
+};
+
 void pre_auton(void) {
 
   altController.ButtonDown.pressed(debugDisable);
@@ -19,13 +26,16 @@ void pre_auton(void) {
 
   altController.ButtonR2.pressed(test);
 
+  mainController.ButtonRight.pressed(rightPressed);
+  mainController.ButtonLeft.pressed(leftPressed);
+
   startTasks();
   botAI.init();
 }
 
 
 void autonomous(void) {
-  brainFancyDebug("Auton Started", vex::color::cyan);
+  botAI.started();
 }
 
 

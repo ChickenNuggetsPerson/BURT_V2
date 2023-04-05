@@ -426,7 +426,7 @@ class Graph {
         };
 };
 
-struct progressBar {
+struct ProgressBar {
 
     const char* id;
 
@@ -441,10 +441,30 @@ struct progressBar {
     colorRange ranges[205];
 };
 
+struct DisplayText {
+    const char* text;
+    int displayData;
+    int x;
+    int y;
+    const char* id;
+    vex::color displayColor;
+};
+
+struct Button { // todo: implement this 
+    int x;
+    int y;
+    int width;
+    int height;
+    //int (*cb)(Page*);
+};
+
 class Page {
     private:
 
-        progressBar barStorage[10];
+        DisplayText textStorage[10];
+        int textsStored = 0;
+
+        ProgressBar barStorage[10];
         int barsStored = 0;
 
         Graph graphStorage[10];
@@ -453,6 +473,10 @@ class Page {
 
         Logger* loggerStorage;
         bool hasLogger = false;
+
+
+        int (*dataUpdaterCB)(Page*);
+        double updateSpeed = 0.00;
 
 
         vex::color determinColorFromRange(int value, colorRange ranges[]) {
@@ -464,7 +488,7 @@ class Page {
             return vex::color::black;
         }
         
-        void drawHorzProgressbar(progressBar bar) {
+        void drawHorzProgressbar(ProgressBar bar) {
             Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
             Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
 
@@ -488,7 +512,7 @@ class Page {
             }
             Brain.Screen.setFillColor(vex::color::black);
         };
-        void drawVertProgressBar(progressBar bar) {
+        void drawVertProgressBar(ProgressBar bar) {
             Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
             Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
             
@@ -517,12 +541,21 @@ class Page {
 
 
     public:
+
+        bool hasCB = false;
+
         Page(int test) {};
 
         void render() {
 
             if (hasLogger) {
                 loggerStorage->render();
+            }
+
+            for (int i = 0; i < textsStored; i++) {
+                Brain.Screen.setPenColor(textStorage[i].displayColor);
+                Brain.Screen.printAt(textStorage[i].x, textStorage[i].y, textStorage[i].text, textStorage[i].displayData);
+                Brain.Screen.setPenColor(white);
             }
 
             for (int i = 0; i < barsStored; i++) {
@@ -538,13 +571,26 @@ class Page {
             }
         };
 
+        void addDataUpdaterCB(int (*cb)(Page*), double refreshRate = 1) {
+            dataUpdaterCB = cb;
+            hasCB = true;
+            updateSpeed = refreshRate;
+        };
+        
+        int updateData() {
+            while (true) {
+                dataUpdaterCB(this);
+                wait(updateSpeed, seconds);                
+            }
+            return 1;
+        };
 
         void addLogger(Logger* loggerMemLocation) {
             loggerStorage = loggerMemLocation;
             hasLogger = true;
         };
         void addHorzProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool middle = false, colorRange ranges[] = nullptr) {
-            progressBar tempBar;
+            ProgressBar tempBar;
             tempBar.x = x;
             tempBar.y = y;
             tempBar.width = width;
@@ -565,7 +611,7 @@ class Page {
 
         };
         void addVertProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool middle = false, colorRange ranges[] = nullptr) {
-            progressBar tempBar;
+            ProgressBar tempBar;
             tempBar.x = x;
             tempBar.y = y;
             tempBar.width = width;
@@ -590,6 +636,17 @@ class Page {
             graphIdStorage[graphsStored] = graphId;
             graphsStored++;
         };
+        void addText(const char* text, int x, int y, vex::color displayColor = white, const char* id = "") {
+            textStorage[textsStored] = DisplayText();
+            textStorage[textsStored].text = text;
+            textStorage[textsStored].x = x;
+            textStorage[textsStored].y = y;
+            textStorage[textsStored].displayData = 0;
+            textStorage[textsStored].displayColor = displayColor;
+            textStorage[textsStored].id = id;
+            textsStored++;
+        }
+
 
         void setProgressBarValue(const char* barId, int value) {
             for (int i = 0; i < barsStored; i++) {
@@ -605,55 +662,174 @@ class Page {
                 }
             }
         };
-
+        void setTextData(const char* textId, int data, const char* newText = "") {
+            for (int i = 0; i < textsStored; i++) {
+                if (strcmp(textStorage[i].id, textId) == 0) {
+                    textStorage[i].displayData = data;
+                    if (strcmp(newText, "") != 0) {
+                        textStorage[i].text = newText;
+                    }
+                }
+            }
+        };
+        void massSetData(const char* id, int data) {
+            setProgressBarValue(id, data);
+            setLineGraphValue(id, data);
+        };
 
 
 };
 
+// I would put this in the MenuSystem Class but I can't call it as a task() in the MenuSystem Class
+int mainDataUpdater(void* pageToUpdate) {
+    Page* pagePointer = (Page*)pageToUpdate;
+    pagePointer->updateData();
+    return 1;
+}
+
+class MenuSystem {
+    private:
+        
+        Page* pageStorage[10];
+        const char* pageIdStorage[10];
+        int pagesStored = 0;
+
+        int displayPage = -1;
+
+        bool firstTimeRender = true;
+
+        task updaterTask;
+        bool isUpdating = false;
+
+        void startUpdaterTask(int pageNum) {
+            if (isUpdating) { stopUpdaterTask(); }
+            if (!pageStorage[displayPage]->hasCB) { return; }
+            updaterTask = task(mainDataUpdater, (void*)pageStorage[displayPage], task::taskPrioritylow);
+            isUpdating = true;
+            //brainDebug("Started Task");
+        }; 
+        void stopUpdaterTask() {
+            updaterTask.stop(updaterTask);
+            isUpdating = false;
+            //brainDebug("Ended Task");
+        };
 
 
-// Define all elements 
+    public:
 
+        MenuSystem() {
+            // Yeet
+        };
+
+        void render() {
+            if (displayPage == -1) {
+                Brain.Screen.printAt(20, 100, "No Pages In Storage");
+            } else {
+                pageStorage[displayPage]->render();
+                if (firstTimeRender) { startUpdaterTask(displayPage); firstTimeRender = false;}
+            }
+        };
+
+        void addPage(const char* pageId, Page* page) {
+            pageStorage[pagesStored] = page;
+            pageIdStorage[pagesStored] = pageId;
+            pagesStored++;
+            if (displayPage == -1 && pagesStored == 1) {
+                displayPage = 0;
+            }
+        };
+
+        void gotoPage(const char* pageId) {
+            for (int i = 0; i < pagesStored; i++) {
+                if (strcmp(pageId, pageIdStorage[i]) == 0) {
+                    if (displayPage != i) {
+                        displayPage = i;
+                        startUpdaterTask(displayPage);
+                        return;
+                    } else { return; }
+                }
+            }
+        };
+
+        Page* searchPages(const char* pageId) {
+            for (int i = 0; i < pagesStored; i++) {
+                if (strcmp(pageId, pageIdStorage[i]) == 0) {
+                    return pageStorage[i];
+                }
+            }
+            return nullptr;
+        }
+};
+
+// Define head elements
 Logger BrainLogs(1, 1);
+MenuSystem mainRenderer;
+
+// Define Pages
 Page homePage(1);
-double graphUpdateRate = 0.05; // In Seconds
+Page debugPage(1);
+Page autonPage(1);
+
+
+// Define the update function for the home page
+int updateHome(Page* self) {
+
+    double time = Brain.timer(vex::timeUnits::msec) / 1000;
+    double value = int(sin(time)*50) + 50;
+    self->setProgressBarValue("battery", Brain.Battery.capacity());
+    self->setTextData("mainText", value);
+
+    return 1;
+}
+
+// Define the update function for the debug page
+int updateDebug(Page* self) {
+    //double time = Brain.timer(vex::timeUnits::msec) / 1000;
+    //double value = int(sin(time)*50) + 50;
+
+    self->setProgressBarValue("fl", leftMotorA.temperature(vex::temperatureUnits::fahrenheit));
+    self->setProgressBarValue("fr", rightMotorA.temperature(vex::temperatureUnits::fahrenheit));
+    self->setProgressBarValue("bl", leftMotorB.temperature(vex::temperatureUnits::fahrenheit));
+    self->setProgressBarValue("br", rightMotorB.temperature(vex::temperatureUnits::fahrenheit));
+
+    return 1;
+}
 
 
 
-int debugDataUpdater() {
+int brainDisplayerInit() {
 
     // Init Gradients
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
+    Gradient heatGradient = Gradient(100, 1, 60, 80);
     Gradient graphGradient = Gradient(10, 300, 10, 100);
-    Gradient rainbowGradient = Gradient(rgbColor(250, 100, 100), rgbColor(237, 212, 252), 0, 100);
+    Gradient rainbowGradient = Gradient(rgbColor("red"), rgbColor(237, 212, 252), 0, 100);
 
-    homePage.addLogger(&BrainLogs);
+    // Add pages to the main renderer
+    mainRenderer.addPage("main", &homePage);
+    mainRenderer.addPage("debug", &debugPage);
+    mainRenderer.addPage("auton", &autonPage);
 
+    // Configure the home page
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
-    homePage.addVertProgressBar("testVert", 280, 15, 30, 100, "%d", false, batteryGradient.finalGradient);
-    homePage.addVertProgressBar("otherTestVert", 230, 15, 30, 100, "%d", false, rainbowGradient.finalGradient);
-
-    homePage.addLineGraph("test", 1, "Graphypoo %d%%", 325, 150, 150, 75, false, rainbowGradient.finalGradient, 50);
-    homePage.addLineGraph("othertest", 1, "Other Graph: %d%%", 150, 150, 150, 75, false, graphGradient.finalGradient, 50);
+    homePage.addLogger(&BrainLogs);
+    homePage.addText("This is a test :) %d", 230, 100, white, "mainText");
 
 
+    autonPage.addText("Auton Page", 20, 20, cyan, "title");
+    autonPage.addText("", 20, 100, white, "description");
 
-    while(true) {
 
-        // Update Data on screen
+    // Configure the debug page
+    debugPage.addLogger(&BrainLogs);
+    debugPage.addVertProgressBar("fl", 280, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("fr", 330, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("bl", 380, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("br", 430, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
 
-        double time = Brain.timer(vex::timeUnits::msec) / 1000;
-        double  value = int(sin(time)*50) + 50;
 
-        homePage.setLineGraphValue("test", value);
-        homePage.setLineGraphValue("othertest", mainController.Axis3.position());
-
-        homePage.setProgressBarValue("battery", Brain.Battery.capacity());
-        homePage.setProgressBarValue("testVert", value);
-        homePage.setProgressBarValue("otherTestVert", 100 - value);
-
-        wait(graphUpdateRate, seconds);
-    }
+    debugPage.addDataUpdaterCB(updateDebug, 1);
+    homePage.addDataUpdaterCB(updateHome, 1);
 
     return 1;
 };
@@ -661,6 +837,7 @@ int debugDataUpdater() {
 // Main Loop For Rendering the Brain Display
 int brainDisplayer() {
 
+    brainDisplayerInit();
 
     double waitTime = 1; // Seconds    
 
@@ -694,7 +871,9 @@ int brainDisplayer() {
         Brain.Screen.clearScreen();
         // Show the screen FPS
         Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime));
-        homePage.render();
+        
+        mainRenderer.render();
+
         // Calculate the fps
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime));
         // Render the screen
@@ -742,6 +921,30 @@ int controllerDisplay() {
         vex::wait(1, seconds);
     }
     return 1;
+}
+
+
+
+// Change the screen page
+void brainChangePage(const char* pageName) {
+    mainRenderer.gotoPage(pageName);
+};
+
+void brainPageChangeData(const char* pageName, const char* pointId, int data) {
+    Page* pagePointer = mainRenderer.searchPages(pageName);
+    if (pagePointer == nullptr) { return; }
+    pagePointer->massSetData(pointId, data);
+}
+
+void brainPageChangeText(const char* pageName, const char* textId, int data) {
+    Page* pagePointer = mainRenderer.searchPages(pageName);
+    if (pagePointer == nullptr) { return; }
+    pagePointer->setTextData(textId, data);
+}
+void brainPageChangeText(const char* pageName, const char* textId, int data, const char* newText) {
+    Page* pagePointer = mainRenderer.searchPages(pageName);
+    if (pagePointer == nullptr) { return; }
+    pagePointer->setTextData(textId, data, newText);
 }
 
 

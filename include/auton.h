@@ -13,5 +13,6 @@ class ai {
   public:
     
     void init();
+    void started();
 
 };
