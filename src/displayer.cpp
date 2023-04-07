@@ -4,6 +4,12 @@
 
 #include "string"
 
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+#include <stdio.h>
+
 using std::cout;
 using std::endl;
 
@@ -46,19 +52,16 @@ using namespace vex;
 
 // A base log message class
 // It contains the actual text of the log and the display color
-class LogMessage {
-    private:
-
-    public:
-        std::string text;
-        vex::color displayColor;
-        int displayNumber;
+struct LogMessage {
+    std::string text;
+    vex::color displayColor;
+    int displayNumber;
     
-        LogMessage(std::string message = "", vex::color messageColor = vex::color::white, int displayData = 0 ) {
-            text = message;
-            displayColor = messageColor;
-            displayNumber = displayData;
-        };
+    LogMessage(std::string message = "", vex::color messageColor = vex::color::white, int displayData = 0 ) {
+        text = message;
+        displayColor = messageColor;
+        displayNumber = displayData;
+    };
 };
 
 // The main class for controlling logging for the robot
@@ -72,9 +75,9 @@ class Logger {
         int maxRows;
         int currentLine;
 
-        LogMessage brainLog[11];
+        const char* logFile;
 
-        bool savingLogs;
+        LogMessage brainLog[11];
 
         void brainLogShift() {
             for (int i=0; i < maxRows - 1; i++) {
@@ -82,28 +85,31 @@ class Logger {
             }
         };
 
-        bool initFileWriter() {
-            if (!Brain.SDcard.isInserted()) {
-                return false; 
-            }
-
-            // Todo: Check for last log -> Arhive it ( somehow )
-            //       Somehow create file write stream 
-
-            return true;
-        };
-
-        void writeLog(const char* message) {
-            if (!savingLogs) { return; }
-            // Todo: Figure out how to append files correctly
+        void appendLogFile(const char* message) {
+            if (!Brain.SDcard.isInserted()) { return; }
+            std::ofstream ofs;
+            ofs.open(logFile, std::ios_base::app);
+            ofs << "[ " << Brain.timer(seconds) << " ] " << message << "\n";
+            ofs.close();
         };
 
     public:
-        Logger(int renderX, int renderY, int maxLogs = 11) {
+        Logger(int renderX, int renderY, const char* outFile = "logs.txt", int maxLogs = 11) {
             xPos = renderX;
             yPos = renderY;
             maxRows = maxLogs;
-            savingLogs = initFileWriter();
+
+            logFile = outFile;
+
+            std::ofstream start(logFile);
+            start << "Program Started\n";
+            start.close();
+
+            //ofs.open(logFile, std::ios_base::app);
+
+            //std::ofstream outStream(logFile);
+            //outStream << "Program Started \n";
+            //outStream.close();
         };
 
         void newLog(const char* message, vex::color messageColor, int data = 0) {
@@ -115,7 +121,7 @@ class Logger {
             brainLog[currentLine] = LogMessage(message, messageColor, data);
             currentLine ++;
 
-            writeLog(message);
+            appendLogFile(message);
         };
 
         void render() {
@@ -448,14 +454,52 @@ struct DisplayText {
     int y;
     const char* id;
     vex::color displayColor;
+    fontType displayFont;
 };
 
-struct Button { // todo: implement this 
+struct DisplayBox {
     int x;
     int y;
     int width;
     int height;
-    //int (*cb)(Page*);
+    const char* id;
+    vex::color fillColor;
+    vex::color penColor;
+};
+
+class Page; // Forward decloration so the button class can build
+class MenuSystem;
+
+struct Button {
+    int x;
+    int y;
+    int width;
+    int height;
+    const char* id;
+    const char* text;
+    int data;
+    vex::color fillColor;
+    int (*cb)(Page*);
+};
+
+struct OverlayQuestion {
+    const char* question;    
+    const char* option1;
+    vex::color option1Color = white;    
+    const char* option2;
+    vex::color option2Color = white;
+};
+
+struct Toggle {
+    const char* displayText;
+    bool status;
+    vex::color offColor;
+    vex::color onColor;
+    int x;
+    int y;
+    int width;
+    int height;
+    
 };
 
 class Page {
@@ -474,9 +518,25 @@ class Page {
         Logger* loggerStorage;
         bool hasLogger = false;
 
+        Button buttonStorage[10];
+        int buttonsStored = 0;
+
+        DisplayBox displayBoxStorage[10];
+        int displayBoxsStored = 0;
+
+        Toggle toggleStorage[10];
+        int togglesStored = 0;
+
+
+        OverlayQuestion storedOverlay;
+        bool showOverlay = false;
+
 
         int (*dataUpdaterCB)(Page*);
         double updateSpeed = 0.00;
+
+        int (*pageLoadedCB)(Page*);
+        bool hasLoadedCB = false;
 
 
         vex::color determinColorFromRange(int value, colorRange ranges[]) {
@@ -488,6 +548,11 @@ class Page {
             return vex::color::black;
         }
         
+        bool inRectangle(int posX, int posY, int x, int y, int width, int height) {
+            return (posX > x && posX < x + width) && (posY > y && posY < y + height);
+        };
+
+
         void drawHorzProgressbar(ProgressBar bar) {
             Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
             Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
@@ -537,27 +602,92 @@ class Page {
     
             Brain.Screen.setFillColor(vex::color::black);
         };
+        void drawButton(Button button) {
+            Brain.Screen.setFillColor(button.fillColor);
+            Brain.Screen.drawRectangle(button.x, button.y, button.width, button.height);
+            Brain.Screen.setFillColor(black);
+            Brain.Screen.printAt(button.x + (button.width / 2) - (Brain.Screen.getStringWidth(button.text) / 2), button.y + (button.height / 2) + (Brain.Screen.getStringHeight(button.text) / 3), button.text, button.data);
+        };
+        void drawDisplayBox(DisplayBox box) {
+            Brain.Screen.setPenColor(box.penColor);
+            Brain.Screen.setFillColor(box.fillColor);
+            Brain.Screen.drawRectangle(box.x, box.y, box.width, box.height);
+            Brain.Screen.setPenColor(white);
+            Brain.Screen.setFillColor(black);            
+        }
+        void drawToggle(Toggle toggleButton) {
 
+            if (toggleButton.status) {
+                Brain.Screen.setFillColor(toggleButton.onColor);
+            } else {
+                Brain.Screen.setFillColor(toggleButton.offColor);
+            }
+
+            Brain.Screen.drawRectangle(toggleButton.x, toggleButton.y, toggleButton.width, toggleButton.height);
+            Brain.Screen.printAt(toggleButton.x + (toggleButton.width / 2) - (Brain.Screen.getStringWidth(toggleButton.displayText) / 2), toggleButton.y + (toggleButton.height / 2) + (Brain.Screen.getStringHeight(toggleButton.displayText) / 4), toggleButton.displayText);
+            Brain.Screen.setFillColor(black);
+        }
+
+        int screenXSize = 480;
+        int screenYSize = 240;
+
+        int overlayWidth = 300;
+        int overlayHeight = 150;
+
+        void drawOverlay(OverlayQuestion overlay) {
+            
+
+            int option1XCenter = (screenXSize / 2) - (overlayWidth / 4);
+            int option2XCenter = (screenXSize / 2) + (overlayWidth / 4);
+
+            Brain.Screen.drawRectangle((screenXSize / 2) - (overlayWidth / 2), (screenYSize / 2) - (overlayHeight / 2), overlayWidth, overlayHeight);
+
+            //Brain.Screen.setFont(fontType::mono20);
+            Brain.Screen.printAt((screenXSize / 2) - (Brain.Screen.getStringWidth(overlay.question) / 2), (screenYSize / 2) - (overlayHeight / 2) + 40, overlay.question);
+            Brain.Screen.setFont(fontType::mono30);
+
+            Brain.Screen.setPenColor(overlay.option1Color); 
+            Brain.Screen.printAt(option1XCenter - (Brain.Screen.getStringWidth(overlay.option1) / 2), (screenYSize / 2) + (overlayHeight / 2) - 25, overlay.option1);
+        
+            Brain.Screen.setPenColor(overlay.option2Color);
+            Brain.Screen.printAt(option2XCenter - (Brain.Screen.getStringWidth(overlay.option2) / 2), (screenYSize / 2) + (overlayHeight / 2) - 25, overlay.option2);
+
+            Brain.Screen.setPenColor(white);
+            Brain.Screen.setFont(fontType::mono20);
+
+
+        };
 
 
     public:
 
         bool hasCB = false;
+        MenuSystem* menuSystemPointer = nullptr; // So then the page can access the MenuSystem controlling it
 
         Page(int test) {};
 
         void render() {
 
+            // Render Logger
             if (hasLogger) {
                 loggerStorage->render();
             }
 
+            // Render Texts
             for (int i = 0; i < textsStored; i++) {
                 Brain.Screen.setPenColor(textStorage[i].displayColor);
+                Brain.Screen.setFont(textStorage[i].displayFont);
                 Brain.Screen.printAt(textStorage[i].x, textStorage[i].y, textStorage[i].text, textStorage[i].displayData);
                 Brain.Screen.setPenColor(white);
+                Brain.Screen.setFont(fontType::mono20);
             }
 
+            // Render Display Boxes
+            for (int i = 0; i < displayBoxsStored; i++) {
+                drawDisplayBox(displayBoxStorage[i]);
+            }
+
+            // Render Progress Bars
             for (int i = 0; i < barsStored; i++) {
                 if (barStorage[i].vertical) {
                     drawVertProgressBar(barStorage[i]);
@@ -566,8 +696,24 @@ class Page {
                 }
             }
 
+            // Render Line Graphs
             for (int i = 0; i < graphsStored; i++) {
                 graphStorage[i].draw();
+            }
+
+            // Render Buttons
+            for (int i = 0; i < buttonsStored; i++) {
+                drawButton(buttonStorage[i]);
+            }
+
+            // Render Toggles
+            for (int i = 0; i < togglesStored; i++) {
+                drawToggle(toggleStorage[i]);
+            }
+
+            // Render Overlay
+            if (showOverlay) {
+                drawOverlay(storedOverlay);
             }
         };
 
@@ -576,7 +722,12 @@ class Page {
             hasCB = true;
             updateSpeed = refreshRate;
         };
-        
+        void addPageLoadedCB(int (*cb)(Page*)) {
+            pageLoadedCB = cb;
+            hasLoadedCB = true;
+        };
+
+
         int updateData() {
             while (true) {
                 dataUpdaterCB(this);
@@ -584,6 +735,11 @@ class Page {
             }
             return 1;
         };
+        void pageLoaded() {
+            if (!hasLoadedCB) { return; };
+            pageLoadedCB(this);
+        };
+
 
         void addLogger(Logger* loggerMemLocation) {
             loggerStorage = loggerMemLocation;
@@ -636,22 +792,59 @@ class Page {
             graphIdStorage[graphsStored] = graphId;
             graphsStored++;
         };
-        void addText(const char* text, int x, int y, vex::color displayColor = white, const char* id = "") {
+        void addText(const char* text, int x, int y, vex::color displayColor = white, vex::fontType displayFont = fontType::mono20, const char* id = "") {
             textStorage[textsStored] = DisplayText();
             textStorage[textsStored].text = text;
             textStorage[textsStored].x = x;
             textStorage[textsStored].y = y;
             textStorage[textsStored].displayData = 0;
             textStorage[textsStored].displayColor = displayColor;
+            textStorage[textsStored].displayFont = displayFont;
             textStorage[textsStored].id = id;
             textsStored++;
         }
+        void addButton(const char* text, int x, int y, int width, int height, int (*cb)(Page*), const char* id = "", vex::color fillColor = black) {
+            buttonStorage[buttonsStored] = Button();
+            buttonStorage[buttonsStored].text = text;
+            buttonStorage[buttonsStored].x = x;
+            buttonStorage[buttonsStored].y = y;
+            buttonStorage[buttonsStored].width = width;
+            buttonStorage[buttonsStored].height = height;
+            buttonStorage[buttonsStored].id = id;
+            buttonStorage[buttonsStored].fillColor = fillColor;
+            buttonStorage[buttonsStored].cb = cb;
+            buttonsStored++;
+        };
+        void addDisplayBox(const char* id, int x, int y, int width, int height, vex::color fillColor, vex::color penColor = white) {
+            displayBoxStorage[displayBoxsStored] = DisplayBox();
+            displayBoxStorage[displayBoxsStored].x = x;
+            displayBoxStorage[displayBoxsStored].y = y;
+            displayBoxStorage[displayBoxsStored].width = width;
+            displayBoxStorage[displayBoxsStored].height = height;
+            displayBoxStorage[displayBoxsStored].id = id;
+            displayBoxStorage[displayBoxsStored].fillColor = fillColor;
+            displayBoxStorage[displayBoxsStored].penColor = penColor;
+            displayBoxsStored++;
+        }
+        void addToggle( const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height) {
+            toggleStorage[togglesStored] = Toggle();
+            toggleStorage[togglesStored].displayText = displayText;
+            toggleStorage[togglesStored].status = startStatus;
+            toggleStorage[togglesStored].offColor = offColor;
+            toggleStorage[togglesStored].onColor = onColor;
+            toggleStorage[togglesStored].x = x;
+            toggleStorage[togglesStored].y = y;
+            toggleStorage[togglesStored].width = width;
+            toggleStorage[togglesStored].height = height;
+            togglesStored++;
+        };
 
 
         void setProgressBarValue(const char* barId, int value) {
             for (int i = 0; i < barsStored; i++) {
                 if (strcmp(barId, barStorage[i].id) == 0) {
                     barStorage[i].value = value;
+                    return;
                 }
             }
         };
@@ -659,16 +852,49 @@ class Page {
             for (int i = 0; i < graphsStored; i++) {
                 if (strcmp(graphId, graphIdStorage[i]) == 0) {
                     graphStorage[i].addPoint(value);
+                    return;
                 }
             }
         };
-        void setTextData(const char* textId, int data, const char* newText = "") {
+        void setTextData(const char* textId, vex::color displayColor = NAN, const char* newText = "", int data = NAN) {
             for (int i = 0; i < textsStored; i++) {
                 if (strcmp(textStorage[i].id, textId) == 0) {
-                    textStorage[i].displayData = data;
+                    if (displayColor != NAN) {
+                        textStorage[i].displayColor = displayColor;
+                    }
+                    if (data != NAN) {
+                        textStorage[i].displayData = data;
+                    }
                     if (strcmp(newText, "") != 0) {
                         textStorage[i].text = newText;
                     }
+                    return;
+                }
+            }
+        };
+        void setButtonData(const char* buttonId, vex::color fillColor, int data = 0) {
+            for (int i = 0; i < buttonsStored; i++) {
+                if (strcmp(buttonStorage[i].text, buttonId) == 0) {
+                    buttonStorage[i].data = data;
+                    buttonStorage[i].fillColor = fillColor;
+                    return;
+                }
+            }
+        }
+        void setDisplayBoxData(const char* boxId, vex::color fillColor, vex::color penColor = white) {
+            for (int i = 0; i < displayBoxsStored; i++) {
+                if (strcmp(displayBoxStorage[i].id, boxId) == 0) {
+                    displayBoxStorage[i].fillColor = fillColor;
+                    displayBoxStorage[i].penColor = penColor;
+                    return;
+                }
+            }
+        };
+        void setToggleStatus(const char* toggleId, bool status) {
+            for (int i = 0; i < togglesStored; i++) {
+                if (strcmp(toggleStorage[i].displayText, toggleId) == 0) {
+                    toggleStorage[i].status = status;
+                    return;
                 }
             }
         };
@@ -678,7 +904,73 @@ class Page {
         };
 
 
+        bool getToggleStatus(const char* toggleId) {
+            for (int i = 0; i < togglesStored; i++) {
+                if (strcmp(toggleStorage[i].displayText, toggleId) == 0) {
+                    return toggleStorage[i].status;
+                }
+            }
+            return false;
+        }
+
+
+        // Returns false for option1 and true for option2
+        bool overlayQuestion(OverlayQuestion overlay) {
+            storedOverlay = overlay;
+            showOverlay = true;
+
+            int lastX = Brain.Screen.xPosition();
+            int lastY = Brain.Screen.yPosition();
+
+            while (true) {
+
+                int clickX = Brain.Screen.xPosition();
+                int clickY = Brain.Screen.yPosition();
+
+                if (clickX != lastX && clickY != lastY) {
+                    if (inRectangle(clickX, clickY, (screenXSize / 2) - (overlayWidth / 2), (screenYSize / 2), overlayWidth / 2, overlayHeight / 2)) {
+                        showOverlay = false;
+                        return false;
+                    } 
+                    if (inRectangle(clickX, clickY, screenXSize / 2, screenYSize / 2, overlayWidth / 2, overlayHeight / 2)) {
+                        showOverlay = false;
+                        return true;
+                    };
+                }
+                wait(0.1, seconds);
+
+            };
+        };
+
+        void screenPressed(int x, int y) {
+            
+            for (int i = 0; i < buttonsStored; i++) {
+                if (inRectangle(x, y, buttonStorage[i].x, buttonStorage[i].y, buttonStorage[i].width, buttonStorage[i].height)) {
+                    buttonStorage[i].cb(this);
+                    return;
+                }
+            }
+
+            for (int i = 0; i < togglesStored; i++) {
+                if (inRectangle(x, y, toggleStorage[i].x, toggleStorage[i].y, toggleStorage[i].width, toggleStorage[i].height)) {
+                    if (toggleStorage[i].status) {
+                        toggleStorage[i].status = false;
+                    } else {
+                        toggleStorage[i].status = true;
+                    }
+                }
+            }
+
+        }
+
 };
+
+struct Notification {
+    const char* text;
+    vex::color displayColor = white;
+    double disapearTime;
+};
+
 
 // I would put this in the MenuSystem Class but I can't call it as a task() in the MenuSystem Class
 int mainDataUpdater(void* pageToUpdate) {
@@ -706,7 +998,6 @@ class MenuSystem {
             if (!pageStorage[displayPage]->hasCB) { return; }
             updaterTask = task(mainDataUpdater, (void*)pageStorage[displayPage], task::taskPrioritylow);
             isUpdating = true;
-            //brainDebug("Started Task");
         }; 
         void stopUpdaterTask() {
             updaterTask.stop(updaterTask);
@@ -715,23 +1006,62 @@ class MenuSystem {
         };
 
 
-    public:
+        task notificationTask;
+        Notification notifications[5];
+        int notifNumber = 0;
+        bool showingNotifications = false;
 
-        MenuSystem() {
-            // Yeet
+        void shiftNotifications() {
+            for (int i=0; i < 5; i++) {
+                notifications[i] = notifications[i + 1];
+            }
         };
 
+        void drawNotification(int rowNum, Notification notif) {
+            int screenXSize = 480;
+            //int width = 100;
+            int width = Brain.Screen.getStringWidth(notif.text) + 20;
+            //int height = 40;
+            int height = Brain.Screen.getStringHeight(notif.text) + 10;
+
+            Brain.Screen.drawRectangle(screenXSize - width, (rowNum * height), width, height);
+            Brain.Screen.setPenColor(notif.displayColor);
+            Brain.Screen.printAt(screenXSize - (width / 2) - (Brain.Screen.getStringWidth(notif.text) / 2), (rowNum * height) + (height / 2) + (Brain.Screen.getStringHeight(notif.text) / 4), notif.text);
+            Brain.Screen.setPenColor(white);
+        }
+
+    public:
+
+        MenuSystem(bool displayNotifications) {
+            showingNotifications = displayNotifications;
+        };
+        
+
         void render() {
+
+            // Render Page
             if (displayPage == -1) {
                 Brain.Screen.printAt(20, 100, "No Pages In Storage");
             } else {
                 pageStorage[displayPage]->render();
                 if (firstTimeRender) { startUpdaterTask(displayPage); firstTimeRender = false;}
             }
+
+            // Render Notifications
+            if (showingNotifications) {
+                for (int i = 0; i < notifNumber; i++) {
+                    drawNotification(i, notifications[i]);
+                    if (notifications[i].disapearTime < Brain.timer(msec)) {
+                        shiftNotifications();
+                        notifNumber--;
+                    }
+                }
+            }
         };
 
         void addPage(const char* pageId, Page* page) {
             pageStorage[pagesStored] = page;
+            pageStorage[pagesStored]->menuSystemPointer = this;
             pageIdStorage[pagesStored] = pageId;
             pagesStored++;
             if (displayPage == -1 && pagesStored == 1) {
@@ -745,6 +1075,7 @@ class MenuSystem {
                     if (displayPage != i) {
                         displayPage = i;
                         startUpdaterTask(displayPage);
+                        pageStorage[i]->pageLoaded();
                         return;
                     } else { return; }
                 }
@@ -759,65 +1090,257 @@ class MenuSystem {
             }
             return nullptr;
         }
+        
+        void screenPressed() {
+            pageStorage[displayPage]->screenPressed(Brain.Screen.xPosition(), Brain.Screen.yPosition());
+        };
+
+
+
+        void newNotification(const char* text, int displayTime, vex::color displayColor = white) {
+            notifications[notifNumber] = Notification();
+            notifications[notifNumber].text = text;
+            notifications[notifNumber].displayColor = displayColor;
+            notifications[notifNumber].disapearTime = Brain.timer(msec) + (1000.00 * displayTime);
+            notifNumber++;
+        };
+
 };
 
+
+
+
+
+
 // Define head elements
-Logger BrainLogs(1, 1);
-MenuSystem mainRenderer;
+Logger BrainLogs(1, 1, "logs.txt", 10);
+MenuSystem mainRenderer(true);
 
 // Define Pages
 Page homePage(1);
 Page debugPage(1);
-Page autonPage(1);
+Page configPage(1);
+
+
+// Called when the screen is pressed
+void screenPressed() {mainRenderer.screenPressed();}
+int notificationCheck() {
+    
+    int checkSpeed = 1;
+
+    // Values to watch for
+    bool sdCard = true;
+
+
+
+    while (true) {
+
+        if ( sdCard != Brain.SDcard.isInserted() ) { 
+            sdCard = Brain.SDcard.isInserted();
+            if ( sdCard ) { mainRenderer.newNotification("SD Card Inserted", 4, green); } else { mainRenderer.newNotification("SD Card Removed", 5, red);} 
+        }
+
+
+        wait(checkSpeed, seconds);
+    }
+
+    return 1;
+};
+
+
 
 
 // Define the update function for the home page
 int updateHome(Page* self) {
-
-    double time = Brain.timer(vex::timeUnits::msec) / 1000;
-    double value = int(sin(time)*50) + 50;
     self->setProgressBarValue("battery", Brain.Battery.capacity());
-    self->setTextData("mainText", value);
-
+    
     return 1;
 }
 
+
+// Define Standard Buttons
+int gotoMainPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("main");
+    return 1;
+};
+int gotoDebugPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("debug");
+    return 1;
+};
+int gotoConfigPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("config");
+    return 1;
+};
+
+
+
+// Config Page Functions
+void configPageInit(Page* currentPage, ai* robotAI) {
+    int x = 0;
+    int y = 0;
+    for (int i = 0; i < robotAI->totalConfigs; i++) {
+        currentPage->addToggle(robotAI->configNames[i].c_str(), false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20 + (110 * x), 80 + (60 * y), 100, 40);
+        x++;
+        if (x == 4) { y++; x = 0; }
+    }
+};
+void setConfigs() {
+    for (int i = 0; i < botAI.totalConfigs; i++) {
+        configPage.setToggleStatus(botAI.configNames[i].c_str(), botAI.getConfig(botAI.configNames[i].c_str()));
+        wait(0.01, seconds);
+    }
+};
+void saveConfigs() {
+
+    brainFancyDebug("Saving New Config", color::purple, true);
+
+    for (int i = 0; i < botAI.totalConfigs; i++) {
+        botAI.saveConfig(botAI.configNames[i].c_str(), configPage.getToggleStatus(botAI.configNames[i].c_str()));
+    }
+};
+
+// Define the page loaded callback for the config page
+int loadedConfigPage(Page* self) {
+    if (!Brain.SDcard.isInserted()) {
+        self->setTextData("savedStatus", red, "SD Card Not Inserted");
+        botAI.configMenuStatus = false;
+    } else {
+        self->setTextData("savedStatus", white, "Loading Config...");
+        botAI.configMenuStatus = true;
+        wait(0.25, seconds);
+        setConfigs();
+        self->setTextData("savedStatus", white, "Ready");
+    };
+    return 1;
+};
+// Config Exit Button
+int configExitButton(Page* self) {
+
+    if (!botAI.configMenuStatus) {
+        
+        OverlayQuestion confirmOverlay;
+        confirmOverlay.question = "What do you want to do?";
+        confirmOverlay.option1 = "Reload";
+        confirmOverlay.option1Color = green;
+        confirmOverlay.option2 = "Exit";
+        confirmOverlay.option2Color = red;
+
+        if (self->overlayQuestion(confirmOverlay)) {
+            // Option 2
+            self->menuSystemPointer->gotoPage("main");
+        } else {
+            // Option 1
+             self->menuSystemPointer->gotoPage("main");
+            self->menuSystemPointer->gotoPage("config");
+        }
+    } else {
+
+        OverlayQuestion confirmOverlay;
+        confirmOverlay.question = "Do You Want to Save?";
+        confirmOverlay.option1 = "No";
+        confirmOverlay.option1Color = red;
+        confirmOverlay.option2 = "Yes";
+        confirmOverlay.option2Color = green;
+
+        if (self->overlayQuestion(confirmOverlay)) {
+            // Option 2
+
+            saveConfigs();
+            botAI.init();
+
+            self->menuSystemPointer->gotoPage("main");
+        } else {
+            // Option 1
+            setConfigs();
+            self->menuSystemPointer->gotoPage("main");
+        }
+    }
+
+    return 1;
+};
+
+
+
 // Define the update function for the debug page
 int updateDebug(Page* self) {
-    //double time = Brain.timer(vex::timeUnits::msec) / 1000;
-    //double value = int(sin(time)*50) + 50;
-
     self->setProgressBarValue("fl", leftMotorA.temperature(vex::temperatureUnits::fahrenheit));
     self->setProgressBarValue("fr", rightMotorA.temperature(vex::temperatureUnits::fahrenheit));
     self->setProgressBarValue("bl", leftMotorB.temperature(vex::temperatureUnits::fahrenheit));
     self->setProgressBarValue("br", rightMotorB.temperature(vex::temperatureUnits::fahrenheit));
 
+    if (Brain.SDcard.isInserted()) { // Update the SD Card Status Box
+        self->setDisplayBoxData("sdStatus", green, white);
+    } else {
+        self->setDisplayBoxData("sdStatus", red, white);
+    }
+    
+    if (inertialSensor.installed() && inertialSensor.isCalibrating()) { // Update the intertial sensor status box
+        self->setDisplayBoxData("gyroStatus", green, white);
+    } else {
+        self->setDisplayBoxData("gyroStatus", red, white);
+    }
+
+    if (botAI.isReady()) { // Update the auton status
+        self->setDisplayBoxData("autonStatus", green, white);
+    } else {
+        self->setDisplayBoxData("autonStatus", red, white);
+    }
+
+    if (Competition.isFieldControl()) { // Update feild stats
+        self->setDisplayBoxData("feildStatus", green, white);
+    } else {
+        self->setDisplayBoxData("feildStatus", red, white);
+    }
+
     return 1;
 }
+// Declare Debug Menu Stuff
+int dubugReloadButton(Page* self) {
+    
+    botAI.init();
+
+    return 1;
+};
+
+
 
 
 
 int brainDisplayerInit() {
 
+
+    Brain.Screen.pressed(screenPressed);
+    task notificationTask(notificationCheck, task::taskPrioritylow);
+
     // Init Gradients
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
     Gradient graphGradient = Gradient(10, 300, 10, 100);
-    Gradient rainbowGradient = Gradient(rgbColor("red"), rgbColor(237, 212, 252), 0, 100);
 
     // Add pages to the main renderer
     mainRenderer.addPage("main", &homePage);
     mainRenderer.addPage("debug", &debugPage);
-    mainRenderer.addPage("auton", &autonPage);
+    mainRenderer.addPage("config", &configPage);
+
+
 
     // Configure the home page
+    homePage.addText("BURT OS", 20, 50, white, fontType::mono40);
+    homePage.addText("Developed by Hayden Steele", 22, 75, white, fontType::mono15);
+
+    homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
+    homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
+
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
-    homePage.addLogger(&BrainLogs);
-    homePage.addText("This is a test :) %d", 230, 100, white, "mainText");
+    homePage.addDataUpdaterCB(updateHome, 1);
 
 
-    autonPage.addText("Auton Page", 20, 20, cyan, "title");
-    autonPage.addText("", 20, 100, white, "description");
+    // Configure Page
+    configPage.addText("Configure Burt", 20, 40, white, fontType::mono30, "title");
+    configPage.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
+    configPage.addButton("Back", 380, 210, 100, 30, configExitButton, "mainPageButton");
+    configPageInit(&configPage, &botAI);
+    configPage.addPageLoadedCB(loadedConfigPage);
 
 
     // Configure the debug page
@@ -827,26 +1350,51 @@ int brainDisplayerInit() {
     debugPage.addVertProgressBar("bl", 380, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
     debugPage.addVertProgressBar("br", 430, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
 
+    debugPage.addText("SD Card", 405 - 210, 75 - 55);
+    debugPage.addDisplayBox("sdStatus", 200, 80 - 55, 65, 15, red, white);
+    debugPage.addText("Gryo", 420 - 210, 110 - 55);
+    debugPage.addDisplayBox("gyroStatus", 410 - 210, 115 - 55, 65, 15, red, white);
+    debugPage.addText("Auton", 417 - 210, 145 - 55);
+    debugPage.addDisplayBox("autonStatus", 410 - 210, 150 - 55, 65, 15, red, white);
+    debugPage.addText("Feild", 420 - 210, 180 - 55);
+    debugPage.addDisplayBox("feildStatus", 410 - 210, 185 - 55, 65, 15, red, white);
 
+    debugPage.addButton("Reload", 100, 210, 100, 30, dubugReloadButton, "reloadButton");
+    debugPage.addButton("Back", 380, 210, 100, 30, gotoMainPageButton, "mainPageButton");
     debugPage.addDataUpdaterCB(updateDebug, 1);
-    homePage.addDataUpdaterCB(updateHome, 1);
+
 
     return 1;
 };
+
+
+
+
+
 
 // Main Loop For Rendering the Brain Display
 int brainDisplayer() {
 
     brainDisplayerInit();
+    
 
     double waitTime = 1; // Seconds    
 
     double endTime = Brain.timer(vex::timeUnits::msec) + (waitTime * 1000);
-    while (endTime > Brain.timer(vex::timeUnits::msec)) {
+
+
+    double deltaTime = 0.00;
+    while(true) {
+        double startTime = Brain.timer(msec);
         Brain.Screen.clearScreen();
-        Brain.Screen.printAt(20, 40, "Calibrating... Do not touch the robot");
+        // Show the screen FPS
+        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime));
         
-        char barArray[40];
+        mainRenderer.render();
+
+
+        /**
+        char barArray[20];
         int arrayLength = sizeof(barArray) / sizeof(char);
         barArray[0] = '[';
         barArray[arrayLength] = ']';
@@ -860,19 +1408,8 @@ int brainDisplayer() {
                 barArray[i] = ' ';
             }
         }
-        Brain.Screen.printAt(20, 80, barArray);
-        Brain.Screen.render();
-    }
-    
-    
-    double deltaTime = 0.00;
-    while(true) {
-        double startTime = Brain.timer(msec);
-        Brain.Screen.clearScreen();
-        // Show the screen FPS
-        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime));
-        
-        mainRenderer.render();
+        Brain.Screen.printAt(20, 200, barArray);
+        */
 
         // Calculate the fps
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime));
@@ -888,15 +1425,16 @@ int brainDisplayer() {
 int controllerDisplay() {
     while (true){
         
-        // Main Controller Displayer
-        mainController.Screen.clearScreen();
-        mainController.Screen.setCursor(1, 1);
-        mainController.Screen.print("Juice Left: ");
-        mainController.Screen.print(Brain.Battery.capacity(percent));
+        if (mainController.installed()) {
+            // Main Controller Displayer
+            mainController.Screen.clearScreen();
+            mainController.Screen.setCursor(1, 1);
+            mainController.Screen.print("Juice Left: ");
+            mainController.Screen.print(Brain.Battery.capacity(percent));
 
-        mainController.Screen.newLine();
-        mainController.Screen.print(mainController.Axis2.position());
-
+            mainController.Screen.newLine();
+            mainController.Screen.print(mainController.Axis2.position());            
+        }
 
         // Alt Controller Displayer
         if (altController.installed()) {
@@ -936,15 +1474,20 @@ void brainPageChangeData(const char* pageName, const char* pointId, int data) {
     pagePointer->massSetData(pointId, data);
 }
 
+void brainPageChangeText(const char* pageName, const char* textId, vex::color displayColor) {
+    Page* pagePointer = mainRenderer.searchPages(pageName);
+    if (pagePointer == nullptr) { return; }
+    pagePointer->setTextData(textId, displayColor);
+}
+void brainPageChangeText(const char* pageName, const char* textId, const char* newText) {
+    Page* pagePointer = mainRenderer.searchPages(pageName);
+    if (pagePointer == nullptr) { return; }
+    pagePointer->setTextData(textId, NAN, newText);
+}
 void brainPageChangeText(const char* pageName, const char* textId, int data) {
     Page* pagePointer = mainRenderer.searchPages(pageName);
     if (pagePointer == nullptr) { return; }
-    pagePointer->setTextData(textId, data);
-}
-void brainPageChangeText(const char* pageName, const char* textId, int data, const char* newText) {
-    Page* pagePointer = mainRenderer.searchPages(pageName);
-    if (pagePointer == nullptr) { return; }
-    pagePointer->setTextData(textId, data, newText);
+    pagePointer->setTextData(textId, NAN, "", data);
 }
 
 
@@ -952,6 +1495,7 @@ void brainPageChangeText(const char* pageName, const char* textId, int data, con
 void brainError(const char* message) {
   
     BrainLogs.newLog(message, vex::color::red);
+    mainRenderer.newNotification(message, 5, red);
 
     cout << "ERROR: " << message << endl;
 }
@@ -977,6 +1521,14 @@ void brainFancyDebug(const char* message, vex::color messageColor) {
 void brainFancyDebug(const char* message, vex::color messageColor, int data) {
   
     BrainLogs.newLog(message, messageColor, data);
+
+    cout << "DEBUG: " << message << endl;
+}
+
+void brainFancyDebug(const char* message, vex::color messageColor, bool showNotification) {
+  
+    BrainLogs.newLog(message, messageColor);
+    mainRenderer.newNotification(message, 4, messageColor);
 
     cout << "DEBUG: " << message << endl;
 }

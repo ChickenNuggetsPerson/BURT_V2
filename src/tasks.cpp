@@ -15,10 +15,12 @@ void rightPressed() {
   brainChangePage("main");
 };
 void leftPressed() {
-  brainChangePage("debug");
+  brainChangePage("config");
 };
 
 void pre_auton(void) {
+
+  brainDebug("Initializing Burt");
 
   altController.ButtonDown.pressed(debugDisable);
   altController.ButtonLeft.pressed(debugAuton);
