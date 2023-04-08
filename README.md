@@ -3,11 +3,9 @@
 
 ![HomePage](images/home.png)
 
-This is just the initial starting code for Burt before the new 2023 - 2024 game is released
+The code for team 84075A in the Over Under game ( 2023 - 2024 )
 
-Just a simple framework to build off of once the game releases
-
-Since the 2022 - 2023 game year was my first year programming in c++, I am slowly learning how to do this so please don't judge my lack of industry standards when programming.
+"Since the 2022 - 2023 game year was my first year programming in C++, I am slowly learning how to do this so please don't judge my lack of industry standards when programming 😐" - Hayden
 
 
 # Framework Features:
