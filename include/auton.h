@@ -1,4 +1,4 @@
-
+#include "odometry.h"
 #include <string>
 #pragma once
 
@@ -12,9 +12,12 @@ class ai {
 
     bool loaded = false;
 
+    OdometrySystem* odometrySystemPointer;
+
   public:
 
     std::string configFoler = "config/";
+    std::string configFileType = ".txt";
 
     int totalConfigs = 8;
     std::string configNames[10] { // Random config names for now
@@ -32,12 +35,16 @@ class ai {
 
     bool configMenuStatus = false;
 
+    ai(OdometrySystem* odometrySystemPointer);
+
     void init();
 
     bool getConfig(const char* configName);
     void saveConfig(const char* configName, bool value);
 
     bool isReady();
+
+    Position getStartPos();
 
     void started();
 

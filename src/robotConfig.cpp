@@ -6,7 +6,8 @@ using namespace vex;
 
 competition Competition;
 brain Brain;
-ai botAI = ai();
+OdometrySystem Odometry;
+ai botAI = ai(&Odometry);
 
 // Drivetrain
 

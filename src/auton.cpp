@@ -4,31 +4,36 @@
 
 using namespace vex;
 
+ai::ai(OdometrySystem* systemPointer) {
+    odometrySystemPointer = systemPointer;
+}
+
 void ai::init() {
 
     if (loaded) { 
-        // Reset auton
+        // Reset auton config
         loaded = false;
         for (int i = 0; i < totalConfigs; i++) {
             configStorage[i] = false;
         }
         brainFancyDebug("Auton Reset", blue, true);
     }
-    // Load auton
-
+    // Load auton Config
     if (Brain.SDcard.isInserted()) {
         for (int i = 0; i < totalConfigs; i++) {
-            if (readFile((configFoler + configNames[i]).c_str()) == 1) {
+            unsigned int valueRead = readFile((configFoler + configNames[i] + configFileType).c_str());
+            if ( valueRead == 1) {
                 configStorage[i] = true;
             } else {
                 configStorage[i] = false;
-            }
+            } 
 
-            //std::cout << configNames[i] << " " << configStorage[i] << std::endl; 
+            //std::cout << (configFoler + configNames[i]).c_str() << " " << configStorage[i] << " " << valueRead << std::endl; 
             wait(0.1, seconds);
         }
         loaded = true;
         brainFancyDebug("Auton Initialized", cyan, true);
+        Odometry.restart(getStartPos());
     } else {
         brainError("No SD Card");
     }
@@ -44,28 +49,44 @@ bool ai::getConfig(const char* configName) {
             return configStorage[i];
         }
     }
-
     return false;
 };
 
 void ai::saveConfig(const char* configName, bool value) {
+
+        std::cout << "Saving: " << configName << " " << value << std::endl;
+
         for (int i = 0; i < totalConfigs; i++) {
         if (configNames[i] == std::string(configName)) {
-            if (value) {
-                writeFile((configFoler + configNames[i]).c_str(), 1);
-            } else {
-                writeFile((configFoler + configNames[i]).c_str(), 0);
-            }
+            int writeVal = 0;
+            if (value) { writeVal= 1;}
+
+            writeFile((configFoler + configNames[i] + configFileType).c_str(), writeVal);
+                
+            
         }
     }
 
 };
 
+Position ai::getStartPos() {
+
+    // TODO: Once game released, determin starting positions and make a lookup based on config 
+
+    if (!Brain.SDcard.isInserted()) { return Position(); }
+
+    Position tempPos;
+    tempPos.x = 10;
+    tempPos.y = 20;
+    tempPos.rot = 1*PI;
+
+    return tempPos;
+}
 
 // Returns true if the autonomous is ready
 bool ai::isReady() {return loaded;};
 
 void ai::started() {
-    brainFancyDebug("Auton Started", vex::color::cyan);
+    brainFancyDebug("Auton Started", vex::color::cyan, true);
 };
 

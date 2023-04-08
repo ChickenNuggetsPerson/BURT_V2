@@ -21,12 +21,12 @@ using std::endl;
 int main() {
 
   cout << endl << endl << endl;
-
+  
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);
 
   pre_auton();
-
+  
   whenStarted();
 
   // Prevent main from exiting with an infinite loop.

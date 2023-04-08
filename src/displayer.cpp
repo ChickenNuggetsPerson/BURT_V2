@@ -87,10 +87,11 @@ class Logger {
 
         void appendLogFile(const char* message) {
             if (!Brain.SDcard.isInserted()) { return; }
-            std::ofstream ofs;
-            ofs.open(logFile, std::ios_base::app);
-            ofs << "[ " << Brain.timer(seconds) << " ] " << message << "\n";
-            ofs.close();
+
+            std::ostringstream formattedMessage;
+            formattedMessage << "[ " << Brain.timer(seconds) << " ] " << message;
+
+            appendFile(logFile, formattedMessage.str().c_str());
         };
 
     public:
@@ -101,15 +102,7 @@ class Logger {
 
             logFile = outFile;
 
-            std::ofstream start(logFile);
-            start << "Program Started\n";
-            start.close();
-
-            //ofs.open(logFile, std::ios_base::app);
-
-            //std::ofstream outStream(logFile);
-            //outStream << "Program Started \n";
-            //outStream.close();
+            writeFile(logFile, "Start of Logs");
         };
 
         void newLog(const char* message, vex::color messageColor, int data = 0) {
@@ -449,7 +442,9 @@ struct ProgressBar {
 
 struct DisplayText {
     const char* text;
-    int displayData;
+    int displayData = NAN;
+    double displayDoubleData = NAN;
+    bool displayInt = true;
     int x;
     int y;
     const char* id;
@@ -664,6 +659,8 @@ class Page {
         bool hasCB = false;
         MenuSystem* menuSystemPointer = nullptr; // So then the page can access the MenuSystem controlling it
 
+        bool pageChanged = false;
+
         Page(int test) {};
 
         void render() {
@@ -677,7 +674,11 @@ class Page {
             for (int i = 0; i < textsStored; i++) {
                 Brain.Screen.setPenColor(textStorage[i].displayColor);
                 Brain.Screen.setFont(textStorage[i].displayFont);
-                Brain.Screen.printAt(textStorage[i].x, textStorage[i].y, textStorage[i].text, textStorage[i].displayData);
+                if (!textStorage[i].displayInt) {
+                    Brain.Screen.printAt(textStorage[i].x, textStorage[i].y, textStorage[i].text, textStorage[i].displayDoubleData);
+                } else {
+                    Brain.Screen.printAt(textStorage[i].x, textStorage[i].y, textStorage[i].text, textStorage[i].displayData);
+                }
                 Brain.Screen.setPenColor(white);
                 Brain.Screen.setFont(fontType::mono20);
             }
@@ -856,14 +857,22 @@ class Page {
                 }
             }
         };
-        void setTextData(const char* textId, vex::color displayColor = NAN, const char* newText = "", int data = NAN) {
+        
+        void setTextData(const char* textId, vex::color displayColor) {
             for (int i = 0; i < textsStored; i++) {
                 if (strcmp(textStorage[i].id, textId) == 0) {
                     if (displayColor != NAN) {
                         textStorage[i].displayColor = displayColor;
                     }
-                    if (data != NAN) {
-                        textStorage[i].displayData = data;
+                    return;
+                }
+            }
+        };
+        void setTextData(const char* textId, vex::color displayColor, const char* newText) {
+            for (int i = 0; i < textsStored; i++) {
+                if (strcmp(textStorage[i].id, textId) == 0) {
+                    if (displayColor != NAN) {
+                        textStorage[i].displayColor = displayColor;
                     }
                     if (strcmp(newText, "") != 0) {
                         textStorage[i].text = newText;
@@ -872,6 +881,31 @@ class Page {
                 }
             }
         };
+        void setTextData(const char* textId, int data) {
+            for (int i = 0; i < textsStored; i++) {
+                if (strcmp(textStorage[i].id, textId) == 0) {
+                    if (data != NAN) {
+                        textStorage[i].displayData = data;
+                    }
+                    textStorage[i].displayDoubleData = NAN;
+                    textStorage[i].displayInt = true;
+                    return;
+                }
+            }
+        };
+        void setTextData(const char* textId, double doubleData) {
+            for (int i = 0; i < textsStored; i++) {
+                if (strcmp(textStorage[i].id, textId) == 0) {
+                    textStorage[i].displayData = NAN;
+                    if (doubleData != NAN) {
+                        textStorage[i].displayDoubleData = doubleData;
+                    }
+                    textStorage[i].displayInt = false;
+                    return;
+                }
+            }
+        };
+        
         void setButtonData(const char* buttonId, vex::color fillColor, int data = 0) {
             for (int i = 0; i < buttonsStored; i++) {
                 if (strcmp(buttonStorage[i].text, buttonId) == 0) {
@@ -943,7 +977,7 @@ class Page {
         };
 
         void screenPressed(int x, int y) {
-            
+            // Check for buttons
             for (int i = 0; i < buttonsStored; i++) {
                 if (inRectangle(x, y, buttonStorage[i].x, buttonStorage[i].y, buttonStorage[i].width, buttonStorage[i].height)) {
                     buttonStorage[i].cb(this);
@@ -951,8 +985,10 @@ class Page {
                 }
             }
 
+            // Check for toggles
             for (int i = 0; i < togglesStored; i++) {
                 if (inRectangle(x, y, toggleStorage[i].x, toggleStorage[i].y, toggleStorage[i].width, toggleStorage[i].height)) {
+                    pageChanged = true;
                     if (toggleStorage[i].status) {
                         toggleStorage[i].status = false;
                     } else {
@@ -1119,6 +1155,7 @@ MenuSystem mainRenderer(true);
 // Define Pages
 Page homePage(1);
 Page debugPage(1);
+Page odometryPage(1);
 Page configPage(1);
 
 
@@ -1130,7 +1167,8 @@ int notificationCheck() {
 
     // Values to watch for
     bool sdCard = true;
-
+    bool inertialCalibrating = false;
+    bool mainControllerStatus = true;
 
 
     while (true) {
@@ -1139,7 +1177,14 @@ int notificationCheck() {
             sdCard = Brain.SDcard.isInserted();
             if ( sdCard ) { mainRenderer.newNotification("SD Card Inserted", 4, green); } else { mainRenderer.newNotification("SD Card Removed", 5, red);} 
         }
-
+        if ( inertialCalibrating != inertialSensor.installed() && inertialSensor.isCalibrating() ) { 
+            inertialCalibrating = inertialSensor.installed() && inertialSensor.isCalibrating();
+            if ( inertialCalibrating ) { mainRenderer.newNotification("Starting Calibration", 4, green); } else { mainRenderer.newNotification("Calibration Done", 5, green);} 
+        }        
+        if (mainControllerStatus != mainController.installed()) {
+            mainControllerStatus = mainController.installed();
+            if ( mainControllerStatus ) { brainFancyDebug("Controller Connected", green, true); } else { brainError("Controller Disconnected"); }
+        }
 
         wait(checkSpeed, seconds);
     }
@@ -1171,7 +1216,10 @@ int gotoConfigPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("config");
     return 1;
 };
-
+int gotoOdometryPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("odometry");
+    return 1;
+}
 
 
 // Config Page Functions
@@ -1201,6 +1249,7 @@ void saveConfigs() {
 
 // Define the page loaded callback for the config page
 int loadedConfigPage(Page* self) {
+    self->pageChanged = false;
     if (!Brain.SDcard.isInserted()) {
         self->setTextData("savedStatus", red, "SD Card Not Inserted");
         botAI.configMenuStatus = false;
@@ -1234,24 +1283,27 @@ int configExitButton(Page* self) {
             self->menuSystemPointer->gotoPage("config");
         }
     } else {
+        if (self->pageChanged) {
+            OverlayQuestion confirmOverlay;
+            confirmOverlay.question = "Do You Want to Save?";
+            confirmOverlay.option1 = "No";
+            confirmOverlay.option1Color = red;
+            confirmOverlay.option2 = "Yes";
+            confirmOverlay.option2Color = green;
 
-        OverlayQuestion confirmOverlay;
-        confirmOverlay.question = "Do You Want to Save?";
-        confirmOverlay.option1 = "No";
-        confirmOverlay.option1Color = red;
-        confirmOverlay.option2 = "Yes";
-        confirmOverlay.option2Color = green;
+            if (self->overlayQuestion(confirmOverlay)) {
+                // Option 2
 
-        if (self->overlayQuestion(confirmOverlay)) {
-            // Option 2
+                saveConfigs();
+                botAI.init();
 
-            saveConfigs();
-            botAI.init();
-
-            self->menuSystemPointer->gotoPage("main");
+                self->menuSystemPointer->gotoPage("main");
+            } else {
+                // Option 1
+                setConfigs();
+                self->menuSystemPointer->gotoPage("main");
+            }
         } else {
-            // Option 1
-            setConfigs();
             self->menuSystemPointer->gotoPage("main");
         }
     }
@@ -1269,27 +1321,27 @@ int updateDebug(Page* self) {
     self->setProgressBarValue("br", rightMotorB.temperature(vex::temperatureUnits::fahrenheit));
 
     if (Brain.SDcard.isInserted()) { // Update the SD Card Status Box
-        self->setDisplayBoxData("sdStatus", green, white);
+        self->setTextData("sdStatus", green);
     } else {
-        self->setDisplayBoxData("sdStatus", red, white);
+        self->setTextData("sdStatus", red);
     }
     
-    if (inertialSensor.installed() && inertialSensor.isCalibrating()) { // Update the intertial sensor status box
-        self->setDisplayBoxData("gyroStatus", green, white);
+    if (Odometry.isTracking) { // Update the tracking status box
+        self->setTextData("trackingStatus", green);
     } else {
-        self->setDisplayBoxData("gyroStatus", red, white);
+        self->setTextData("trackingStatus", red);
     }
 
     if (botAI.isReady()) { // Update the auton status
-        self->setDisplayBoxData("autonStatus", green, white);
+        self->setTextData("autonStatus", green);
     } else {
-        self->setDisplayBoxData("autonStatus", red, white);
+        self->setTextData("autonStatus", red);
     }
 
     if (Competition.isFieldControl()) { // Update feild stats
-        self->setDisplayBoxData("feildStatus", green, white);
+        self->setTextData("feildStatus", green);
     } else {
-        self->setDisplayBoxData("feildStatus", red, white);
+        self->setTextData("feildStatus", red);
     }
 
     return 1;
@@ -1297,12 +1349,55 @@ int updateDebug(Page* self) {
 // Declare Debug Menu Stuff
 int dubugReloadButton(Page* self) {
     
-    botAI.init();
+    OverlayQuestion overlay;
+    overlay.question = "Reload What?";
+    overlay.option1 = "Auton";
+    overlay.option1Color = cyan;
+    overlay.option2 = "Odometry";
+    overlay.option2Color = green;
+
+    if (self->overlayQuestion(overlay)) {
+        OverlayQuestion secondOverlay;
+        secondOverlay.question = "Position";
+        secondOverlay.option1 = "(0,0)";
+        secondOverlay.option1Color = green;
+        secondOverlay.option2 = "Match";
+        if (Brain.SDcard.isInserted()) {
+            secondOverlay.option2Color = green;
+        } else {
+            secondOverlay.option2Color = red;
+        }
+        wait(0.5, sec);
+        if (self->overlayQuestion(secondOverlay)) {
+            Odometry.restart(botAI.getStartPos());
+        } else {
+            Odometry.restart();
+        }
+        
+    } else {
+        botAI.init();
+    }
 
     return 1;
 };
 
 
+// Define the update function for the odometry page
+int updateOdometry(Page* self) {
+    if (Odometry.isTracking) {
+        self->setTextData("status", green, "Running");
+    } else {
+        self->setTextData("status", red, "Not Running");
+    }
+
+    Position currentPos = Odometry.currentPos();
+
+    self->setTextData("xpos", currentPos.x);
+    self->setTextData("ypos", currentPos.y);
+    self->setTextData("rot", currentPos.rot);
+
+    return 1;
+};
 
 
 
@@ -1321,16 +1416,15 @@ int brainDisplayerInit() {
     mainRenderer.addPage("main", &homePage);
     mainRenderer.addPage("debug", &debugPage);
     mainRenderer.addPage("config", &configPage);
+    mainRenderer.addPage("odometry", &odometryPage);
 
 
 
     // Configure the home page
     homePage.addText("BURT OS", 20, 50, white, fontType::mono40);
     homePage.addText("Developed by Hayden Steele", 22, 75, white, fontType::mono15);
-
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
-
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
 
@@ -1345,24 +1439,30 @@ int brainDisplayerInit() {
 
     // Configure the debug page
     debugPage.addLogger(&BrainLogs);
-    debugPage.addVertProgressBar("fl", 280, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("fr", 330, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("bl", 380, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("br", 430, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("fl", 300, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("fr", 350, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("bl", 400, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("br", 450, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
 
-    debugPage.addText("SD Card", 405 - 210, 75 - 55);
-    debugPage.addDisplayBox("sdStatus", 200, 80 - 55, 65, 15, red, white);
-    debugPage.addText("Gryo", 420 - 210, 110 - 55);
-    debugPage.addDisplayBox("gyroStatus", 410 - 210, 115 - 55, 65, 15, red, white);
-    debugPage.addText("Auton", 417 - 210, 145 - 55);
-    debugPage.addDisplayBox("autonStatus", 410 - 210, 150 - 55, 65, 15, red, white);
-    debugPage.addText("Feild", 420 - 210, 180 - 55);
-    debugPage.addDisplayBox("feildStatus", 410 - 210, 185 - 55, 65, 15, red, white);
+    debugPage.addText("SD Card",  300, 140, white, fontType::mono20, "sdStatus");
+    debugPage.addText("Odometry Status", 300, 160, white, fontType::mono20, "trackingStatus");
+    debugPage.addText("Auton Status",    300, 180, white, fontType::mono20, "autonStatus");
+    debugPage.addText("Connected to Feild",    300, 200, white, fontType::mono20, "feildStatus");
 
     debugPage.addButton("Reload", 100, 210, 100, 30, dubugReloadButton, "reloadButton");
+    debugPage.addButton("Odometry", 240, 210, 100, 30, gotoOdometryPageButton, "odometryPageButton");
     debugPage.addButton("Back", 380, 210, 100, 30, gotoMainPageButton, "mainPageButton");
     debugPage.addDataUpdaterCB(updateDebug, 1);
 
+
+    // Config the Odometry Page
+    odometryPage.addText("Odometry Debug", 20, 40, white, fontType::mono30, "title");
+    odometryPage.addText("Status", 22, 65, white, fontType::mono15, "status");
+    odometryPage.addText("X:   %f", 60, 100, white, fontType::mono30, "xpos");
+    odometryPage.addText("Y:   %f", 60, 140, white, fontType::mono30, "ypos");
+    odometryPage.addText("Rot: %f", 60, 180, white, fontType::mono30, "rot");
+    odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
+    odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
 
     return 1;
 };
@@ -1377,44 +1477,14 @@ int brainDisplayer() {
 
     brainDisplayerInit();
     
-
-    double waitTime = 1; // Seconds    
-
-    double endTime = Brain.timer(vex::timeUnits::msec) + (waitTime * 1000);
-
-
     double deltaTime = 0.00;
     while(true) {
         double startTime = Brain.timer(msec);
         Brain.Screen.clearScreen();
-        // Show the screen FPS
-        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime));
-        
-        mainRenderer.render();
-
-
-        /**
-        char barArray[20];
-        int arrayLength = sizeof(barArray) / sizeof(char);
-        barArray[0] = '[';
-        barArray[arrayLength] = ']';
-
-        double currentPercent = 1 - ((endTime - Brain.timer(msec)) / (waitTime * 1000));
-
-        for (int i = 1; i < arrayLength; i++) {
-            if ((double(i) / double(arrayLength)) < currentPercent) {
-                barArray[i] = '=';
-            } else {
-                barArray[i] = ' ';
-            }
-        }
-        Brain.Screen.printAt(20, 200, barArray);
-        */
-
-        // Calculate the fps
-        deltaTime = 1000 / (round(Brain.timer(msec) - startTime));
-        // Render the screen
-        Brain.Screen.render();
+        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime)); // Show the screen FPS
+        mainRenderer.render(); // Render the screen
+        deltaTime = 1000 / (round(Brain.timer(msec) - startTime)); // Calculate the fps
+        Brain.Screen.render(); // Use the Screen.Render() to stop visual bugs
     }
 
     return 1;
@@ -1487,7 +1557,7 @@ void brainPageChangeText(const char* pageName, const char* textId, const char* n
 void brainPageChangeText(const char* pageName, const char* textId, int data) {
     Page* pagePointer = mainRenderer.searchPages(pageName);
     if (pagePointer == nullptr) { return; }
-    pagePointer->setTextData(textId, NAN, "", data);
+    pagePointer->setTextData(textId, data);
 }
 
 
@@ -1504,6 +1574,13 @@ void brainError(const char* message) {
 void brainDebug(const char* message) {
   
     BrainLogs.newLog(message, vex::color::purple);
+
+    cout << "DEBUG: " << message << endl;
+}
+void brainDebug(const char* message, bool notification) {
+  
+    BrainLogs.newLog(message, vex::color::purple);
+    mainRenderer.newNotification(message, 4, purple);
 
     cout << "DEBUG: " << message << endl;
 }

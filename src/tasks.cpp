@@ -20,7 +20,7 @@ void leftPressed() {
 
 void pre_auton(void) {
 
-  brainDebug("Initializing Burt");
+  brainDebug("Initializing Burt", true);
 
   altController.ButtonDown.pressed(debugDisable);
   altController.ButtonLeft.pressed(debugAuton);
@@ -42,7 +42,7 @@ void autonomous(void) {
 
 
 void usercontrol(void) {
-  brainFancyDebug("UserControl Started", vex::color::green);
+  brainFancyDebug("UserControl Started", vex::color::green, true);
 }
 
 
