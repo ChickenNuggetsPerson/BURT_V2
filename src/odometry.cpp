@@ -6,6 +6,34 @@ using namespace vex;
 using std::cout;
 using std::endl;
 
+
+// Position Constructor
+Position::Position(double xPos, double yPos, double rotation) {
+    x = xPos;
+    y = yPos;
+    rot = rotation;
+};
+Position::Position(double xPos, double yPos) {
+    x = xPos;
+    y = yPos;
+    rot = 0;
+};
+Position::Position() {};
+
+// TilePosition Constructor
+TilePosition::TilePosition(double xPos, double yPos, double rotation) {
+    x = xPos;
+    y = yPos;
+    rot = rotation;
+};
+TilePosition::TilePosition(double xPos, double yPos) {
+    x = xPos;
+    y = yPos;
+    rot = 0;
+};
+TilePosition::TilePosition() {};
+
+
 // Main system for tracking the position of the robot
 
 int mainTrackingTask(void* system) {
@@ -36,28 +64,59 @@ OdometrySystem::OdometrySystem() {
     //trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
 }
 
+void OdometrySystem::restart() {
+    restart(Position());
+};
 void OdometrySystem::restart(Position currentPos) {
     if (isTracking) { trackingTask.stop(); isTracking = false; }
     wait(0.1, sec);
-    xPos = currentPos.x;
-    yPos = currentPos.y;
-    rot = currentPos.rot;
+    currentPosition = currentPos;
+    updateTilePos();
     wait(0.1, sec);
     trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
 };
+void OdometrySystem::restart(TilePosition currentPos) {
+    restart(tilePosToPos(currentPos));
+};
+
 
 Position OdometrySystem::currentPos() {
-    Position tempPos;
-    tempPos.x = xPos;
-    tempPos.y = yPos;
-    tempPos.rot = rot;
+    return currentPosition;
+};
+TilePosition OdometrySystem::currentTilePos() {
+    return currentTilePosition;
+};
 
-    return tempPos;
-}
+
+TilePosition OdometrySystem::posToTilePos(Position pos) {
+    return TilePosition(
+        (pos.x - (tileWidth / 2)) / tileWidth,
+        (pos.y - (tileWidth / 2)) / tileWidth,
+        pos.rot
+    );
+};
+Position OdometrySystem::tilePosToPos(TilePosition tilePos) {
+    return Position(
+        (tilePos.x * tileWidth) + (tileWidth / 2), 
+        (tilePos.y * tileWidth) + (tileWidth / 2), 
+        tilePos.rot);
+};
+
+
+
+void OdometrySystem::updateTilePos() {
+    currentTilePosition = posToTilePos(currentPosition);
+};
+
+
+
 
 void OdometrySystem::track() {
-    rot = sin(Brain.timer(msec) / 1000) * 360;
-    xPos = sin(Brain.timer(msec) / 1000) * 10;
-    yPos = cos(Brain.timer(msec) / 1000) * 10;
+    currentPosition.rot = sin(Brain.timer(msec) / 1000) * 360;
+    currentPosition.x = 70 + sin(Brain.timer(msec) / 1000) * 70;
+    currentPosition.y = 70 + cos(Brain.timer(msec) / 1000) * 70;
 
+    
+    // Make sure to update the tile position
+    updateTilePos();
 };

@@ -75,10 +75,7 @@ Position ai::getStartPos() {
 
     if (!Brain.SDcard.isInserted()) { return Position(); }
 
-    Position tempPos;
-    tempPos.x = 10;
-    tempPos.y = 20;
-    tempPos.rot = 1*PI;
+    Position tempPos = Position(10, 20, 90);
 
     return tempPos;
 }

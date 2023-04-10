@@ -1279,7 +1279,7 @@ int configExitButton(Page* self) {
             self->menuSystemPointer->gotoPage("main");
         } else {
             // Option 1
-             self->menuSystemPointer->gotoPage("main");
+            self->menuSystemPointer->gotoPage("main");
             self->menuSystemPointer->gotoPage("config");
         }
     } else {
@@ -1396,6 +1396,11 @@ int updateOdometry(Page* self) {
     self->setTextData("ypos", currentPos.y);
     self->setTextData("rot", currentPos.rot);
 
+    TilePosition currentTile = Odometry.currentTilePos();
+
+    self->setTextData("xtile", currentTile.x);
+    self->setTextData("ytile", currentTile.y);
+
     return 1;
 };
 
@@ -1461,6 +1466,8 @@ int brainDisplayerInit() {
     odometryPage.addText("X:   %f", 60, 100, white, fontType::mono30, "xpos");
     odometryPage.addText("Y:   %f", 60, 140, white, fontType::mono30, "ypos");
     odometryPage.addText("Rot: %f", 60, 180, white, fontType::mono30, "rot");
+    odometryPage.addText("%f", 300, 100, white, fontType::mono30, "xtile");
+    odometryPage.addText("%f", 300, 140, white, fontType::mono30, "ytile");
     odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
     odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
 

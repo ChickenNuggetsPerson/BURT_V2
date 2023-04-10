@@ -14,6 +14,10 @@ class ai {
 
     OdometrySystem* odometrySystemPointer;
 
+
+
+
+
   public:
 
     std::string configFoler = "config/";
