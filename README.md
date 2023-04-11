@@ -1,9 +1,12 @@
 # BURT_V2 
-[![CodeTime badge](https://img.shields.io/endpoint?style=&color=red&url=https%3A%2F%2Fapi.codetime.dev%2Fshield%3Fid%3D17035%26project%3DBURT_V2Workspace%%26in%3D0)](https://codetime.dev) <font size="4">Time Spent on BURT_V2 Since April 10, 2023 <br><br>
+Time Spent on BURT_V2 Since April 10, 2023 <br>
+[![CodeTime badge](https://img.shields.io/endpoint?style=&color=red&url=https%3A%2F%2Fapi.codetime.dev%2Fshield%3Fid%3D17035%26project%3DBURT_V2Workspace%%26in%3D0)](https://codetime.dev)
+
+<br>
 
 ![HomePage](images/home.png)
 
-<font size="2"> The code for team 84075A in the Over Under game ( 2023 - 2024 )
+The code for team 84075A in the Over Under game ( 2023 - 2024 )
 
 "Since the 2022 - 2023 game year was my first year programming in C++, I am slowly learning how to do this so please don't judge my lack of industry standards when programming 😐" - Hayden
 
