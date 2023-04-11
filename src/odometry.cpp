@@ -108,8 +108,6 @@ Position OdometrySystem::tilePosToPos(TilePosition tilePos) {
         tilePos.rot);
 };
 
-
-
 void OdometrySystem::updateTilePos() {
     currentTilePosition = posToTilePos(currentPosition);
 };
@@ -118,11 +116,20 @@ void OdometrySystem::updateTilePos() {
 
 
 void OdometrySystem::track() {
-    currentPosition.rot = inertialSensor.heading(rotationUnits::deg);
+    currentPosition.rot = inertialSensor.rotation(rotationUnits::deg);
+
+
+    // Todo: research methods for tracking movement
+    //       maybe use the encoders in the motors until we get rotational sensors
+
+
+    // Two different types of movements to track, linear and arc movements
+    // Linear = Easy because trig 
+    // Arc = Headache because I do not know that type of math yet
+
     currentPosition.x = 70 + sin(Brain.timer(msec) / 1000) * 70;
     currentPosition.y = 70 + cos(Brain.timer(msec) / 1000) * 70;
 
-    //cout << testEncoder.rotation(rotationUnits::deg) << endl;
 
     // Make sure to update the tile position
     updateTilePos();

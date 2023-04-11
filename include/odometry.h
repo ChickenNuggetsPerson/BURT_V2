@@ -56,12 +56,6 @@ class OdometrySystem {
         Position currentPosition;
         TilePosition currentTilePosition;
        
-        
-        
-
-        TilePosition posToTilePos(Position pos);
-        Position tilePosToPos(TilePosition tilePos);
-
         void updateTilePos();
 
 
@@ -74,6 +68,9 @@ class OdometrySystem {
         void restart();
         void restart(Position currentPos);
         void restart(TilePosition currentPos);
+
+        TilePosition posToTilePos(Position pos);
+        Position tilePosToPos(TilePosition tilePos);
 
         void track();
         Position currentPos();

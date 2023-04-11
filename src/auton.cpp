@@ -33,10 +33,10 @@ void ai::init() {
         }
         loaded = true;
         brainFancyDebug("Auton Initialized", cyan, true);
-        Odometry.restart(getStartPos());
+        odometrySystemPointer->restart(getStartPos());
     } else {
         brainError("No SD Card");
-        Odometry.restart();
+        odometrySystemPointer->restart();
     }
 
     
@@ -52,7 +52,6 @@ bool ai::getConfig(const char* configName) {
     }
     return false;
 };
-
 void ai::saveConfig(const char* configName, bool value) {
 
         std::cout << "Saving: " << configName << " " << value << std::endl;
@@ -74,6 +73,9 @@ Position ai::getStartPos() {
 
     // TODO: Once game released, determin starting positions and make a lookup based on config 
 
+    // Other Idea: if the robot starts against the wall, use the distance sensor to measure distance
+    //             from perpendicular wall, which will provide a more accurate starting position
+
     if (!Brain.SDcard.isInserted()) { return Position(); }
 
     Position tempPos = Position(10, 20, 90);
@@ -84,24 +86,31 @@ Position ai::getStartPos() {
 // Returns true if the autonomous is ready
 bool ai::isReady() {return loaded;};
 
-void ai::started() {
-    brainFancyDebug("Auton Started", vex::color::cyan, true);
+// Finds the nearest rotation based on the provided target absolute rotation
+double ai::findNearestRot(double currentRot, double targetRot) {
+
+    int currentMult = trunc(currentRot / 360);
+
+    double smallerVal = (( currentMult ) * 360) + targetRot;
+    double biggerVal = (( currentMult + 1 ) * 360) + targetRot;
+
+    double smallerDiff = fabs(smallerVal - currentRot);
+    double biggerDiff = fabs(biggerVal - currentRot);
+
+    if (smallerDiff < biggerDiff) {
+        return smallerVal;
+    } else {
+        return biggerVal;
+    }
 };
-
-
-void setMotors(double right, double left) {
-    
-}
 
 
 bool ai::turnTo(double deg) {
 
     running = true;
 
-    PID turnPID(PIDConfig(0.15, 0.001, 0.4), deg);
-
-    double lastHeading = 0;
-    bool correcting = false;
+    double heading = odometrySystemPointer->currentPos().rot;
+    PID turnPID(PIDConfig(0.15, 0.001, 0.4), findNearestRot(heading, deg));
 
     double accuracy = 0.30;
     int checks = 15;
@@ -110,30 +119,13 @@ bool ai::turnTo(double deg) {
     int totalChecks = 0;
     while (true) {
         
-        double heading = Odometry.currentPos().rot;
-
-        if (lastHeading > 0 && lastHeading < 90 && heading > 270 && !correcting) {
-            correcting = true;
-        }
-
-        if (heading > 0 && heading < 90 && correcting) {
-            correcting = false;
-        }
-
-        if (correcting) {
-            heading = 360.00 - heading;
-        }
-
-
+        heading = odometrySystemPointer->currentPos().rot;
         double power = turnPID.iterate(heading);
 
         std::cout << power << " " << heading << std::endl;
 
         LeftDriveSmart.spin(fwd, -power, volt);
         RightDriveSmart.spin(fwd, power, volt);
-
-
-        lastHeading = heading;
     
         wait(0.05, seconds);
 
@@ -145,11 +137,29 @@ bool ai::turnTo(double deg) {
         }
     }
 
-
     LeftDriveSmart.spin(fwd, 0, volt);
     RightDriveSmart.spin(fwd, 0, volt);
-
 
     running = false;
     return true;
 };
+
+bool ai::gotoLoc(TilePosition pos) {return gotoLoc(odometrySystemPointer->tilePosToPos(pos));};
+bool ai::gotoLoc(Position pos) {
+
+    // Required: Odomotry system needs to be working to do this
+
+    // TODO:
+    //  1. Figure out the math for finding the angle and distance to the point
+    //  2. Develop a "stright drive" function that uses the inertial sensor and track wheel to drive stright
+    //  3  Compare desired position to the final position and correct
+
+    return true;
+};
+
+
+void ai::started() {
+    brainFancyDebug("Auton Started", vex::color::cyan, true);
+};
+
+

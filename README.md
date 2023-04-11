@@ -218,6 +218,25 @@ I do plan on adding the ability to remove items from pages. The problem is that 
 
 Everything here is very vauge because we do not know what the new game is yet. Though I do want to invest a lot of time over the summer in a solid odometry and auton system. Purdue Sigbots has a lot of good information on their website: https://wiki.purduesigbots.com/software/odometry
 
+## Easy PID Creation
+
+One important part of any antonomous movement is the use of PIDs. In order to make the creation of PIDs easy, I made a PID class. When the PID is created, a PIDConfig is passed into the constructor along with the target value. Example:
+
+    PID turnPID(PIDConfig(0.15, 0.001, 0.4), 90); // Set the target to 90 degrees
+
+Then in the movement loop, run `.iterate()` and it will return the result value from the PID. Make sure to also pass in the current value. Here is an example loop using the PID:
+
+    while (true) {
+        
+        heading = odometrySystemPointer->currentPos().rot;
+        double power = turnPID.iterate(heading);
+
+        LeftDriveSmart.spin(fwd, -power, volt);
+        RightDriveSmart.spin(fwd, power, volt);
+    
+        wait(0.05, seconds);
+    }
+
 # Specific Burt Features
 
 ## Dynamically Generated Config Screen
@@ -249,8 +268,3 @@ This year, I plan on integrating at least two tracking wheels. Into the odometry
 
 Another plan for this year is the plan for automated path planning. Instead of saying "drive 4 inches, turn right", I would like to have a system where I could say "goto ( 2, 4 ) on the feild". This would require a system that could constantly track the position of the robot on the feild. It would also require some sort of path finding system too. This is why I am starting the code for BURT_V2 this early, so then I can do propper research and testing on odometry systems and path planning. 
 
-## Tunable PIDs
-
-While propper PIDs are integral for path planning, they can also be used for a lot of other aspects of the bot. We learned this the hard way last year, but Vex's Smart Motor PIDs are not the best for flywheels. They over correct and under correct way too much and cause too much variability in motor RPM when under high load and speed. 
-
-One way to make a propper tunable PID is by making a PID class. This class then can have default or custom values loaded into it when created. Then in some sort of loop, the PID class could continually update and then be applied to a motor for example.

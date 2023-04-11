@@ -32,17 +32,21 @@ double PID::iterate(double newVal, double newDesired) {
     desiredVal = newDesired;
     return iterate(newVal);
 };
+
+
+// Credit to Connor 1814D on youtube for this simple yet concise PID code bellow
+// https://www.youtube.com/watch?v=_Itn-0d340g&ab_channel=Connor1814D
 double PID::iterate(double newVal) {
 
     error = newVal - desiredVal;
     derivative = error - prevError;
     totalError += error;
-
+    
     double result = error * P + derivative * D + totalError * I;
 
     prevError = error;
 
-    if (hasMin) {if (result < min) { result = min; }}
+    if (hasMin) {if (result < min) { result = min; }} // Limit the PID to defined min and max vales
     if (hasMax) {if (result > max) { result = max; }}
 
     return result;

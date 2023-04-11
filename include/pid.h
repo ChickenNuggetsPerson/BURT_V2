@@ -1,5 +1,6 @@
 
-
+// Usefull resouce for PID tunning 
+// https://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=9013#:~:text=To%20tune%20your%20PID%20controller,to%20roughly%20half%20this%20value.
 struct PIDConfig {
     double P;
     double I;
@@ -10,7 +11,8 @@ struct PIDConfig {
 };
 
 
-
+// Define the PID class
+// By using this class, PIDs can be easily created and tuned for different scenarios
 class PID {
 
     private:

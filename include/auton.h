@@ -14,8 +14,11 @@ class ai {
 
     OdometrySystem* odometrySystemPointer;
 
-    
+    double findNearestRot(double currentRot, double targetRot);
 
+
+    bool gotoLoc(TilePosition pos);
+    bool gotoLoc(Position pos);
 
   public:
 
