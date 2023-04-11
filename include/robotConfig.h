@@ -5,6 +5,7 @@
 #include "displayer.h"
 #include "auton.h"
 #include "odometry.h"
+#include "pid.h"
 #include "mainController.h"
 #include "altController.h"
 #include "misc.h"
@@ -35,3 +36,4 @@ extern inertial inertialSensor;
 
 
 
+extern encoder testEncoder;

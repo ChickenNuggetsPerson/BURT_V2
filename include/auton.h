@@ -14,11 +14,12 @@ class ai {
 
     OdometrySystem* odometrySystemPointer;
 
-
-
+    
 
 
   public:
+
+    bool running = false;
 
     std::string configFoler = "config/";
     std::string configFileType = ".txt";
@@ -51,5 +52,7 @@ class ai {
     Position getStartPos();
 
     void started();
+
+    bool turnTo(double deg);
 
 };

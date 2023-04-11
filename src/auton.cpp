@@ -36,6 +36,7 @@ void ai::init() {
         Odometry.restart(getStartPos());
     } else {
         brainError("No SD Card");
+        Odometry.restart();
     }
 
     
@@ -87,3 +88,68 @@ void ai::started() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
 };
 
+
+void setMotors(double right, double left) {
+    
+}
+
+
+bool ai::turnTo(double deg) {
+
+    running = true;
+
+    PID turnPID(PIDConfig(0.15, 0.001, 0.4), deg);
+
+    double lastHeading = 0;
+    bool correcting = false;
+
+    double accuracy = 0.30;
+    int checks = 15;
+
+
+    int totalChecks = 0;
+    while (true) {
+        
+        double heading = Odometry.currentPos().rot;
+
+        if (lastHeading > 0 && lastHeading < 90 && heading > 270 && !correcting) {
+            correcting = true;
+        }
+
+        if (heading > 0 && heading < 90 && correcting) {
+            correcting = false;
+        }
+
+        if (correcting) {
+            heading = 360.00 - heading;
+        }
+
+
+        double power = turnPID.iterate(heading);
+
+        std::cout << power << " " << heading << std::endl;
+
+        LeftDriveSmart.spin(fwd, -power, volt);
+        RightDriveSmart.spin(fwd, power, volt);
+
+
+        lastHeading = heading;
+    
+        wait(0.05, seconds);
+
+        if (power <= accuracy && power >= -accuracy) {
+            totalChecks++;
+            if (totalChecks > checks) {
+                break;
+            }
+        }
+    }
+
+
+    LeftDriveSmart.spin(fwd, 0, volt);
+    RightDriveSmart.spin(fwd, 0, volt);
+
+
+    running = false;
+    return true;
+};

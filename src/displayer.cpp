@@ -1043,12 +1043,12 @@ class MenuSystem {
 
 
         task notificationTask;
-        Notification notifications[5];
+        Notification notifications[10];
         int notifNumber = 0;
         bool showingNotifications = false;
 
         void shiftNotifications() {
-            for (int i=0; i < 5; i++) {
+            for (int i=0; i < 10; i++) {
                 notifications[i] = notifications[i + 1];
             }
         };
@@ -1168,7 +1168,7 @@ int notificationCheck() {
     // Values to watch for
     bool sdCard = true;
     bool inertialCalibrating = false;
-    bool mainControllerStatus = true;
+    bool mainControllerStatus = false;
 
 
     while (true) {
@@ -1406,6 +1406,19 @@ int updateOdometry(Page* self) {
 
 
 
+int mainPageTestButton(Page* self) {
+
+    botAI.turnTo(90.00);
+    wait(3, seconds);
+    botAI.turnTo(180.00);
+    wait(3, seconds);
+    botAI.turnTo(0.00);
+
+    return 1;
+}
+
+
+
 int brainDisplayerInit() {
 
 
@@ -1432,6 +1445,8 @@ int brainDisplayerInit() {
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
+
+    homePage.addButton("test", 20, 150, 100, 30, mainPageTestButton);
 
 
     // Configure Page
@@ -1502,7 +1517,7 @@ int brainDisplayer() {
 int controllerDisplay() {
     while (true){
         
-        if (mainController.installed()) {
+        //if (mainController.installed()) {
             // Main Controller Displayer
             mainController.Screen.clearScreen();
             mainController.Screen.setCursor(1, 1);
@@ -1511,7 +1526,7 @@ int controllerDisplay() {
 
             mainController.Screen.newLine();
             mainController.Screen.print(mainController.Axis2.position());            
-        }
+        //}
 
         // Alt Controller Displayer
         if (altController.installed()) {

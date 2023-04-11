@@ -34,12 +34,15 @@ TilePosition::TilePosition(double xPos, double yPos) {
 TilePosition::TilePosition() {};
 
 
+
+
+
 // Main system for tracking the position of the robot
 
 int mainTrackingTask(void* system) {
     OdometrySystem* systemPointer = (OdometrySystem*)system;
 
-    double updateSpeed = 100; // In msec 
+    double updateSpeed = 10; // In msec 
 
     wait(0.5, seconds);
 
@@ -61,6 +64,9 @@ int mainTrackingTask(void* system) {
 
 OdometrySystem::OdometrySystem() {
     // Start tracking system
+
+    inertialSensor.startCalibration();
+
     //trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
 }
 
@@ -112,11 +118,12 @@ void OdometrySystem::updateTilePos() {
 
 
 void OdometrySystem::track() {
-    currentPosition.rot = sin(Brain.timer(msec) / 1000) * 360;
+    currentPosition.rot = inertialSensor.heading(rotationUnits::deg);
     currentPosition.x = 70 + sin(Brain.timer(msec) / 1000) * 70;
     currentPosition.y = 70 + cos(Brain.timer(msec) / 1000) * 70;
 
-    
+    //cout << testEncoder.rotation(rotationUnits::deg) << endl;
+
     // Make sure to update the tile position
     updateTilePos();
 };

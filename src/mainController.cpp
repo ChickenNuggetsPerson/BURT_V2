@@ -3,10 +3,6 @@
 using namespace vex;
 
 
-
-motor Test1(PORT1, vex::gearSetting::ratio18_1);
-motor Test2(PORT2);
-
 // Controller Stuff
 
 int motorFL = 0;
@@ -18,6 +14,8 @@ int leftFB = 0;
 int rightFB = 0;
 
 int controllerTask() {
+
+  std::cout << "Starting controller" << std::endl;
 
   // process the controller input every 20 milliseconds
   // update the motors based on the input values
@@ -32,8 +30,7 @@ int controllerTask() {
   rightMotorA.setVelocity(0, percent);
   rightMotorB.setVelocity(0, percent);
 
-  Test1.spin(fwd);
-  Test2.spin(fwd);
+
 
   while(true) {
 
@@ -45,9 +42,6 @@ int controllerTask() {
       }
 
     }
-
-    Test1.setVelocity(mainController.Axis3.position(), percent);
-    Test2.setVelocity(mainController.Axis3.position(), percent);
     
 
     motorFL = leftFB;
@@ -56,7 +50,7 @@ int controllerTask() {
     motorBL = leftFB;
     motorBR = rightFB;
 
-    if ( !Drivetrain.isMoving() ) {
+    if ( !botAI.running ) {
 
       leftMotorA.spin(fwd);
       leftMotorB.spin(fwd);
