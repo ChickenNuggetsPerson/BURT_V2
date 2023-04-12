@@ -10,3 +10,5 @@ void appendFile(const char* fileName, const char* content);
 
 double degreeToRad(double degree);
 double radToDegree(double rad);
+
+double limitAngle(double angle);

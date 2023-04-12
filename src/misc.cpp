@@ -73,3 +73,8 @@ double degreeToRad(double degree) {
 double radToDegree(double rad) {
   return rad * ( 180 / PI );
 };
+
+
+double limitAngle(double angle) {
+  return fmod(angle, 360);
+};

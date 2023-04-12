@@ -1315,10 +1315,10 @@ int configExitButton(Page* self) {
 
 // Define the update function for the debug page
 int updateDebug(Page* self) {
-    self->setProgressBarValue("fl", leftMotorA.temperature(vex::temperatureUnits::fahrenheit));
-    self->setProgressBarValue("fr", rightMotorA.temperature(vex::temperatureUnits::fahrenheit));
-    self->setProgressBarValue("bl", leftMotorB.temperature(vex::temperatureUnits::fahrenheit));
-    self->setProgressBarValue("br", rightMotorB.temperature(vex::temperatureUnits::fahrenheit));
+    self->setProgressBarValue("fl", leftMotorA.temperature(percent));
+    self->setProgressBarValue("fr", rightMotorA.temperature(percent));
+    self->setProgressBarValue("bl", leftMotorB.temperature(percent));
+    self->setProgressBarValue("br", rightMotorB.temperature(percent));
 
     if (Brain.SDcard.isInserted()) { // Update the SD Card Status Box
         self->setTextData("sdStatus", green);
@@ -1394,7 +1394,7 @@ int updateOdometry(Page* self) {
 
     self->setTextData("xpos", currentPos.x);
     self->setTextData("ypos", currentPos.y);
-    self->setTextData("rot", currentPos.rot);
+    self->setTextData("rot", fabs(limitAngle(radToDegree(currentPos.rot))));
 
     TilePosition currentTile = Odometry.currentTilePos();
 
@@ -1521,11 +1521,14 @@ int controllerDisplay() {
             // Main Controller Displayer
             mainController.Screen.clearScreen();
             mainController.Screen.setCursor(1, 1);
-            mainController.Screen.print("Juice Left: ");
-            mainController.Screen.print(Brain.Battery.capacity(percent));
 
+            Position currentPos = Odometry.currentPos();
+
+            mainController.Screen.print(currentPos.x);
             mainController.Screen.newLine();
-            mainController.Screen.print(mainController.Axis2.position());            
+            mainController.Screen.print(currentPos.y);
+            mainController.Screen.newLine();
+            mainController.Screen.print(limitAngle(currentPos.rot));            
         //}
 
         // Alt Controller Displayer

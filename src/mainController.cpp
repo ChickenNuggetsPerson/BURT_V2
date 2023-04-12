@@ -13,6 +13,8 @@ int motorBR = 0;
 int leftFB = 0;
 int rightFB = 0;
 
+int turn = 0;
+
 int controllerTask() {
 
   std::cout << "Starting controller" << std::endl;
@@ -38,17 +40,19 @@ int controllerTask() {
 
       if (!inertialSensor.isCalibrating()) {
         leftFB = mainController.Axis3.position();
-        rightFB = mainController.Axis2.position();
+        rightFB = mainController.Axis3.position();
+
+        turn = mainController.Axis1.position();
       }
 
     }
     
 
-    motorFL = leftFB;
-    motorFR = rightFB;
+    motorFL = leftFB + turn;
+    motorFR = rightFB - turn;
 
-    motorBL = leftFB;
-    motorBR = rightFB;
+    motorBL = leftFB + turn;
+    motorBR = rightFB - turn;
 
     if ( !botAI.running ) {
 

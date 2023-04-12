@@ -1,5 +1,6 @@
 #include "robotConfig.h"
 #include "odometry.h"
+#include "robotMeasurements.h"
 
 using namespace vex;
 
@@ -52,6 +53,8 @@ int mainTrackingTask(void* system) {
     while (inertialSensor.isCalibrating()) {
         wait(0.05, seconds);
     }
+
+    systemPointer->resetEncoders();
     
     brainFancyDebug("Starting Odometry System", green, true);
     systemPointer->isTracking = true;
@@ -76,7 +79,11 @@ void OdometrySystem::restart() {
 void OdometrySystem::restart(Position currentPos) {
     if (isTracking) { trackingTask.stop(); isTracking = false; }
     wait(0.1, sec);
-    currentPosition = currentPos;
+    globalX = currentPos.x;
+    globalY = currentPos.y;
+    globalRot = currentPos.rot;
+    lastData = odomRawData();
+    
     updateTilePos();
     wait(0.1, sec);
     trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
@@ -87,7 +94,7 @@ void OdometrySystem::restart(TilePosition currentPos) {
 
 
 Position OdometrySystem::currentPos() {
-    return currentPosition;
+    return Position(globalX, globalY, globalRot);
 };
 TilePosition OdometrySystem::currentTilePos() {
     return currentTilePosition;
@@ -109,27 +116,89 @@ Position OdometrySystem::tilePosToPos(TilePosition tilePos) {
 };
 
 void OdometrySystem::updateTilePos() {
-    currentTilePosition = posToTilePos(currentPosition);
+    currentTilePosition = posToTilePos(Position(globalX, globalY, globalRot));
 };
 
 
+void OdometrySystem::resetEncoders() {
+    rightMotorA.resetPosition();
+    rightMotorB.resetPosition();
+    leftMotorA.resetPosition();
+    leftMotorB.resetPosition();
+    testEncoder.resetRotation();
+};
+
+odomRawData OdometrySystem::getChanges(odomRawData oldData) {
 
 
+
+    double circumference = 2 * PI * (wheelDiameter / 2);
+
+    // Calc the new encoder positions
+    double newRightEncoder = ((rightMotorA.position(rotationUnits::rev) + rightMotorB.position(rotationUnits::rev)) / 2) * circumference;
+    double newLeftEncoder = ((leftMotorA.position(rotationUnits::rev) + leftMotorB.position(rotationUnits::rev)) / 2) * circumference;
+    double newBackEncoder = (testEncoder.position(rotationUnits::rev)) * circumference;
+
+    odomRawData newData;
+    
+    // Calculate the arc lengths
+    newData.deltaRight = newRightEncoder - oldData.rightEncoder;
+    newData.deltaLeft = newLeftEncoder - oldData.leftEncoder;
+    newData.deltaBack = newBackEncoder - oldData.backEncoder;
+
+
+ 
+    // Set the current data
+    newData.rightEncoder = newRightEncoder; // Right encoder
+    newData.leftEncoder = newLeftEncoder;   // Left encoder
+    newData.backEncoder = newBackEncoder;   // Back encoder
+    newData.heading = globalRot;  // Heading
+    newData.locX = globalX;
+    newData.locY = globalY;
+
+    return newData;
+}
+
+
+// Main Tracking Loop
 void OdometrySystem::track() {
-    currentPosition.rot = inertialSensor.rotation(rotationUnits::deg);
+
+    // Get the current movement arc
+    odomRawData currentData = getChanges(lastData);
+    
+    // Calc Change in Rotation
+    double rotChange = (currentData.deltaLeft - currentData.deltaRight) / (encoderDist + encoderDist);
+    globalRot += rotChange;
+
+    double inertialReading = degreeToRad(inertialSensor.rotation(vex::rotationUnits::deg));
+
+    double maxError = 0.5;
+    if (globalRot > inertialReading - maxError && globalRot < inertialReading + maxError) {
+        globalRot = inertialReading;
+    }
 
 
-    // Todo: research methods for tracking movement
-    //       maybe use the encoders in the motors until we get rotational sensors
+    double radius = (currentData.deltaRight/rotChange)+encoderDist;
+
+    if (rotChange != 0) {
+        double newX = lastData.locX + radius*cos(rotChange);
+        double newY = lastData.locY + radius*sin(rotChange);
+
+        if (!isnan(newX)) { globalX = newX; }
+        if (!isnan(newY)) { globalY = newY; }
+    } else {
+        double changeX = currentData.deltaRight*cos(globalRot);
+        double changeY = currentData.deltaRight*sin(globalRot);
+
+        if (!isnan(changeX)) { globalX += changeX; }
+        if (!isnan(changeY)) { globalY += changeY; } 
+    }
 
 
-    // Two different types of movements to track, linear and arc movements
-    // Linear = Easy because trig 
-    // Arc = Headache because I do not know that type of math yet
 
-    currentPosition.x = 70 + sin(Brain.timer(msec) / 1000) * 70;
-    currentPosition.y = 70 + cos(Brain.timer(msec) / 1000) * 70;
+    //std::cout << globalX << " " << globalY << std::endl;
 
+    lastData = currentData;
 
     // Make sure to update the tile position
     updateTilePos();

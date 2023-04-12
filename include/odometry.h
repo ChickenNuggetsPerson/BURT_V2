@@ -7,9 +7,9 @@ static int tileWidth = 24; // Vex Tiles are 2ft across
 
 // Positions are based on inches from the bottom left of the feild
 struct Position {
-    double x = 0;   // In Inches
-    double y = 0;   // In Inches
-    double rot = 0; // In Degrees
+    double x = 0.00;   // In Inches
+    double y = 0.00;   // In Inches
+    double rot = 0.00; 
     Position(double xPos, double yPos, double rotation);
     Position(double xPos, double yPos);
     Position();
@@ -48,15 +48,36 @@ struct TilePosition {
 };
 
 
+struct odomRawData {
+    double rightEncoder = 0.00;
+    double leftEncoder = 0.00;
+    double backEncoder = 0.00;
+    double heading = 0.00;
+    double locX = 0.00;
+    double locY = 0.00;
+
+    double deltaRight;
+    double deltaLeft;
+    double deltaBack;
+};
+
+
 class OdometrySystem {
     private:
 
         vex::task trackingTask;
 
-        Position currentPosition;
+        double globalX = 0.00;
+        double globalY = 0.00;
+        double globalRot = 0.00;
+
         TilePosition currentTilePosition;
        
         void updateTilePos();
+
+
+        odomRawData lastData; 
+        odomRawData getChanges(odomRawData data);
 
 
     public:
@@ -75,6 +96,7 @@ class OdometrySystem {
         void track();
         Position currentPos();
         TilePosition currentTilePos();
-
+        
+        void resetEncoders();
 };
 

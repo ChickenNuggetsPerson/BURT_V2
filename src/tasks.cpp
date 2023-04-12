@@ -12,10 +12,11 @@ void test(){
 };
 
 void rightPressed() {
-  brainChangePage("main");
+ // botAI.gotoLoc(TilePosition(0, 0, 0));
+ botAI.turnTo(90);
 };
 void leftPressed() {
-  brainChangePage("config");
+  brainChangePage("odometry");
 };
 
 void pre_auton(void) {

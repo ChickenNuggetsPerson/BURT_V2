@@ -16,10 +16,6 @@ class ai {
 
     double findNearestRot(double currentRot, double targetRot);
 
-
-    bool gotoLoc(TilePosition pos);
-    bool gotoLoc(Position pos);
-
   public:
 
     bool running = false;
@@ -57,5 +53,6 @@ class ai {
     void started();
 
     bool turnTo(double deg);
-
+    bool gotoLoc(TilePosition pos);
+    bool gotoLoc(Position pos);
 };

@@ -107,22 +107,26 @@ double ai::findNearestRot(double currentRot, double targetRot) {
 
 bool ai::turnTo(double deg) {
 
+    if (running) { return false; }
+
     running = true;
 
-    double heading = odometrySystemPointer->currentPos().rot;
-    PID turnPID(PIDConfig(0.15, 0.001, 0.4), findNearestRot(heading, deg));
+    double heading = radToDegree(odometrySystemPointer->currentPos().rot);
+    double target = findNearestRot(heading, deg);
+    PID turnPID(PIDConfig(0.1, 0, 0), target);
 
-    double accuracy = 0.30;
-    int checks = 15;
+
+    double accuracy = 0.75;
+    int checks = 7;
 
 
     int totalChecks = 0;
     while (true) {
         
-        heading = odometrySystemPointer->currentPos().rot;
+        heading = radToDegree(odometrySystemPointer->currentPos().rot);
         double power = turnPID.iterate(heading);
 
-        std::cout << power << " " << heading << std::endl;
+        std::cout << power << " " << limitAngle(heading) << std::endl;
 
         LeftDriveSmart.spin(fwd, -power, volt);
         RightDriveSmart.spin(fwd, power, volt);
@@ -136,6 +140,36 @@ bool ai::turnTo(double deg) {
             }
         }
     }
+
+
+    PID correctPID(PIDConfig(0.5, 0, 0.25), target);
+    accuracy = 1;
+    checks = 7;
+
+    totalChecks = 0;
+    std::cout << "starting accurate" << std::endl;
+
+    while (true) {
+        
+        heading = radToDegree(odometrySystemPointer->currentPos().rot);
+        double power = correctPID.iterate(heading);
+
+        std::cout << power << " " << limitAngle(heading) << std::endl;
+
+        LeftDriveSmart.spin(fwd, -power, volt);
+        RightDriveSmart.spin(fwd, power, volt);
+    
+        wait(0.05, seconds);
+
+        if (heading < target + 1 && heading > target - 1) {
+            break;
+        }
+        totalChecks++;
+        if (totalChecks > checks) {
+            break;
+        }
+    }
+
 
     LeftDriveSmart.spin(fwd, 0, volt);
     RightDriveSmart.spin(fwd, 0, volt);
@@ -153,6 +187,16 @@ bool ai::gotoLoc(Position pos) {
     //  1. Figure out the math for finding the angle and distance to the point
     //  2. Develop a "stright drive" function that uses the inertial sensor and track wheel to drive stright
     //  3  Compare desired position to the final position and correct
+
+    Position currentPos = odometrySystemPointer->currentPos();
+    double distX = pos.x - currentPos.x;
+    double distY = pos.y - currentPos.y;
+
+    double desiredHeading = radToDegree(atan(distX / distY));
+
+    std::cout << desiredHeading << std::endl;
+    
+    turnTo(desiredHeading);
 
     return true;
 };
