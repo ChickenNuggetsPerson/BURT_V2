@@ -1,6 +1,5 @@
 # BURT_V2 
-Time Spent on BURT_V2 Since April 10, 2023 <br>
-[![CodeTime badge](https://img.shields.io/endpoint?style=&color=red&url=https%3A%2F%2Fapi.codetime.dev%2Fshield%3Fid%3D17035%26project%3DBURT_V2Workspace%%26in%3D0)](https://codetime.dev)
+[![CodeTime badge](https://img.shields.io/badge/dynamic/json?color=red&label=Time%20Spent%3A%20&query=%24.message&url=https%3A%2F%2Fapi.codetime.dev%2Fshield%3Fid%3D17035%26project%3DBURT_V2Workspace%25)](https://codetime.dev)
 
 <br>
 

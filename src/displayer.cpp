@@ -1394,7 +1394,7 @@ int updateOdometry(Page* self) {
 
     self->setTextData("xpos", currentPos.x);
     self->setTextData("ypos", currentPos.y);
-    self->setTextData("rot", fabs(limitAngle(radToDegree(currentPos.rot))));
+    self->setTextData("rot", (radToDegree(currentPos.rot)));
 
     TilePosition currentTile = Odometry.currentTilePos();
 

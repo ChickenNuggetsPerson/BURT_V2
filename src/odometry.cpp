@@ -145,6 +145,7 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     newData.deltaRight = newRightEncoder - oldData.rightEncoder;
     newData.deltaLeft = newLeftEncoder - oldData.leftEncoder;
     newData.deltaBack = newBackEncoder - oldData.backEncoder;
+    
 
 
  
@@ -167,34 +168,31 @@ void OdometrySystem::track() {
     odomRawData currentData = getChanges(lastData);
     
     // Calc Change in Rotation
-    double rotChange = (currentData.deltaLeft - currentData.deltaRight) / (encoderDist + encoderDist);
+    double rotChange = ((currentData.deltaLeft - currentData.deltaRight) / (encoderDist))/2;
     globalRot += rotChange;
 
-    double inertialReading = degreeToRad(inertialSensor.rotation(vex::rotationUnits::deg));
 
-    double maxError = 0.5;
-    if (globalRot > inertialReading - maxError && globalRot < inertialReading + maxError) {
-        globalRot = inertialReading;
-    }
+    // Code from the Purduesigbots ARMS Library
+    // https://github.com/purduesigbots/ARMS/blob/master/src/ARMS/odom.cpp
 
+    double localX;
+    double localY;
 
-    double radius = (currentData.deltaRight/rotChange)+encoderDist;
+    if (rotChange != 0.00) {
+        double i = sin(rotChange / 2.00) * 2.0;
 
-    if (rotChange != 0) {
-        double newX = lastData.locX + radius*cos(rotChange);
-        double newY = lastData.locY + radius*sin(rotChange);
+        localX = (currentData.deltaRight / rotChange - encoderDist) * i;
+        localY = (currentData.deltaBack / rotChange + backEncoderDist) * i;
 
-        if (!isnan(newX)) { globalX = newX; }
-        if (!isnan(newY)) { globalY = newY; }
     } else {
-        double changeX = currentData.deltaRight*cos(globalRot);
-        double changeY = currentData.deltaRight*sin(globalRot);
-
-        if (!isnan(changeX)) { globalX += changeX; }
-        if (!isnan(changeY)) { globalY += changeY; } 
+        localX = currentData.deltaRight;
+        localY = currentData.deltaBack;
     }
 
+    double p = globalRot - rotChange / 2.0;
 
+    globalX += cos(p) * localX - sin(p) * localY;
+    globalY += cos(p) * localY + sin(p) * localY;
 
     //std::cout << globalX << " " << globalY << std::endl;
 
