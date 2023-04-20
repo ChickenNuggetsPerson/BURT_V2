@@ -12,8 +12,8 @@ void test(){
 };
 
 void rightPressed() {
- // botAI.gotoLoc(TilePosition(0, 0, 0));
- botAI.turnTo(90);
+ botAI.gotoLoc(Position(10, 10, 0));
+ //botAI.turnTo(90);
 };
 void leftPressed() {
   brainChangePage("odometry");

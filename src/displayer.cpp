@@ -1528,7 +1528,7 @@ int controllerDisplay() {
             mainController.Screen.newLine();
             mainController.Screen.print(currentPos.y);
             mainController.Screen.newLine();
-            mainController.Screen.print(limitAngle(currentPos.rot));            
+            mainController.Screen.print(limitAngle(radToDegree(currentPos.rot)));            
         //}
 
         // Alt Controller Displayer
@@ -1551,7 +1551,7 @@ int controllerDisplay() {
             };
         }
         
-        vex::wait(1, seconds);
+        vex::wait(0.2, seconds);
     }
     return 1;
 }

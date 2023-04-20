@@ -1,12 +1,12 @@
 #include "robotConfig.h"
 #include "odometry.h"
 #include "robotMeasurements.h"
+#include "math.h"
 
 using namespace vex;
 
 using std::cout;
 using std::endl;
-
 
 // Position Constructor
 Position::Position(double xPos, double yPos, double rotation) {
@@ -120,12 +120,25 @@ void OdometrySystem::updateTilePos() {
 };
 
 
+
+void OdometrySystem::calcInertialAvg() {
+    for (int i=0; i < inertialAvgSize - 1; i++) {
+        inertialLastVals[i] = inertialLastVals[i + 1];
+    }
+    inertialLastVals[inertialAvgSize - 1] = degreeToRad(inertialSensor.rotation(rotationUnits::deg));
+    double tempAvg = 0.00;
+    for (int i=0; i < inertialAvgSize; i++) {
+        tempAvg += inertialLastVals[i];
+    }
+    inertialAvg = tempAvg / inertialAvgSize;
+}
+
+
 void OdometrySystem::resetEncoders() {
     rightMotorA.resetPosition();
     rightMotorB.resetPosition();
     leftMotorA.resetPosition();
     leftMotorB.resetPosition();
-    testEncoder.resetRotation();
 };
 
 odomRawData OdometrySystem::getChanges(odomRawData oldData) {
@@ -135,25 +148,30 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     double circumference = 2 * PI * (wheelDiameter / 2);
 
     // Calc the new encoder positions
-    double newRightEncoder = ((rightMotorA.position(rotationUnits::rev) + rightMotorB.position(rotationUnits::rev)) / 2) * circumference;
-    double newLeftEncoder = ((leftMotorA.position(rotationUnits::rev) + leftMotorB.position(rotationUnits::rev)) / 2) * circumference;
-    double newBackEncoder = (testEncoder.position(rotationUnits::rev)) * circumference;
+    //double newRightEncoder = ((rightMotorA.position(rotationUnits::rev) + rightMotorB.position(rotationUnits::rev)) / 2) * circumference;
+    //double newLeftEncoder = ((leftMotorA.position(rotationUnits::rev) + leftMotorB.position(rotationUnits::rev)) / 2) * circumference;
+    
+    double newRightEncoder = rightMotorB.position(rotationUnits::rev) * circumference;
+    double newLeftEncoder = leftMotorB.position(rotationUnits::rev) * circumference;
+    
+    //double newBackEncoder = (testEncoder.position(rotationUnits::rev)) * circumference;
 
     odomRawData newData;
     
     // Calculate the arc lengths
     newData.deltaRight = newRightEncoder - oldData.rightEncoder;
     newData.deltaLeft = newLeftEncoder - oldData.leftEncoder;
-    newData.deltaBack = newBackEncoder - oldData.backEncoder;
-    
-
+    //newData.deltaBack = newBackEncoder - oldData.backEncoder;
+    calcInertialAvg();
+    newData.heading = inertialAvg;    
+    newData.deltaHeading = newData.heading - oldData.heading;
 
  
     // Set the current data
     newData.rightEncoder = newRightEncoder; // Right encoder
     newData.leftEncoder = newLeftEncoder;   // Left encoder
-    newData.backEncoder = newBackEncoder;   // Back encoder
-    newData.heading = globalRot;  // Heading
+    //newData.backEncoder = newBackEncoder;   // Back encoder
+    //newData.heading = globalRot;  // Heading
     newData.locX = globalX;
     newData.locY = globalY;
 
@@ -168,33 +186,21 @@ void OdometrySystem::track() {
     odomRawData currentData = getChanges(lastData);
     
     // Calc Change in Rotation
-    double rotChange = ((currentData.deltaLeft - currentData.deltaRight) / (encoderDist))/2;
-    globalRot += rotChange;
+    //double rotChange = ((currentData.deltaLeft - currentData.deltaRight) / (encoderDist))/2;
+    globalRot = currentData.heading;
 
 
-    // Code from the Purduesigbots ARMS Library
-    // https://github.com/purduesigbots/ARMS/blob/master/src/ARMS/odom.cpp
+    double deltaDist = (currentData.deltaLeft + currentData.deltaRight) / 2.0;
 
-    double localX;
-    double localY;
+    double deltaX = deltaDist * cos(currentData.heading);
+    double deltaY = deltaDist * sin(currentData.heading);
 
-    if (rotChange != 0.00) {
-        double i = sin(rotChange / 2.00) * 2.0;
+    globalX += deltaX;
+    globalY += deltaY;    
 
-        localX = (currentData.deltaRight / rotChange - encoderDist) * i;
-        localY = (currentData.deltaBack / rotChange + backEncoderDist) * i;
-
-    } else {
-        localX = currentData.deltaRight;
-        localY = currentData.deltaBack;
-    }
-
-    double p = globalRot - rotChange / 2.0;
-
-    globalX += cos(p) * localX - sin(p) * localY;
-    globalY += cos(p) * localY + sin(p) * localY;
-
-    //std::cout << globalX << " " << globalY << std::endl;
+    //std::cout << std::endl;
+    //std::cout << deltaX << " " << deltaY << " " << currentData.heading << std::endl;
+    //std::cout << globalX << " " << globalY << " " << globalRot << std::endl;
 
     lastData = currentData;
 

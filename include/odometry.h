@@ -59,6 +59,7 @@ struct odomRawData {
     double deltaRight;
     double deltaLeft;
     double deltaBack;
+    double deltaHeading;
 };
 
 
@@ -70,6 +71,12 @@ class OdometrySystem {
         double globalX = 0.00;
         double globalY = 0.00;
         double globalRot = 0.00;
+
+        const int inertialAvgSize = 10;
+        double inertialLastVals[10] = {0.00};
+        double inertialAvg;
+        void calcInertialAvg();
+
 
         TilePosition currentTilePosition;
        

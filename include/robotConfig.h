@@ -34,6 +34,3 @@ extern controller altController;
 
 extern inertial inertialSensor;
 
-
-
-extern encoder testEncoder;

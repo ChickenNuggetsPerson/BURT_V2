@@ -28,10 +28,6 @@ controller altController = controller(partner);
 
 
 
-// Test Bot Config
-encoder testEncoder = encoder(Brain.ThreeWirePort.E);
-
-
 
 void startTasks( void ) {
 

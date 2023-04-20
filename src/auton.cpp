@@ -107,17 +107,17 @@ double ai::findNearestRot(double currentRot, double targetRot) {
 
 bool ai::turnTo(double deg) {
 
-    if (running) { return false; }
+    bool wasRunning = running;
 
     running = true;
 
     double heading = radToDegree(odometrySystemPointer->currentPos().rot);
     double target = findNearestRot(heading, deg);
-    PID turnPID(PIDConfig(0.1, 0, 0), target);
+    PID turnPID(PIDConfig(0.12, 0, 0.15), target);
 
 
-    double accuracy = 0.75;
-    int checks = 7;
+    double accuracy = 0.35;
+    int checks = 20;
 
 
     int totalChecks = 0;
@@ -126,7 +126,7 @@ bool ai::turnTo(double deg) {
         heading = radToDegree(odometrySystemPointer->currentPos().rot);
         double power = turnPID.iterate(heading);
 
-        std::cout << power << " " << limitAngle(heading) << std::endl;
+        //std::cout << power << " " << limitAngle(heading) << std::endl;
 
         LeftDriveSmart.spin(fwd, -power, volt);
         RightDriveSmart.spin(fwd, power, volt);
@@ -147,14 +147,14 @@ bool ai::turnTo(double deg) {
     checks = 7;
 
     totalChecks = 0;
-    std::cout << "starting accurate" << std::endl;
+    //std::cout << "starting accurate" << std::endl;
 
-    while (true) {
+    while (false) {
         
         heading = radToDegree(odometrySystemPointer->currentPos().rot);
         double power = correctPID.iterate(heading);
 
-        std::cout << power << " " << limitAngle(heading) << std::endl;
+        //std::cout << power << " " << limitAngle(heading) << std::endl;
 
         LeftDriveSmart.spin(fwd, -power, volt);
         RightDriveSmart.spin(fwd, power, volt);
@@ -174,13 +174,13 @@ bool ai::turnTo(double deg) {
     LeftDriveSmart.spin(fwd, 0, volt);
     RightDriveSmart.spin(fwd, 0, volt);
 
-    running = false;
+    running = wasRunning;
     return true;
 };
 
 bool ai::gotoLoc(TilePosition pos) {return gotoLoc(odometrySystemPointer->tilePosToPos(pos));};
 bool ai::gotoLoc(Position pos) {
-
+    running = true;
     // Required: Odomotry system needs to be working to do this
 
     // TODO:
@@ -191,6 +191,7 @@ bool ai::gotoLoc(Position pos) {
     Position currentPos = odometrySystemPointer->currentPos();
     double distX = pos.x - currentPos.x;
     double distY = pos.y - currentPos.y;
+    double travelDist = sqrt((distX * distX) + (distY * distY));
 
     double desiredHeading = radToDegree(atan(distX / distY));
 
@@ -198,6 +199,54 @@ bool ai::gotoLoc(Position pos) {
     
     turnTo(desiredHeading);
 
+    // Straight Drive
+
+    PID drivePid(PIDConfig(0.5, 0.00, 0.00), 0);
+    double drivePower = 0.00;
+
+    PID turnPid(PIDConfig(0.05, 0.00, 0.00));
+    double turnPower = 0.00;
+
+    bool traveling = true;
+    while (traveling) {
+
+        
+        Position tempPos = odometrySystemPointer->currentPos();
+        double tempDistX = pos.x - tempPos.x;
+        double tempDistY = pos.y - tempPos.y;
+
+        desiredHeading = radToDegree(atan(distX / distY));
+        travelDist = sqrt((tempDistX * tempDistX) + (tempDistY * tempDistY));
+
+        if (travelDist < 2) {
+            traveling = false;
+        }
+
+
+        //drivePower = drivePid.iterate(travelDist);
+
+        double turnCurrent = radToDegree(odometrySystemPointer->currentPos().rot);
+        double turnWant = findNearestRot(radToDegree(tempPos.rot), desiredHeading);
+        turnPower = turnPid.iterate(turnCurrent, turnWant);
+
+
+        double leftPower = drivePower - turnPower;
+        double rightPower = drivePower + turnPower;
+
+        LeftDriveSmart.spin(fwd, leftPower, voltageUnits::volt);
+        RightDriveSmart.spin(fwd, rightPower, voltageUnits::volt);
+
+
+        std::cout << std::endl;
+        std::cout << turnCurrent << " " << turnWant << " " << desiredHeading << std::endl;
+        std::cout << leftPower << " " << rightPower << " " << travelDist << std::endl;
+
+        wait(0.05, seconds);
+    }
+
+
+    turnTo(pos.rot);
+    running = false;
     return true;
 };
 
