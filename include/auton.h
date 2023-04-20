@@ -15,6 +15,8 @@ class ai {
     OdometrySystem* odometrySystemPointer;
 
     double findNearestRot(double currentRot, double targetRot);
+    double angleBetweenPoints(Position pos1, Position pos2);
+    double distBetweenPoints(Position pos1, Position pos2);
 
   public:
 

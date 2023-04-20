@@ -87,6 +87,7 @@ Position ai::getStartPos() {
 bool ai::isReady() {return loaded;};
 
 // Finds the nearest rotation based on the provided target absolute rotation
+// USES DEGREES AND NOT RADIANS
 double ai::findNearestRot(double currentRot, double targetRot) {
 
     int currentMult = trunc(currentRot / 360);
@@ -104,11 +105,20 @@ double ai::findNearestRot(double currentRot, double targetRot) {
     }
 };
 
+// https://www.desmos.com/calculator/gdryojf8i3 << My tests for figuring out the math
+// Returns Angle between points in radians using positive Y axis as 0 and goes clockwise
+double ai::angleBetweenPoints(Position pos1, Position pos2) {
+    return atan2(pos2.x - pos1.x, pos2.y - pos2.y);
+}
+// Returns the distance between points
+double ai::distBetweenPoints(Position pos1, Position pos2) {
+    return sqrt(pow((pos2.x - pos1.x), 2) + pow((pos2.y - pos1.y), 2));
+}
+
 
 bool ai::turnTo(double deg) {
 
     bool wasRunning = running;
-
     running = true;
 
     double heading = radToDegree(odometrySystemPointer->currentPos().rot);
@@ -180,7 +190,9 @@ bool ai::turnTo(double deg) {
 
 bool ai::gotoLoc(TilePosition pos) {return gotoLoc(odometrySystemPointer->tilePosToPos(pos));};
 bool ai::gotoLoc(Position pos) {
+    bool wasRunning = running;
     running = true;
+
     // Required: Odomotry system needs to be working to do this
 
     // TODO:
@@ -189,11 +201,9 @@ bool ai::gotoLoc(Position pos) {
     //  3  Compare desired position to the final position and correct
 
     Position currentPos = odometrySystemPointer->currentPos();
-    double distX = pos.x - currentPos.x;
-    double distY = pos.y - currentPos.y;
-    double travelDist = sqrt((distX * distX) + (distY * distY));
 
-    double desiredHeading = radToDegree(atan(distX / distY));
+    double travelDist = distBetweenPoints(currentPos, pos);
+    double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos));
 
     std::cout << desiredHeading << std::endl;
     
@@ -212,16 +222,13 @@ bool ai::gotoLoc(Position pos) {
 
         
         Position tempPos = odometrySystemPointer->currentPos();
-        double tempDistX = pos.x - tempPos.x;
-        double tempDistY = pos.y - tempPos.y;
 
-        desiredHeading = radToDegree(atan(distX / distY));
-        travelDist = sqrt((tempDistX * tempDistX) + (tempDistY * tempDistY));
+        travelDist = distBetweenPoints(tempPos, pos);
+        desiredHeading = radToDegree(angleBetweenPoints(tempPos, pos));
 
         if (travelDist < 2) {
             traveling = false;
         }
-
 
         //drivePower = drivePid.iterate(travelDist);
 
@@ -246,7 +253,8 @@ bool ai::gotoLoc(Position pos) {
 
 
     turnTo(pos.rot);
-    running = false;
+
+    running = wasRunning;
     return true;
 };
 
