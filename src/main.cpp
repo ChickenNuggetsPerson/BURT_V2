@@ -16,16 +16,10 @@ using namespace vex;
 using std::cout;
 using std::endl;
 
-#include <cstdlib>
-void cleanup() {
-  std::cout << "Program was stopped" << std::endl;
-};
-
 
 int main() {
 
   cout << endl << endl << endl;
-  std::atexit(cleanup);
   
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);

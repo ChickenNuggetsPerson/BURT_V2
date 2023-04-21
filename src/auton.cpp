@@ -119,12 +119,14 @@ double ai::distBetweenPoints(Position pos1, Position pos2) {
 
 bool ai::turnTo(double deg) {
 
+    double timeout = Brain.timer(msec) + (5 * 1000);
+
     bool wasRunning = running;
     running = true;
 
     double heading = radToDegree(odometrySystemPointer->currentPos().rot);
     double target = findNearestRot(heading, deg);
-    PID turnPID(PIDConfig(0.12, 0, 0.15), target);
+    PID turnPID(TURNTO_PID_CONFIG, target);
 
 
     double accuracy = 0.35;
@@ -141,8 +143,6 @@ bool ai::turnTo(double deg) {
 
         LeftDriveSmart.spin(fwd, -power, volt);
         RightDriveSmart.spin(fwd, power, volt);
-    
-        wait(0.05, seconds);
 
         if (power <= accuracy && power >= -accuracy) {
             totalChecks++;
@@ -150,37 +150,14 @@ bool ai::turnTo(double deg) {
                 break;
             }
         }
-    }
 
+        if (Brain.timer(msec) > timeout) {
+            break;
+        }
 
-    PID correctPID(PIDConfig(0.5, 0, 0.25), target);
-    accuracy = 1;
-    checks = 7;
-
-    totalChecks = 0;
-    //std::cout << "starting accurate" << std::endl;
-
-    while (false) {
         
-        heading = radToDegree(odometrySystemPointer->currentPos().rot);
-        double power = correctPID.iterate(heading);
-
-        //std::cout << power << " " << limitAngle(heading) << std::endl;
-
-        LeftDriveSmart.spin(fwd, -power, volt);
-        RightDriveSmart.spin(fwd, power, volt);
-    
         wait(0.05, seconds);
-
-        if (heading < target + 1 && heading > target - 1) {
-            break;
-        }
-        totalChecks++;
-        if (totalChecks > checks) {
-            break;
-        }
     }
-
 
     LeftDriveSmart.spin(fwd, 0, volt);
     RightDriveSmart.spin(fwd, 0, volt);
@@ -212,12 +189,13 @@ bool ai::gotoLoc(Position pos) {
 
     // Straight Drive
 
-    PID drivePid(PIDConfig(0.2, 0.00, 0.00), 0);
+    PID drivePid(GOTO_DRIVE_PID_CONFIG, 0);
     double drivePower = 0.00;
 
-    PID turnPid(PIDConfig(0.05, 0.00, 0.00));
+    PID turnPid(GOTO_TURN_PID_CONFIG);
     double turnPower = 0.00;
 
+    int stopped = 0;
     bool traveling = true;
     while (traveling) {
 
@@ -227,7 +205,7 @@ bool ai::gotoLoc(Position pos) {
         travelDist = distBetweenPoints(tempPos, pos);
         desiredHeading = radToDegree(angleBetweenPoints(tempPos, pos));
 
-        if (travelDist < 2) {
+        if (travelDist < 1) {
             traveling = false;
         }
 
@@ -246,8 +224,15 @@ bool ai::gotoLoc(Position pos) {
 
 
         std::cout << std::endl;
-        std::cout << turnCurrent << " " << turnWant << " " << desiredHeading << std::endl;
-        //std::cout << leftPower << " " << rightPower << " " << travelDist << std::endl;
+        //std::cout << turnCurrent << " " << turnWant << " " << desiredHeading << std::endl;
+        std::cout << leftPower << " " << rightPower << " " << travelDist << std::endl;
+
+        if (drivePower < 0.5) {
+            stopped++;
+        }
+        if (stopped > 10) {
+            traveling = false;
+        }
 
         wait(0.05, seconds);
     }

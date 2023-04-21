@@ -25,6 +25,14 @@ PID::PID(PIDConfig config, double desired) {
     desiredVal = desired;
 };
 
+void PID::changeConfig(PIDConfig newConfig) {
+    P = newConfig.P;
+    I = newConfig.I;
+    D = newConfig.D;
+}
+
+
+
 void PID::setMax(double maxVal) {max = maxVal; hasMax = true;}
 void PID::setMin(double minVal) {min = minVal; hasMin = true;}
 
@@ -32,7 +40,6 @@ double PID::iterate(double newVal, double newDesired) {
     desiredVal = newDesired;
     return iterate(newVal);
 };
-
 
 // Credit to Connor 1814D on youtube for this simple yet concise PID code bellow
 // https://www.youtube.com/watch?v=_Itn-0d340g&ab_channel=Connor1814D

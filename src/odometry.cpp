@@ -74,7 +74,7 @@ OdometrySystem::OdometrySystem() {
 }
 
 void OdometrySystem::restart() {
-    restart(Position());
+    restart(TilePosition());
 };
 void OdometrySystem::restart(Position currentPos) {
     if (isTracking) { trackingTask.stop(); isTracking = false; }

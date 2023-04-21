@@ -11,6 +11,14 @@ struct PIDConfig {
 };
 
 
+// Global PID Configs
+
+static PIDConfig TURNTO_PID_CONFIG(0.10, 0, 0.25);
+
+static PIDConfig GOTO_DRIVE_PID_CONFIG(0.2, 0.00, 0.00);
+static PIDConfig GOTO_TURN_PID_CONFIG(0.05, 0.00, 0.00);
+
+
 // Define the PID class
 // By using this class, PIDs can be easily created and tuned for different scenarios
 class PID {
@@ -39,6 +47,8 @@ class PID {
 
         PID(PIDConfig config);
         PID(PIDConfig config, double desired);
+
+        void changeConfig(PIDConfig newConfig);
 
         void setMax(double maxVal);
         void setMin(double minVal);

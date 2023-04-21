@@ -1408,11 +1408,15 @@ int updateOdometry(Page* self) {
 
 int mainPageTestButton(Page* self) {
 
-    botAI.turnTo(90.00);
-    wait(3, seconds);
-    botAI.turnTo(180.00);
-    wait(3, seconds);
-    botAI.turnTo(0.00);
+    self->setButtonData("debugy", green);
+    wait(4, seconds);
+    botAI.gotoLoc(TilePosition(-1, 4));
+    wait(2, sec);
+    botAI.gotoLoc(TilePosition(0, 3));
+    wait(2, seconds);
+    botAI.gotoLoc(TilePosition(0, 0));
+
+    self->setButtonData("debugy", black);
 
     return 1;
 }
@@ -1446,7 +1450,7 @@ int brainDisplayerInit() {
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
 
-    homePage.addButton("test", 20, 150, 100, 30, mainPageTestButton);
+    homePage.addButton("test", 20, 150, 100, 30, mainPageTestButton, "debugy");
 
 
     // Configure Page
