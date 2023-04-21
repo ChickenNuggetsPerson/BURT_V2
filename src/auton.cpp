@@ -108,7 +108,8 @@ double ai::findNearestRot(double currentRot, double targetRot) {
 // https://www.desmos.com/calculator/gdryojf8i3 << My tests for figuring out the math
 // Returns Angle between points in radians using positive Y axis as 0 and goes clockwise
 double ai::angleBetweenPoints(Position pos1, Position pos2) {
-    return atan2(pos2.x - pos1.x, pos2.y - pos2.y);
+    //std::cout << atan2(pos2.x - pos1.x, pos2.y - pos1.y) << std::endl;
+    return atan2(pos2.x - pos1.x, pos2.y - pos1.y);
 }
 // Returns the distance between points
 double ai::distBetweenPoints(Position pos1, Position pos2) {
@@ -211,7 +212,7 @@ bool ai::gotoLoc(Position pos) {
 
     // Straight Drive
 
-    PID drivePid(PIDConfig(0.5, 0.00, 0.00), 0);
+    PID drivePid(PIDConfig(0.2, 0.00, 0.00), 0);
     double drivePower = 0.00;
 
     PID turnPid(PIDConfig(0.05, 0.00, 0.00));
@@ -230,7 +231,7 @@ bool ai::gotoLoc(Position pos) {
             traveling = false;
         }
 
-        //drivePower = drivePid.iterate(travelDist);
+        drivePower = drivePid.iterate(travelDist);
 
         double turnCurrent = radToDegree(odometrySystemPointer->currentPos().rot);
         double turnWant = findNearestRot(radToDegree(tempPos.rot), desiredHeading);
@@ -246,7 +247,7 @@ bool ai::gotoLoc(Position pos) {
 
         std::cout << std::endl;
         std::cout << turnCurrent << " " << turnWant << " " << desiredHeading << std::endl;
-        std::cout << leftPower << " " << rightPower << " " << travelDist << std::endl;
+        //std::cout << leftPower << " " << rightPower << " " << travelDist << std::endl;
 
         wait(0.05, seconds);
     }

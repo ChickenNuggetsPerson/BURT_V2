@@ -192,8 +192,8 @@ void OdometrySystem::track() {
 
     double deltaDist = (currentData.deltaLeft + currentData.deltaRight) / 2.0;
 
-    double deltaX = deltaDist * cos(currentData.heading);
-    double deltaY = deltaDist * sin(currentData.heading);
+    double deltaX = deltaDist * sin(currentData.heading);
+    double deltaY = deltaDist * cos(currentData.heading);
 
     globalX += deltaX;
     globalY += deltaY;    
