@@ -1,10 +1,6 @@
 #pragma once
 #include "vex.h"
 
-static double PI = 3.14159;
-static int tileWidth = 24; // Vex Tiles are 2ft across
-
-
 // Positions are based on inches from the bottom left of the feild
 struct Position {
     double x = 0.00;   // In Inches

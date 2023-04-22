@@ -239,6 +239,7 @@ Then in the movement loop, run `.iterate()` and it will return the result value 
         wait(0.05, seconds);
     }
 
+
 # Specific Burt Features
 
 ## Dynamically Generated Config Screen
@@ -257,6 +258,12 @@ As of writing this, the brain only looks for changes in two values:
 I plan on expanding this list in the future
 
 ![SdNotification](images/sdNotification.png)
+
+
+## PID Auto Tuning
+
+In order to keep the turning PID accurate with the ever changing mass of the robot in the early stages of development, I have created a [separate program](https://github.com/ChickenNuggetsPerson/BURT_V2_PIDAutoTunner) for tuning the turning PIDs using the [Ziegler–Nichols method](https://en.wikipedia.org/wiki/Ziegler%E2%80%93Nichols_method).
+
 
 # Future Ideas / Plans
 

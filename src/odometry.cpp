@@ -1,6 +1,5 @@
 #include "robotConfig.h"
 #include "odometry.h"
-#include "robotMeasurements.h"
 #include "math.h"
 
 using namespace vex;
@@ -74,7 +73,7 @@ OdometrySystem::OdometrySystem() {
 }
 
 void OdometrySystem::restart() {
-    restart(TilePosition());
+    restart(ODOM_DEFAULT_RESET_POS);
 };
 void OdometrySystem::restart(Position currentPos) {
     if (isTracking) { trackingTask.stop(); isTracking = false; }

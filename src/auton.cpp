@@ -126,7 +126,7 @@ bool ai::turnTo(double deg) {
 
     double heading = radToDegree(odometrySystemPointer->currentPos().rot);
     double target = findNearestRot(heading, deg);
-    PID turnPID(TURNTO_PID_CONFIG, target);
+    PID turnPID(AUTON_TURNTO_PID_CONFIG, target);
 
 
     double accuracy = 0.35;
@@ -189,10 +189,10 @@ bool ai::gotoLoc(Position pos) {
 
     // Straight Drive
 
-    PID drivePid(GOTO_DRIVE_PID_CONFIG, 0);
+    PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
     double drivePower = 0.00;
 
-    PID turnPid(GOTO_TURN_PID_CONFIG);
+    PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
     double turnPower = 0.00;
 
     int stopped = 0;

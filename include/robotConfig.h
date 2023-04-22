@@ -1,6 +1,8 @@
 
 #include "vex.h"
 
+#include "robotConstants.h"
+
 #include "tasks.h"
 #include "displayer.h"
 #include "auton.h"
