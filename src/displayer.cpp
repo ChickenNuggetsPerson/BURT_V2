@@ -33,31 +33,24 @@ Page configPage(1);
 
 // Called when the screen is pressed
 void screenPressed() {mainRenderer.screenPressed();}
+
+// Define Notification Checks
+bool checkInertial() {return inertialSensor.isCalibrating();}
+bool checkSDCard() {return Brain.SDcard.isInserted();}
+bool checkMainController() {return mainController.installed();}
 int notificationCheck() {
     
     int checkSpeed = 1;
 
-    // Values to watch for
-    bool sdCard = true;
-    bool inertialCalibrating = false;
-    bool mainControllerStatus = false;
+    NotificationChecker NotChecker(&mainRenderer);
 
+
+    NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, false, green, green);
+    NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard);
+    NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController);
 
     while (true) {
-
-        if ( sdCard != Brain.SDcard.isInserted() ) { 
-            sdCard = Brain.SDcard.isInserted();
-            if ( sdCard ) { mainRenderer.newNotification("SD Card Inserted", 4, green); } else { mainRenderer.newNotification("SD Card Removed", 5, red);} 
-        }
-        if ( inertialCalibrating != inertialSensor.installed() && inertialSensor.isCalibrating() ) { 
-            inertialCalibrating = inertialSensor.installed() && inertialSensor.isCalibrating();
-            if ( inertialCalibrating ) { mainRenderer.newNotification("Starting Calibration", 4, green); } else { mainRenderer.newNotification("Calibration Done", 5, green);} 
-        }        
-        if (mainControllerStatus != mainController.installed()) {
-            mainControllerStatus = mainController.installed();
-            if ( mainControllerStatus ) { brainFancyDebug("Controller Connected", green, true); } else { brainError("Controller Disconnected"); }
-        }
-
+        NotChecker.check();
         wait(checkSpeed, seconds);
     }
 

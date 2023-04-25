@@ -1110,8 +1110,6 @@ struct Notification {
     double disapearTime;
 };
 
-
-
 // I would put this in the MenuSystem Class but I can't call it as a task() in the MenuSystem Class
 int mainDataUpdater(void* pageToUpdate) {
     Page* pagePointer = (Page*)pageToUpdate;
@@ -1253,3 +1251,54 @@ class MenuSystem {
 
 };
 
+
+
+struct NotCheck {
+    const char* trueMessage;
+    vex::color trueColor = green;
+    const char* falseMessage;
+    vex::color falseColor = red;
+    bool log;
+    bool lastVal;
+    bool (*checkCB)();
+    
+};
+
+class NotificationChecker {
+    private:
+        NotCheck checksStorage[10];
+        int checksStored = 0;
+
+        MenuSystem* menuSystemPtr;
+
+    public:
+        NotificationChecker(MenuSystem* ptr) {
+            menuSystemPtr = ptr;
+        };
+
+        void addCheck(const char* trueMessage, const char* falseMessage, bool (*cb)(), bool initVal = false, vex::color falseColor = red, vex::color trueColor = green, bool log = false) {
+            NotCheck newCheck = NotCheck();
+            newCheck.trueMessage = trueMessage;
+            newCheck.falseMessage = falseMessage;
+            newCheck.checkCB = cb;
+            newCheck.falseColor = falseColor;
+            newCheck.trueColor = trueColor;
+            newCheck.lastVal = initVal;
+            newCheck.log = log;
+            checksStorage[checksStored] = newCheck;
+            checksStored++;
+        }
+        void check() {
+            for (int i = 0; i < checksStored; i++) {
+                bool newVal = checksStorage[i].checkCB();
+                if (newVal != checksStorage[i].lastVal) {
+                    if (checksStorage[i].log) {
+                        brainFancyDebug(newVal ? checksStorage[i].trueMessage : checksStorage[i].falseMessage, newVal ? checksStorage[i].trueColor : checksStorage[i].falseColor, true);
+                    } else {
+                        menuSystemPtr->newNotification(newVal ? checksStorage[i].trueMessage : checksStorage[i].falseMessage, 4, newVal ? checksStorage[i].trueColor : checksStorage[i].falseColor);
+                    } 
+                }
+                checksStorage[i].lastVal = newVal;
+            }
+        }
+};
