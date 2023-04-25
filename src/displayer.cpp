@@ -45,8 +45,8 @@ int notificationCheck() {
     NotificationChecker NotChecker(&mainRenderer);
 
 
-    NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, false, green, green);
-    NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard);
+    NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, false, yellow, green);
+    NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController);
 
     while (true) {
@@ -292,15 +292,11 @@ int updateMap(Page* self) {
     plotPtr->drawPoint1 = true;
 
     if ( botAI.running ) {
-        plotPtr->point2 = botAI.targetPos;
-        plotPtr->drawPoint2 = true;
-
-        plotPtr->line = Line(currentPos.x, currentPos.y, botAI.targetPos.x, botAI.targetPos.y, cyan);
-        plotPtr->drawStoredLine = true;
-        
+        plotPtr->updatePoint(2, true, botAI.getTargetPos());
+        plotPtr->updateLine(true);
     } else {
-        plotPtr->drawPoint2 = false;
-        plotPtr->drawStoredLine = false;
+        plotPtr->updatePoint(2, false);
+        plotPtr->updateLine(false);
     }
 
     return 1;
@@ -359,9 +355,9 @@ int brainDisplayerInit() {
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, white, fontType::mono30, "title");
     mapPage.addText("Status", 22, 65, white, fontType::mono15, "status");
-    mapPage.addPlot("map", "Robot Pos", 100, 30, 100, 100, tileWidth*6, tileWidth*6, 0);
+    mapPage.addPlot("map", "Robot Pos", 175, 15, 200, 200, tileWidth*6, tileWidth*6, 6);
     mapPage.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
-    mapPage.addDataUpdaterCB(updateMap);
+    mapPage.addDataUpdaterCB(updateMap, 0.2);
 
 
     // Configure the config page
@@ -399,6 +395,7 @@ int brainDisplayerInit() {
     odometryPage.addText("%f", 300, 100, white, fontType::mono30, "xtile");
     odometryPage.addText("%f", 300, 140, white, fontType::mono30, "ytile");
     odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
+    odometryPage.addButton("Map", 280, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
 
     return 1;

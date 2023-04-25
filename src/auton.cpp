@@ -116,12 +116,14 @@ double ai::distBetweenPoints(Position pos1, Position pos2) {
     return sqrt(pow((pos2.x - pos1.x), 2) + pow((pos2.y - pos1.y), 2));
 }
 
+Position ai::getTargetPos() {
+    return target;
+}
+
 
 bool ai::turnTo(double deg) {
-    targetPos = odometrySystemPointer->currentPos();
-    targetPos.rot = deg;
 
-    double timeout = Brain.timer(msec) + (5 * 1000);
+    double timeout = Brain.timer(msec) + (3 * 1000);
 
     bool wasRunning = running;
     running = true;
@@ -172,7 +174,11 @@ bool ai::gotoLoc(TilePosition pos) {return gotoLoc(odometrySystemPointer->tilePo
 bool ai::gotoLoc(Position pos) {
     bool wasRunning = running;
     running = true;
-    targetPos = pos;
+    target.x = pos.x;
+    target.y = pos.y;
+    target.rot = pos.rot;
+
+    std::cout << "Target: " << pos.x << " " << pos.y << std::endl;
 
     // Required: Odomotry system needs to be working to do this
 
@@ -186,7 +192,7 @@ bool ai::gotoLoc(Position pos) {
     double travelDist = distBetweenPoints(currentPos, pos);
     double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos));
 
-    std::cout << desiredHeading << std::endl;
+    //std::cout << desiredHeading << std::endl;
     
     turnTo(desiredHeading);
 
@@ -226,9 +232,9 @@ bool ai::gotoLoc(Position pos) {
         RightDriveSmart.spin(fwd, rightPower, voltageUnits::volt);
 
 
-        std::cout << std::endl;
+        //std::cout << std::endl;
         //std::cout << turnCurrent << " " << turnWant << " " << desiredHeading << std::endl;
-        std::cout << leftPower << " " << rightPower << " " << travelDist << std::endl;
+        //std::cout << leftPower << " " << rightPower << " " << travelDist << std::endl;
 
         if (drivePower < 0.5) {
             stopped++;

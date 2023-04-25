@@ -450,22 +450,6 @@ struct Toggle {
     
 };
 
-struct Line {
-    int x1 = 0;
-    int y1 = 0;
-    int x2 = 0;
-    int y2 = 0;
-    vex::color lineColor = white;
-    Line(int pointX1, int pointY1, int pointX2, int pointY2, vex::color displayColor = white) {
-        x1 = pointX1;
-        y1 = pointY1;
-        x2 = pointX2;
-        y2 = pointY2;
-        lineColor = displayColor;
-    };
-    Line();
-};
-
 class Plot {
     public:
         const char* id;
@@ -484,7 +468,6 @@ class Plot {
         Position point2;
         bool drawPoint2 = false;
 
-        Line line = Line(0, 0, 0, 0);
         bool drawStoredLine = false;
 
         Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0) {
@@ -496,16 +479,16 @@ class Plot {
             maxY = plotMaxY;
             subdiv = plotSubdiv;
         }
-
-        //Plot();
         
         void draw() {
             Brain.Screen.printAt(x, y, label);
-            Brain.Screen.drawRectangle(x, y + 5, x + width, y + 5 + height);
             if (subdiv != 0) {
                 int moveX = width / subdiv;
                 int moveY = height / subdiv;
 
+                vex::color gray;
+                gray.rgb(150, 150, 150);
+                Brain.Screen.setPenColor(gray);
                 for (int i = 0; i < subdiv; i++) {
                     Brain.Screen.drawLine(x + moveX*i, y + 5, x + moveX*i, y + 5 + height);
                 }
@@ -513,9 +496,28 @@ class Plot {
                 for (int i = 0; i < subdiv; i++) {
                     Brain.Screen.drawLine(x, y + 5 + moveY*i, x + width, y + 5 + moveY*i);
                 }
+                Brain.Screen.setPenColor(white);
             }
+            
+            Brain.Screen.setFillColor(vex::color::transparent);
+            Brain.Screen.drawRectangle(x, y + 5, width, height);
+            Brain.Screen.setFillColor(black);
 
-            drawLine(line);
+            if (drawStoredLine) { 
+                int drawX1 = (( point1.x / maxX ) * width) + x;
+                int drawY1 = y + 5 + height - (( point1.y / maxY) * height);
+
+
+                int drawX2 = (( point2.x / maxX ) * width) + x;
+                int drawY2 = y + 5 + height - (( point2.y / maxY) * height);
+
+                Brain.Screen.setPenColor(cyan);
+                Brain.Screen.drawLine(drawX1, drawY1, drawX2, drawY2);
+                Brain.Screen.setPenColor(white);
+
+                wait(0.1, seconds);
+
+            }
             drawPoints();
         }
         void updatePoint(int pointNum, bool draw, Position newPoint = Position()) {
@@ -528,41 +530,28 @@ class Plot {
                 drawPoint2 = draw;
             }
         }
-        void updateLine (bool draw, Line newLine) {
+
+        void updateLine (bool draw) {
             drawStoredLine = draw;
-            line = newLine;
         }
-        void drawPoint(Position drawPoint) {
+        void drawPoint(Position drawPoint, vex::color displayColor) {
             double radius = 5;
 
             int drawX = (( drawPoint.x / maxX ) * width) + x;
-            int drawY = (( drawPoint.y / maxY) * height) + y + 5;
+            int drawY = y + 5 + height - (( drawPoint.y / maxY) * height);
 
+            Brain.Screen.setFillColor(displayColor);
             Brain.Screen.drawCircle(drawX, drawY, radius);
+            Brain.Screen.setFillColor(black);
         }
         void drawPoints() {
 
             if (drawPoint2) {
-                drawPoint(point2);
+                drawPoint(point2, cyan);
             }
             if (drawPoint1) {
-                drawPoint(point1);
+                drawPoint(point1, green);
             }
-        };
-        void drawLine(Line lineToDraw) {
-            if (!drawStoredLine) { return; }
-
-            int drawX1 = (( lineToDraw.x1 / maxX ) * width) + x;
-            int drawY1 = (( lineToDraw.y1 / maxY) * height) + y + 5;
-
-            
-            int drawX2 = (( lineToDraw.x2 / maxX ) * width) + x;
-            int drawY2 = (( lineToDraw.y2 / maxY) * height) + y + 5;
-
-            Brain.Screen.setPenColor(lineToDraw.lineColor);
-            Brain.Screen.drawLine(drawX1, drawY1, drawX2, drawY2);
-            Brain.Screen.setPenColor(white);
-
         };
 };
 
@@ -1276,7 +1265,7 @@ class NotificationChecker {
             menuSystemPtr = ptr;
         };
 
-        void addCheck(const char* trueMessage, const char* falseMessage, bool (*cb)(), bool initVal = false, vex::color falseColor = red, vex::color trueColor = green, bool log = false) {
+        void addCheck(const char* trueMessage, const char* falseMessage, bool (*cb)(), bool initVal = false, vex::color trueColor = green, vex::color falseColor = red, bool log = false) {
             NotCheck newCheck = NotCheck();
             newCheck.trueMessage = trueMessage;
             newCheck.falseMessage = falseMessage;

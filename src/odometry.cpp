@@ -44,18 +44,16 @@ int mainTrackingTask(void* system) {
 
     double updateSpeed = 10; // In msec 
 
-    wait(0.5, seconds);
-
-    // V-- Put back in once inertial sensor is installed
-    //if (!inertialSensor.installed()) { brainError("Inertial Sensor Not Installed"); return 1;}
-
+    inertialSensor.startCalibration();
     while (inertialSensor.isCalibrating()) {
         wait(0.05, seconds);
     }
 
     systemPointer->resetEncoders();
     
-    brainFancyDebug("Starting Odometry System", green, true);
+    vex::color notColor;
+    notColor.rgb(24, 222, 166);
+    brainFancyDebug("Starting Odometry System", notColor, true);
     systemPointer->isTracking = true;
     while (true) {
         systemPointer->track();
@@ -67,7 +65,7 @@ int mainTrackingTask(void* system) {
 OdometrySystem::OdometrySystem() {
     // Start tracking system
 
-    inertialSensor.startCalibration();
+    
 
     //trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
 }

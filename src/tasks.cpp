@@ -12,7 +12,7 @@ void test(){
 };
 
 void rightPressed() {
- botAI.gotoLoc(Position(0, 0, 0));
+ botAI.gotoLoc(TilePosition(4, 3, 0));
  //botAI.turnTo(90);
 };
 void leftPressed() {

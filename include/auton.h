@@ -18,10 +18,11 @@ class ai {
     double angleBetweenPoints(Position pos1, Position pos2);
     double distBetweenPoints(Position pos1, Position pos2);
 
+    Position target;
+
   public:
 
     bool running = false;
-    Position targetPos;
 
     std::string configFoler = "config/";
     std::string configFileType = ".txt";
@@ -52,6 +53,7 @@ class ai {
     bool isReady();
 
     Position getStartPos();
+    Position getTargetPos();
 
     void started();
 
