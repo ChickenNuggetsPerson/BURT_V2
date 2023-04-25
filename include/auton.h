@@ -21,6 +21,7 @@ class ai {
   public:
 
     bool running = false;
+    Position targetPos;
 
     std::string configFoler = "config/";
     std::string configFileType = ".txt";

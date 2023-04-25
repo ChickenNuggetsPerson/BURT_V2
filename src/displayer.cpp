@@ -497,6 +497,123 @@ struct Toggle {
     
 };
 
+
+struct Line {
+    int x1 = 0;
+    int y1 = 0;
+    int x2 = 0;
+    int y2 = 0;
+    vex::color lineColor = white;
+    Line(int pointX1, int pointY1, int pointX2, int pointY2, vex::color displayColor = white) {
+        x1 = pointX1;
+        y1 = pointY1;
+        x2 = pointX2;
+        y2 = pointY2;
+        lineColor = displayColor;
+    };
+    Line();
+};
+
+class Plot {
+    public:
+        const char* id;
+        const char* label;
+        int x;
+        int y;
+        int width;
+        int height;
+        int maxX;
+        int maxY;
+        int subdiv;
+
+
+        Position point1;
+        bool drawPoint1 = false;
+        Position point2;
+        bool drawPoint2 = false;
+
+        Line line = Line(0, 0, 0, 0);
+        bool drawStoredLine = false;
+
+        Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0) {
+            id = plotId;
+            label = plotLabel;
+            width = plotWidth;
+            height = plotHeight;
+            maxX = plotMaxX;
+            maxY = plotMaxY;
+            subdiv = plotSubdiv;
+        }
+
+        //Plot();
+        
+        void draw() {
+            Brain.Screen.printAt(x, y, label);
+            Brain.Screen.drawRectangle(x, y + 5, x + width, y + 5 + height);
+            if (subdiv != 0) {
+                int moveX = width / subdiv;
+                int moveY = height / subdiv;
+
+                for (int i = 0; i < subdiv; i++) {
+                    Brain.Screen.drawLine(x + moveX*i, y + 5, x + moveX*i, y + 5 + height);
+                }
+
+                for (int i = 0; i < subdiv; i++) {
+                    Brain.Screen.drawLine(x, y + 5 + moveY*i, x + width, y + 5 + moveY*i);
+                }
+            }
+
+            drawLine(line);
+            drawPoints();
+        }
+        void updatePoint(int pointNum, bool draw, Position newPoint = Position()) {
+            if (pointNum == 1) {
+                point1 = newPoint;
+                drawPoint1 = draw;
+            }
+            if (pointNum == 2) {
+                point2 = newPoint;
+                drawPoint2 = draw;
+            }
+        }
+        void updateLine (bool draw, Line newLine) {
+            drawStoredLine = draw;
+            line = newLine;
+        }
+        void drawPoint(Position drawPoint) {
+            double radius = 5;
+
+            int drawX = (( drawPoint.x / maxX ) * width) + x;
+            int drawY = (( drawPoint.y / maxY) * height) + y + 5;
+
+            Brain.Screen.drawCircle(drawX, drawY, radius);
+        }
+        void drawPoints() {
+
+            if (drawPoint2) {
+                drawPoint(point2);
+            }
+            if (drawPoint1) {
+                drawPoint(point1);
+            }
+        };
+        void drawLine(Line lineToDraw) {
+            if (!drawStoredLine) { return; }
+
+            int drawX1 = (( lineToDraw.x1 / maxX ) * width) + x;
+            int drawY1 = (( lineToDraw.y1 / maxY) * height) + y + 5;
+
+            
+            int drawX2 = (( lineToDraw.x2 / maxX ) * width) + x;
+            int drawY2 = (( lineToDraw.y2 / maxY) * height) + y + 5;
+
+            Brain.Screen.setPenColor(lineToDraw.lineColor);
+            Brain.Screen.drawLine(drawX1, drawY1, drawX2, drawY2);
+            Brain.Screen.setPenColor(white);
+
+        };
+};
+
 class Page {
     private:
 
@@ -522,6 +639,8 @@ class Page {
         Toggle toggleStorage[10];
         int togglesStored = 0;
 
+        Plot plotStorage[10];
+        int plotsStored = 0;
 
         OverlayQuestion storedOverlay;
         bool showOverlay = false;
@@ -712,6 +831,11 @@ class Page {
                 drawToggle(toggleStorage[i]);
             }
 
+            // Render Plots
+            for (int i = 0; i < plotsStored; i++) {
+                plotStorage[i].draw();
+            }
+
             // Render Overlay
             if (showOverlay) {
                 drawOverlay(storedOverlay);
@@ -839,6 +963,20 @@ class Page {
             toggleStorage[togglesStored].height = height;
             togglesStored++;
         };
+        void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0) {
+            plotStorage[plotsStored] = Plot();
+            plotStorage[plotsStored].id = plotId;
+            plotStorage[plotsStored].label = label;
+            plotStorage[plotsStored].x = plotX;
+            plotStorage[plotsStored].y = plotY;
+            plotStorage[plotsStored].width = plotWidth;
+            plotStorage[plotsStored].height = plotHeight;
+            plotStorage[plotsStored].maxX = plotMaxX;
+            plotStorage[plotsStored].maxY = plotMaxY;
+            plotStorage[plotsStored].subdiv = plotSubdiv;
+
+            plotsStored++;
+        };
 
 
         void setProgressBarValue(const char* barId, int value) {
@@ -932,6 +1070,19 @@ class Page {
                 }
             }
         };
+        Plot* getPlotPointer(const char* id) {
+            for (int i = 0; i < plotsStored; i++) {
+                if (strcmp(plotStorage[i].id, id) == 0) {
+                    return &plotStorage[i];
+                }
+            }
+            return nullptr;
+        }
+
+
+
+
+
         void massSetData(const char* id, int data) {
             setProgressBarValue(id, data);
             setLineGraphValue(id, data);
@@ -1023,6 +1174,7 @@ class MenuSystem {
         int pagesStored = 0;
 
         int displayPage = -1;
+        int prevPage = 0;
 
         bool firstTimeRender = true;
 
@@ -1109,6 +1261,7 @@ class MenuSystem {
             for (int i = 0; i < pagesStored; i++) {
                 if (strcmp(pageId, pageIdStorage[i]) == 0) {
                     if (displayPage != i) {
+                        prevPage = displayPage;
                         displayPage = i;
                         startUpdaterTask(displayPage);
                         pageStorage[i]->pageLoaded();
@@ -1117,6 +1270,10 @@ class MenuSystem {
                 }
             }
         };
+
+        void gotoPrevPage() {
+            gotoPage(pageIdStorage[prevPage]);
+        }
 
         Page* searchPages(const char* pageId) {
             for (int i = 0; i < pagesStored; i++) {
@@ -1148,12 +1305,21 @@ class MenuSystem {
 
 
 
+
+
+
+
+
+
+
+
 // Define head elements
 Logger BrainLogs(1, 1, "logs.txt", 10);
 MenuSystem mainRenderer(true);
 
 // Define Pages
 Page homePage(1);
+Page mapPage(1);
 Page debugPage(1);
 Page odometryPage(1);
 Page configPage(1);
@@ -1204,6 +1370,10 @@ int updateHome(Page* self) {
 
 
 // Define Standard Buttons
+int gotoPrevPageButton(Page* self) {
+    self->menuSystemPointer->gotoPrevPage();
+    return 1;
+}
 int gotoMainPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("main");
     return 1;
@@ -1218,6 +1388,10 @@ int gotoConfigPageButton(Page* self) {
 };
 int gotoOdometryPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("odometry");
+    return 1;
+}
+int gotoMapPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("map");
     return 1;
 }
 
@@ -1405,6 +1579,36 @@ int updateOdometry(Page* self) {
 };
 
 
+int updateMap(Page* self) {
+    if (Odometry.isTracking) {
+        self->setTextData("status", green, "Running");
+    } else {
+        self->setTextData("status", red, "Odom Not Running");
+        return 1;
+    }
+
+    Plot* plotPtr = self->getPlotPointer("map"); 
+    Position currentPos = Odometry.currentPos();
+    currentPos.rot = radToDegree(currentPos.rot);
+
+    plotPtr->point1 = currentPos;
+    plotPtr->drawPoint1 = true;
+
+    if ( botAI.running ) {
+        plotPtr->point2 = botAI.targetPos;
+        plotPtr->drawPoint2 = true;
+
+        plotPtr->line = Line(currentPos.x, currentPos.y, botAI.targetPos.x, botAI.targetPos.y, cyan);
+        plotPtr->drawStoredLine = true;
+        
+    } else {
+        plotPtr->drawPoint2 = false;
+        plotPtr->drawStoredLine = false;
+    }
+
+    return 1;
+}
+
 
 int mainPageTestButton(Page* self) {
 
@@ -1439,6 +1643,7 @@ int brainDisplayerInit() {
     mainRenderer.addPage("debug", &debugPage);
     mainRenderer.addPage("config", &configPage);
     mainRenderer.addPage("odometry", &odometryPage);
+    mainRenderer.addPage("map", &mapPage);
 
 
 
@@ -1447,13 +1652,22 @@ int brainDisplayerInit() {
     homePage.addText("Developed by Hayden Steele", 22, 75, white, fontType::mono15);
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
+    homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
 
     homePage.addButton("test", 20, 150, 100, 30, mainPageTestButton, "debugy");
 
 
-    // Configure Page
+    // Configure the map page
+    mapPage.addText("Feild Map", 20, 40, white, fontType::mono30, "title");
+    mapPage.addText("Status", 22, 65, white, fontType::mono15, "status");
+    mapPage.addPlot("map", "Robot Pos", 100, 30, 100, 100, tileWidth*6, tileWidth*6, 0);
+    mapPage.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
+    mapPage.addDataUpdaterCB(updateMap);
+
+
+    // Configure the config page
     configPage.addText("Configure Burt", 20, 40, white, fontType::mono30, "title");
     configPage.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
     configPage.addButton("Back", 380, 210, 100, 30, configExitButton, "mainPageButton");

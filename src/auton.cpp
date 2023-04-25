@@ -118,6 +118,8 @@ double ai::distBetweenPoints(Position pos1, Position pos2) {
 
 
 bool ai::turnTo(double deg) {
+    targetPos = odometrySystemPointer->currentPos();
+    targetPos.rot = deg;
 
     double timeout = Brain.timer(msec) + (5 * 1000);
 
@@ -170,6 +172,7 @@ bool ai::gotoLoc(TilePosition pos) {return gotoLoc(odometrySystemPointer->tilePo
 bool ai::gotoLoc(Position pos) {
     bool wasRunning = running;
     running = true;
+    targetPos = pos;
 
     // Required: Odomotry system needs to be working to do this
 
