@@ -16,8 +16,14 @@ void rightPressed() {
  //botAI.turnTo(90);
 };
 void leftPressed() {
-  brainChangePage("odometry");
+  brainChangePage("map");
 };
+void upPressed() {
+  botAI.gotoLoc(TilePosition(1, 5, 0));
+}
+void downPressed() {
+  botAI.gotoLoc(TilePosition(0, 0, 0));
+}
 
 void pre_auton(void) {
 
@@ -31,6 +37,8 @@ void pre_auton(void) {
 
   mainController.ButtonRight.pressed(rightPressed);
   mainController.ButtonLeft.pressed(leftPressed);
+  mainController.ButtonUp.pressed(upPressed);
+  mainController.ButtonDown.pressed(downPressed);
 
   startTasks();
   botAI.init();

@@ -299,6 +299,10 @@ int updateMap(Page* self) {
         plotPtr->updateLine(false);
     }
 
+    self->setTextData("xpos", currentPos.x);
+    self->setTextData("ypos", currentPos.y);
+    self->setTextData("rot", (currentPos.rot));
+
     return 1;
 }
 
@@ -355,7 +359,10 @@ int brainDisplayerInit() {
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, white, fontType::mono30, "title");
     mapPage.addText("Status", 22, 65, white, fontType::mono15, "status");
-    mapPage.addPlot("map", "Robot Pos", 175, 15, 200, 200, tileWidth*6, tileWidth*6, 6);
+    mapPage.addPlot("map", "Robot Pos", 175, 15, 200, 200, tileWidth*6, tileWidth*6, 6, true);
+    mapPage.addText("X:   %f", 20, 100, white, fontType::mono20, "xpos");
+    mapPage.addText("Y:   %f", 20, 130, white, fontType::mono20, "ypos");
+    mapPage.addText("Rot: %f", 20, 160, white, fontType::mono20, "rot");
     mapPage.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
     mapPage.addDataUpdaterCB(updateMap, 0.2);
 

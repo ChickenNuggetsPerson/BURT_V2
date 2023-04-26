@@ -461,6 +461,7 @@ class Plot {
         int maxX;
         int maxY;
         int subdiv;
+        bool labels;
 
 
         Position point1;
@@ -470,7 +471,7 @@ class Plot {
 
         bool drawStoredLine = false;
 
-        Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0) {
+        Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0, bool showLabels = false) {
             id = plotId;
             label = plotLabel;
             width = plotWidth;
@@ -478,6 +479,7 @@ class Plot {
             maxX = plotMaxX;
             maxY = plotMaxY;
             subdiv = plotSubdiv;
+            labels = showLabels;
         }
         
         void draw() {
@@ -490,10 +492,16 @@ class Plot {
                 gray.rgb(150, 150, 150);
                 Brain.Screen.setPenColor(gray);
                 for (int i = 0; i < subdiv; i++) {
+                    if (labels) {
+                        Brain.Screen.printAt(x + moveX*i, y + 3 + height, "%d", i);
+                    }
                     Brain.Screen.drawLine(x + moveX*i, y + 5, x + moveX*i, y + 5 + height);
                 }
 
-                for (int i = 0; i < subdiv; i++) {
+                for (int i = 1; i < subdiv; i++) {
+                    if (labels) {
+                        Brain.Screen.printAt(x, y + 3 + moveY*i, "%d", subdiv - i);
+                    }
                     Brain.Screen.drawLine(x, y + 5 + moveY*i, x + width, y + 5 + moveY*i);
                 }
                 Brain.Screen.setPenColor(white);
@@ -904,7 +912,7 @@ class Page {
             toggleStorage[togglesStored].height = height;
             togglesStored++;
         };
-        void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0) {
+        void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false) {
             plotStorage[plotsStored] = Plot();
             plotStorage[plotsStored].id = plotId;
             plotStorage[plotsStored].label = label;
@@ -915,6 +923,7 @@ class Page {
             plotStorage[plotsStored].maxX = plotMaxX;
             plotStorage[plotsStored].maxY = plotMaxY;
             plotStorage[plotsStored].subdiv = plotSubdiv;
+            plotStorage[plotsStored].labels = showLabels;
 
             plotsStored++;
         };

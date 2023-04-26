@@ -58,6 +58,7 @@ class ai {
     void started();
 
     bool turnTo(double deg);
+    bool turnTo(double deg, double turnTimeout);
     bool gotoLoc(TilePosition pos);
     bool gotoLoc(Position pos);
 };

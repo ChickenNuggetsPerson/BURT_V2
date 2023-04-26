@@ -27,8 +27,6 @@ void ai::init() {
             } else {
                 configStorage[i] = false;
             } 
-
-            //std::cout << (configFoler + configNames[i]).c_str() << " " << configStorage[i] << " " << valueRead << std::endl; 
             wait(0.1, seconds);
         }
         loaded = true;
@@ -60,10 +58,7 @@ void ai::saveConfig(const char* configName, bool value) {
         if (configNames[i] == std::string(configName)) {
             int writeVal = 0;
             if (value) { writeVal= 1;}
-
             writeFile((configFoler + configNames[i] + configFileType).c_str(), writeVal);
-                
-            
         }
     }
 
@@ -120,8 +115,10 @@ Position ai::getTargetPos() {
     return target;
 }
 
-
 bool ai::turnTo(double deg) {
+    return turnTo(deg, 3);
+}
+bool ai::turnTo(double deg, double turnTimeout) {
 
     double timeout = Brain.timer(msec) + (3 * 1000);
 
@@ -194,7 +191,7 @@ bool ai::gotoLoc(Position pos) {
 
     //std::cout << desiredHeading << std::endl;
     
-    turnTo(desiredHeading);
+    turnTo(desiredHeading, 2);
 
     // Straight Drive
 
@@ -247,7 +244,7 @@ bool ai::gotoLoc(Position pos) {
     }
 
 
-    turnTo(pos.rot);
+    turnTo(pos.rot, 1.5);
 
     running = wasRunning;
     return true;
