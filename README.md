@@ -277,3 +277,5 @@ This year, I plan on integrating at least two tracking wheels. Into the odometry
 
 Another plan for this year is the plan for automated path planning. Instead of saying "drive 4 inches, turn right", I would like to have a system where I could say "goto ( 2, 4 ) on the feild". This would require a system that could constantly track the position of the robot on the feild. It would also require some sort of path finding system too. This is why I am starting the code for BURT_V2 this early, so then I can do propper research and testing on odometry systems and path planning. 
 
+
+![test](code.png)
