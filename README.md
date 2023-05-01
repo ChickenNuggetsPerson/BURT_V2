@@ -50,22 +50,11 @@ Once created, data can be changed using:<br>
  
  Page data can be continually updated using the `.addDataUpdaterCB()` function. First, declare your update function as follows:
 
-    int updateDebug(Page* self) {
-    
-	    return  1;
-    }
+![addDataUpdaterCB](images/code/addDataUpdaterCB.png)
     
 When run, the update function is given the pointer to the page object. This means that any aspect of the page object can be edited through this update function. In this example, we are setting the progressbars on the page to the temperature of the four different motors.
 
-	int updateDebug(Page* self) {
-		
-	    self->setProgressBarValue("fl", leftMotorA.temperature(fahrenheit));
-	    self->setProgressBarValue("fr", rightMotorA.temperature(fahrenheit));
-	    self->setProgressBarValue("bl", leftMotorB.temperature(fahrenheit));
-	    self->setProgressBarValue("br", rightMotorB.temperature(fahrenheit));
-		
-	    return 1;
-	}
+![dataUpdaterCB](images/code/dataUpdaterCB.png)
 
 Once the update function is defined, it is added using the `.addDataUpdaterCB()` function on the page. ( You can also define the time between updates in seconds )
 
@@ -79,7 +68,7 @@ This is the debug page. It shows the [logs](https://github.com/ChickenNuggetsPer
 ### Log Messages:
 The logging system is controlled by the `Logger` object. When creating a logger, it is given the row and column that it is drawn at. The Logger then can be added to a `Page` by using the `.addLogger()` method.
 
-    homePage.addLogger(&BrainLogs); // Add the pointer to the logger to the page
+![setDataUpdaterCB](images/code/setDataUpdaterCB.png)
 
 By default, the Logger object is not extended to the rest of the program so use the following functions to send messages to the brain screen from anywhere else in the program.
 
@@ -141,13 +130,7 @@ To create an overlay, you first need to make an `OverlayQuestion`
 
 Then you can edit the different values of the object to define the overlay. Here is the definition for the `OverlayQuestion` object:
 
-    struct OverlayQuestion {
-        const char* question;    
-        const char* option1;
-        vex::color option1Color = white;    
-        const char* option2;
-        vex::color option2Color = white;
-    };
+![overlayStruct](images/code/overlayStruct.png)
 
 Once the overlay is defined, pass it into:
 
@@ -157,30 +140,7 @@ The interesting thing about overlays is that they are purley temporary. `overlay
 
 Here is an example of asking the user if they want to save when they press the exit button.
 
-    int exitButton(Page* self) {
-      
-        OverlayQuestion confirmOverlay;
-        confirmOverlay.question = "Do You Want to Save?";
-        confirmOverlay.option1 = "No";
-        confirmOverlay.option1Color = red;
-        confirmOverlay.option2 = "Yes";
-        confirmOverlay.option2Color = green;
-    
-        if (self->overlayQuestion(confirmOverlay)) {
-                // Option 2
-
-                // Save Code
-
-                self->menuSystemPointer->gotoPage("main");
-        } else {
-                // Option 1
-
-                // Don't save
-
-                self->menuSystemPointer->gotoPage("main");
-         }
-        return 1;
-    };
+![exitButton](images/code/exitButton.png)
 
 ![Overlay Box](images/brain/confirmOverlay.png)
 
@@ -191,11 +151,7 @@ For all display elements, they can be colored using a color gradient. All color 
 
 "Blocky" gradients are manually created by the user defining their own array of colorRanges:
 
-    colorRange  myColorRange[4] = { // Make sure to make the array 1 bigger than the amount of colors
-	    colorRange(0, 60, green),
-	    colorRange(61, 80, yellow),
-	    colorRange(81, 100, red),
-    };
+![defineColorRange](images/code/defineColorRange.png)
 
 Or they can be created using the `Gradient` object to make a smooth transition. Gradients can be made with either RGB values using the `rgbColor` object or HSV values.
 
@@ -205,13 +161,13 @@ Or they can be created using the `Gradient` object to make a smooth transition. 
 
 Example:
 
-    Gradient myGradient = Gradient(10, 300, 10, 100);
-    Gradient myOtherGradient = Gradient(rgbColor("red"), rgbColor(237, 212, 252), 0, 100);
+![defineGradient](images/code/defineGradient.png)
+
 Once created, pass the `.finalGradient` of the gradient to the function of choice.
 
 Using it in a horizontal progress bar:<br>
-`homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);`
 
+![gradientExample](images/code/gradientExample.png)
 
 ### Remove data from pages?
 I do plan on adding the ability to remove items from pages. The problem is that everything is stored in arrays for the pages. This means that removing an item on the page can be a pain. I do plan on experimenting with a data structure called Linked Lists. Using Linked Lists would allow for more easy data manipulation but it will take a bit to implement since it is something that is not as standard as arrays.
@@ -224,21 +180,12 @@ Everything here is very vauge because we do not know what the new game is yet. T
 
 One important part of any antonomous movement is the use of PIDs. In order to make the creation of PIDs easy, I made a PID class. When the PID is created, a PIDConfig is passed into the constructor along with the target value. Example:
 
-    PID turnPID(PIDConfig(0.15, 0.001, 0.4), 90); // Set the target to 90 degrees
+![pidCreation](images/code/pidCreation.png)
 
 Then in the movement loop, run `.iterate()` and it will return the result value from the PID. Make sure to also pass in the current value. Here is an example loop using the PID:
 
-    while (true) {
-        
-        heading = odometrySystemPointer->currentPos().rot;
-        double power = turnPID.iterate(heading);
 
-        LeftDriveSmart.spin(fwd, -power, volt);
-        RightDriveSmart.spin(fwd, power, volt);
-    
-        wait(0.05, seconds);
-    }
-
+![pidLoop](images/code/pidLoop.png)
 
 # Specific Burt Features
 
