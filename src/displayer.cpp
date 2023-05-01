@@ -410,7 +410,10 @@ int brainDisplayerInit() {
 
 
 
-
+int gotoMainPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("main");
+    return 1;
+};
 
 
 // Main Loop For Rendering the Brain Display

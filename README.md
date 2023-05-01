@@ -58,7 +58,7 @@ When run, the update function is given the pointer to the page object. This mean
 
 Once the update function is defined, it is added using the `.addDataUpdaterCB()` function on the page. ( You can also define the time between updates in seconds )
 
-	debugPage.addDataUpdaterCB(updateDebug, 1); // Update the page every second
+![setDataUpdaterCB](images/code/setDataUpdaterCB.png)
 
 
 This is the debug page. It shows the [logs](https://github.com/ChickenNuggetsPerson/BURT_V2#log-messages) on the left, the motor temperatures on the right, and the status of various tasks on the bottom right. It also has navigation [buttons](https://github.com/ChickenNuggetsPerson/BURT_V2#interactables) on the bottom that allow for switching between pages.
@@ -68,7 +68,7 @@ This is the debug page. It shows the [logs](https://github.com/ChickenNuggetsPer
 ### Log Messages:
 The logging system is controlled by the `Logger` object. When creating a logger, it is given the row and column that it is drawn at. The Logger then can be added to a `Page` by using the `.addLogger()` method.
 
-![setDataUpdaterCB](images/code/setDataUpdaterCB.png)
+
 
 By default, the Logger object is not extended to the rest of the program so use the following functions to send messages to the brain screen from anywhere else in the program.
 
@@ -110,10 +110,7 @@ To add a button, use:
 
 The most common use of the button object is used to change the current page. Since every page stores the pointer to the `MenuSystem` controlling it, buttons can directly change the current displayed page. Here is an example button callback that goes to the main page. 
 
-    int gotoMainPageButton(Page* self) {
-        self->menuSystemPointer->gotoPage("main");
-        return 1;
-    };
+![gotoPageButton](images/code/gotoPageButton.png)
 
 For toggles, their value can be fetched or altered using:
 
