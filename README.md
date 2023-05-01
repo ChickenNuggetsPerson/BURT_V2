@@ -3,7 +3,7 @@
 
 <br>
 
-![HomePage](images/home.png)
+![HomePage](images/brain/home.png)
 
 The code for team 84075A in the Over Under game ( 2023 - 2024 )
 
@@ -106,7 +106,7 @@ Some notes on notifications...
 
 Here is the Home Screen with notifications on the top right:
 
-![Notifications](images/notifications.png)
+![Notifications](images/brain/notifications.png)
 
 ### Interactables:
 Currently there are two* types of interactable objects: buttons and toggles. The main difference between a button and a toggle is what happens when they are pressed. When pressed, buttons will call the callback specified when they are created. When a toggle is pressed, no callback is called but the state of the toggle is changed. The state of the toggle is displayed as the fill color of the toggle. 
@@ -182,7 +182,7 @@ Here is an example of asking the user if they want to save when they press the e
         return 1;
     };
 
-![Overlay Box](images/confirmOverlay.png)
+![Overlay Box](images/brain/confirmOverlay.png)
 
 
 ### Color Gradients:
@@ -246,7 +246,7 @@ Then in the movement loop, run `.iterate()` and it will return the result value 
 
 Since there is no way of knowing what about the robot will need to be configured, the config screen is auto generated when the program is run. The init function reads the `Auton Class` for all of its configs and auto populates the config page with the corresponding toggles.
 
-![config Page](images/configPage.png)
+![config Page](images/brain/configPage.png)
 
 ## Notification Watch System
 
@@ -257,7 +257,7 @@ As of writing this, the brain only looks for changes in two values:
 
 I plan on expanding this list in the future
 
-![SdNotification](images/sdNotification.png)
+![SdNotification](images/brain/sdNotification.png)
 
 
 ## PID Auto Tuning
@@ -276,6 +276,3 @@ Midway through the 2022-2023 season, we got access to the Inertial sensor. After
 This year, I plan on integrating at least two tracking wheels. Into the odometry system along with the inertial sensor. 
 
 Another plan for this year is the plan for automated path planning. Instead of saying "drive 4 inches, turn right", I would like to have a system where I could say "goto ( 2, 4 ) on the feild". This would require a system that could constantly track the position of the robot on the feild. It would also require some sort of path finding system too. This is why I am starting the code for BURT_V2 this early, so then I can do propper research and testing on odometry systems and path planning. 
-
-
-![test](code.png)
