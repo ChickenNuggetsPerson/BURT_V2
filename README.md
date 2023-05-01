@@ -63,7 +63,7 @@ Once the update function is defined, it is added using the `.addDataUpdaterCB()`
 
 This is the debug page. It shows the [logs](https://github.com/ChickenNuggetsPerson/BURT_V2#log-messages) on the left, the motor temperatures on the right, and the status of various tasks on the bottom right. It also has navigation [buttons](https://github.com/ChickenNuggetsPerson/BURT_V2#interactables) on the bottom that allow for switching between pages.
 
-![DebugPage](images/debugPage.png)
+![DebugPage](images/brain/debugPage.png)
 
 ### Log Messages:
 The logging system is controlled by the `Logger` object. When creating a logger, it is given the row and column that it is drawn at. The Logger then can be added to a `Page` by using the `.addLogger()` method.
