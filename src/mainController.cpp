@@ -1,5 +1,6 @@
 
 #include "robotConfig.h"
+#include "controllerDisplayerAPI.h"
 using namespace vex;
 
 
@@ -74,3 +75,47 @@ int controllerTask() {
   return 0;
 }
 
+void mainControllerRender() {
+  mainController.Screen.clearScreen();
+  mainController.Screen.setCursor(1, 1);
+
+  Position currentPos = Odometry.currentPos();
+
+  mainController.Screen.print(currentPos.x);
+  mainController.Screen.newLine();
+  mainController.Screen.print(currentPos.y);
+  mainController.Screen.newLine();
+  mainController.Screen.print(limitAngle(radToDegree(currentPos.rot)));            
+
+  if (mainController.ButtonA.pressing()) {
+    bool chosen = displayOverlay(ControllerOverlay("Choose", "Launch", "Other"), &mainController);
+
+    if (chosen) {
+      std::cout << "Other" << std::endl;
+    } else {
+      std::cout << "Launch" << std::endl;
+    }
+
+  }
+
+  if (mainController.ButtonB.pressing()) {
+    std::vector <const char *> options;
+
+    options.push_back("(0, 0)");
+    options.push_back("(1, 1)");
+    options.push_back("(2, 5)");
+    options.push_back("(6, 6)");
+    options.push_back("(3, 2)");
+
+    int chosen = pickOption(options, &mainController);
+
+    if (chosen == 0) { botAI.gotoLoc(TilePosition(0, 0)); }
+    if (chosen == 1) { botAI.gotoLoc(TilePosition(1, 1)); }
+    if (chosen == 2) { botAI.gotoLoc(TilePosition(2, 5)); }
+    if (chosen == 3) { botAI.gotoLoc(TilePosition(6, 6)); }
+    if (chosen == 4) { botAI.gotoLoc(TilePosition(3, 2)); }
+
+
+  }
+
+}

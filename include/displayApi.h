@@ -729,7 +729,7 @@ class Page {
 
         bool pageChanged = false;
 
-        Page(int test) {};
+        Page() {};
 
         void render() {
 

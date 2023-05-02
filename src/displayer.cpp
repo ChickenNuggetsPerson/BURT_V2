@@ -24,11 +24,11 @@ Logger BrainLogs(1, 1, "logs.txt", 10);
 MenuSystem mainRenderer(true);
 
 // Define Pages
-Page homePage(1);
-Page mapPage(1);
-Page debugPage(1);
-Page odometryPage(1);
-Page configPage(1);
+Page homePage;
+Page mapPage;
+Page debugPage;
+Page odometryPage;
+Page configPage;
 
 
 // Called when the screen is pressed
@@ -442,19 +442,10 @@ int brainDisplayer() {
 int controllerDisplay() {
     while (true){
         
-        //if (mainController.installed()) {
+        if (mainController.installed()) {
             // Main Controller Displayer
-            mainController.Screen.clearScreen();
-            mainController.Screen.setCursor(1, 1);
-
-            Position currentPos = Odometry.currentPos();
-
-            mainController.Screen.print(currentPos.x);
-            mainController.Screen.newLine();
-            mainController.Screen.print(currentPos.y);
-            mainController.Screen.newLine();
-            mainController.Screen.print(limitAngle(radToDegree(currentPos.rot)));            
-        //}
+            mainControllerRender();
+        }
 
         // Alt Controller Displayer
         if (altController.installed()) {
@@ -475,7 +466,7 @@ int controllerDisplay() {
                 altController.Screen.print("Nothing");
             };
         }
-        
+
         vex::wait(0.2, seconds);
     }
     return 1;
