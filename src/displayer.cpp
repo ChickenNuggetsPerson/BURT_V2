@@ -30,6 +30,8 @@ Page debugPage;
 Page odometryPage;
 Page configPage;
 
+Page testPage;
+
 
 // Called when the screen is pressed
 void screenPressed() {mainRenderer.screenPressed();}
@@ -91,7 +93,10 @@ int gotoMapPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("map");
     return 1;
 }
-
+int gotoTestPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("test");
+    return 1;
+}
 
 // Config Page Functions
 void configPageInit(Page* currentPage, ai* robotAI) {
@@ -307,21 +312,16 @@ int updateMap(Page* self) {
 }
 
 
-int mainPageTestButton(Page* self) {
 
-    self->setButtonData("debugy", green);
-    wait(4, seconds);
-    botAI.gotoLoc(TilePosition(-1, 4));
-    wait(2, sec);
-    botAI.gotoLoc(TilePosition(0, 3));
-    wait(2, seconds);
-    botAI.gotoLoc(TilePosition(0, 0));
 
-    self->setButtonData("debugy", black);
+int loadedTestPage(Page* self) {
+    self->addKeyboard();
+    return 1;
+}
+int testPageUpdater(Page* self) {
 
     return 1;
 }
-
 
 
 int brainDisplayerInit() {
@@ -341,7 +341,11 @@ int brainDisplayerInit() {
     mainRenderer.addPage("config", &configPage);
     mainRenderer.addPage("odometry", &odometryPage);
     mainRenderer.addPage("map", &mapPage);
+    mainRenderer.addPage("test", &testPage);
 
+
+    testPage.addPageLoadedCB(loadedTestPage);
+    testPage.addDataUpdaterCB(testPageUpdater);
 
 
     // Configure the home page
@@ -353,7 +357,7 @@ int brainDisplayerInit() {
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
 
-    homePage.addButton("test", 20, 150, 100, 30, mainPageTestButton, "debugy");
+    homePage.addButton("test", 20, 150, 100, 30, gotoTestPageButton, "test");
 
 
     // Configure the map page

@@ -33,9 +33,11 @@ bool displayOverlay(ControllerOverlay overlay, controller* con) {
 
     wait(0.5, seconds);
 
+    con->rumble("..");
     bool choosing = true;
     while (choosing) {
         if (con->ButtonUp.pressing() || con->ButtonDown.pressing()) {
+            con->rumble(".");
             return con->ButtonDown.pressing();
             choosing = false;
         }
@@ -48,6 +50,8 @@ int pickOption(std::vector <const char*> options, controller* con) {
 
     con->Screen.clearScreen();
     wait(0.5, seconds);
+
+    con->rumble(".");
 
     while (true) {
 
@@ -82,6 +86,7 @@ int pickOption(std::vector <const char*> options, controller* con) {
         if (hover >= options.size()) { hover = 0; }
 
         if (con->ButtonA.pressing()) {
+            con->rumble(".");
             return hover;
         }
 
