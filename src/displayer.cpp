@@ -28,7 +28,8 @@ Page homePage;
 Page mapPage;
 Page debugPage;
 Page odometryPage;
-Page configPage;
+Page autonConfig;
+Page systemConfig;
 
 Page testPage;
 
@@ -68,6 +69,7 @@ int updateHome(Page* self) {
 }
 
 
+
 // Define Standard Buttons
 int gotoPrevPageButton(Page* self) {
     self->menuSystemPointer->gotoPrevPage();
@@ -97,6 +99,10 @@ int gotoTestPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("test");
     return 1;
 }
+int gotoSystemConfigButton(Page* self) {
+    self->menuSystemPointer->gotoPage("systemConfig");
+    return 1;
+}
 
 // Config Page Functions
 void configPageInit(Page* currentPage, ai* robotAI) {
@@ -110,7 +116,7 @@ void configPageInit(Page* currentPage, ai* robotAI) {
 };
 void setConfigs() {
     for (int i = 0; i < botAI.totalConfigs; i++) {
-        configPage.setToggleStatus(botAI.configNames[i].c_str(), botAI.getConfig(botAI.configNames[i].c_str()));
+        autonConfig.setToggleStatus(botAI.configNames[i].c_str(), botAI.getConfig(botAI.configNames[i].c_str()));
         wait(0.01, seconds);
     }
 };
@@ -119,7 +125,7 @@ void saveConfigs() {
     brainFancyDebug("Saving New Config", color::purple, true);
 
     for (int i = 0; i < botAI.totalConfigs; i++) {
-        botAI.saveConfig(botAI.configNames[i].c_str(), configPage.getToggleStatus(botAI.configNames[i].c_str()));
+        botAI.saveConfig(botAI.configNames[i].c_str(), autonConfig.getToggleStatus(botAI.configNames[i].c_str()));
     }
 };
 
@@ -188,6 +194,65 @@ int configExitButton(Page* self) {
 };
 
 
+int loadedSystemConfigPage(Page* self) {
+
+    if (!Brain.SDcard.isInserted()) {
+        self->setTextData("savedStatus", red, "SD Card Not Inserted");
+    } 
+    self->setTextData("savedStatus", white, "Edit System Config Values");
+
+    return 1;
+}
+int updateSystemConfig(Page* self) {
+
+    return 1;
+}
+int systemConfigExitButton(Page* self) {
+
+    if (!Brain.SDcard.isInserted()) {
+        
+        OverlayQuestion confirmOverlay;
+        confirmOverlay.question = "What do you want to do?";
+        confirmOverlay.option1 = "Reload";
+        confirmOverlay.option1Color = green;
+        confirmOverlay.option2 = "Exit";
+        confirmOverlay.option2Color = red;
+
+        if (self->overlayQuestion(confirmOverlay)) {
+            // Option 2
+            self->menuSystemPointer->gotoPage("main");
+        } else {
+            // Option 1
+            self->menuSystemPointer->gotoPage("main");
+            self->menuSystemPointer->gotoPage("systemConfig");
+        }
+    } else {
+        if (self->pageChanged) {
+            OverlayQuestion confirmOverlay;
+            confirmOverlay.question = "Do You Want to Save?";
+            confirmOverlay.option1 = "No";
+            confirmOverlay.option1Color = red;
+            confirmOverlay.option2 = "Yes";
+            confirmOverlay.option2Color = green;
+
+            if (self->overlayQuestion(confirmOverlay)) {
+                // Option 2
+
+                
+                
+                botAI.init();
+
+                self->menuSystemPointer->gotoPage("main");
+            } else {
+                // Option 1
+                setConfigs();
+                self->menuSystemPointer->gotoPage("main");
+            }
+        } else {
+            self->menuSystemPointer->gotoPage("main");
+        }
+    }   
+}
 
 // Define the update function for the debug page
 int updateDebug(Page* self) {
@@ -315,7 +380,7 @@ int updateMap(Page* self) {
 
 
 int loadedTestPage(Page* self) {
-    self->addKeyboard();
+
     return 1;
 }
 int testPageUpdater(Page* self) {
@@ -338,7 +403,8 @@ int brainDisplayerInit() {
     // Add pages to the main renderer
     mainRenderer.addPage("main", &homePage);
     mainRenderer.addPage("debug", &debugPage);
-    mainRenderer.addPage("config", &configPage);
+    mainRenderer.addPage("config", &autonConfig);
+    mainRenderer.addPage("systemConfig", &systemConfig);
     mainRenderer.addPage("odometry", &odometryPage);
     mainRenderer.addPage("map", &mapPage);
     mainRenderer.addPage("test", &testPage);
@@ -371,14 +437,22 @@ int brainDisplayerInit() {
     mapPage.addDataUpdaterCB(updateMap, 0.2);
 
 
-    // Configure the config page
-    configPage.addText("Configure Burt", 20, 40, white, fontType::mono30, "title");
-    configPage.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
-    configPage.addButton("Back", 380, 210, 100, 30, configExitButton, "mainPageButton");
-    configPageInit(&configPage, &botAI);
-    configPage.addPageLoadedCB(loadedConfigPage);
+    // Configure the auton config page
+    autonConfig.addText("Configure Auton", 20, 40, white, fontType::mono30, "title");
+    autonConfig.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
+    autonConfig.addButton("Back", 380, 210, 100, 30, configExitButton, "mainPageButton");
+    configPageInit(&autonConfig, &botAI);
+    autonConfig.addPageLoadedCB(loadedConfigPage);
 
 
+    // Configure the system config page
+    systemConfig.addText("Configure System", 20, 40, white, fontType::mono30, "title");
+    systemConfig.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
+    systemConfig.addButton("Back", 380, 210, 100, 30, gotoMainPageButton, "mainPageButton");
+    systemConfig.addPageLoadedCB(loadedSystemConfigPage);
+    systemConfig.addDataUpdaterCB(updateSystemConfig);
+
+    
     // Configure the debug page
     debugPage.addLogger(&BrainLogs);
     debugPage.addVertProgressBar("fl", 300, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
@@ -391,8 +465,9 @@ int brainDisplayerInit() {
     debugPage.addText("Auton Status",    300, 180, white, fontType::mono20, "autonStatus");
     debugPage.addText("Connected to Feild",    300, 200, white, fontType::mono20, "feildStatus");
 
-    debugPage.addButton("Reload", 100, 210, 100, 30, dubugReloadButton, "reloadButton");
-    debugPage.addButton("Odometry", 240, 210, 100, 30, gotoOdometryPageButton, "odometryPageButton");
+    debugPage.addButton("Reload", 80, 210, 100, 30, dubugReloadButton, "reloadButton");
+    debugPage.addButton("System", 180, 210, 100, 30, gotoSystemConfigButton, "systemButton");
+    debugPage.addButton("Odometry", 280, 210, 100, 30, gotoOdometryPageButton, "odometryPageButton");
     debugPage.addButton("Back", 380, 210, 100, 30, gotoMainPageButton, "mainPageButton");
     debugPage.addDataUpdaterCB(updateDebug, 1);
 

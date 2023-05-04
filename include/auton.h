@@ -29,7 +29,7 @@ class ai {
 
     int totalConfigs = 8;
     std::string configNames[10] { // Random config names for now
-      "test",
+      "Is_Comp",
       "other",
       "ghjkk",
       "erwtw",

@@ -59,6 +59,11 @@ class Logger {
             writeFile(logFile, "Start of Logs");
         };
 
+        void reloadLogger(const char* outFile = "logs.txt") {
+            logFile = outFile;
+            writeFile(logFile, "Start of Logs");  
+        }
+
         void newLog(const char* message, vex::color messageColor, int data = 0) {
             if (currentLine == maxRows) {
                 brainLogShift();
@@ -564,154 +569,6 @@ class Plot {
         };
 };
 
-class Key {
-    private:
-
-        int x;
-        int y;
-        int width;
-        int height;
-
-        const char* letter;
-
-        bool special = false;
-        const char* id;
-
-    public:
-
-        Key(int keyX, int keyY, int keyWidth, int keyHeight, const char* keyLetter, bool isSpecial = false, const char* specialId = "") {
-            x = keyX;
-            y = keyY;
-            width = keyWidth;
-            height = keyHeight;
-            letter = keyLetter;
-            special = isSpecial;
-            id = specialId;
-        }
-
-        void draw() {
-            Brain.Screen.drawRectangle(x, y, width, height);
-            int letterWidth = Brain.Screen.getStringWidth(letter);
-            int letterHeight = Brain.Screen.getStringHeight(letter);
-
-            Brain.Screen.printAt(x + (width/2) - letterWidth/2, y + (height/2) + letterHeight/3, letter);
-
-        }
-
-        bool inBounds(int pressX, int pressY) {
-
-            if (pressX < x && pressX > x + width) { return false; }
-            if (pressY < y && pressY > y + height) { return false; }
-
-            return true;
-        }
-
-        bool isSpecial() {
-            return special;
-        }
-
-        const char* specialId() {
-            return id;
-        }
-
-        const char* getLetter() {
-            return letter;
-        }
-
-};
-
-class Keyboard {
-    private:
-
-        std::string internalString;
-
-        int screenXSize = 480;
-        int screenYSize = 240;
-
-        std::vector <Key> keyStorage;
-        bool built = false;
-
-        Page* pagePtr;
-
-    public:
-
-        Keyboard(Page* pagePointer) {
-            pagePtr = pagePointer;
-        };
-
-        Keyboard() {};
-
-        void build() {
-            int backSpaceWidth = 50;
-            int tabWidth = 30;
-            int enterWidth = 60;
-            int shiftWidth = 100;
-            int spaceWidth = 300;
-
-            int keyHeight = (screenYSize / 2)/5;
-
-            std::vector <Key> row1;
-            std::vector <Key> row2;
-            std::vector <Key> row3;
-            std::vector <Key> row4;
-            std::vector <Key> row5;
-
-
-            int topRowTotal = 13;
-            const char* topRow[13] = {"`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="};
-
-            int firstRowTotal = 12;
-            const char* firstRow[12] = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "{", "}"};
-
-            int secondRowTotal = 11;
-            const char* secondRow[11] = {"A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'"};
-
-            int thirdRowTotal = 12;
-            const char* thirdRow[12] = {"Z", "X", "C", "V", "B", "N", "M", ",", ".", "/"};
-
-            
-            int keyWidth = (screenXSize - backSpaceWidth) / (topRowTotal);
-            for (int i = 0; i < topRowTotal; i++) {
-                row1.push_back(Key(i*keyWidth, screenYSize / 2, keyWidth, keyHeight, topRow[i]));
-            }
-            row1.push_back(Key(topRowTotal*keyWidth, screenYSize / 2, backSpaceWidth, keyHeight, "Backspace", true, "bksp"));
-
-
-            for (int i = 0; i < row1.size(); i++) {
-                keyStorage.push_back(row1.at(i));
-            }
-        }
-
-        void draw() {
-            for (int i = 0; i < keyStorage.size(); i++) {
-                keyStorage.at(i).draw();
-            }
-        }
-
-        bool screenPress(int x, int y) {
-
-            if (y < screenYSize / 2) { return false; }
-
-            for (int i = 0; i < keyStorage.size(); i++) {
-                if (keyStorage.at(i).inBounds(x, y)) {
-                    if (keyStorage.at(i).isSpecial()) {
-                        // Handle Special Key
-                        specialKey(keyStorage.at(i).specialId());
-                    } else {
-                        // Handle Normal Key
-                        internalString += keyStorage.at(i).getLetter();
-                    }
-                }
-            }
-
-            return true;
-        };
-
-        void specialKey(const char* id) {
-            //if (strcmp("enter", id) == 0) { pagePtr->stopKeyboard(); }
-        }
-
-};
 
 
 class Page {
@@ -745,8 +602,6 @@ class Page {
         OverlayQuestion storedOverlay;
         bool showOverlay = false;
 
-        Keyboard storedKeyboard;
-        bool showKeyboard = true;
 
 
         int (*dataUpdaterCB)(Page*);
@@ -944,9 +799,6 @@ class Page {
                 drawOverlay(storedOverlay);
             }
 
-            if (showKeyboard) {
-                storedKeyboard.draw();
-            }
         };
 
         void addDataUpdaterCB(int (*cb)(Page*), double refreshRate = 1) {
@@ -1085,15 +937,7 @@ class Page {
 
             plotsStored++;
         };
-        void addKeyboard() {
-            storedKeyboard = Keyboard(this);
-            showKeyboard = true;
 
-            storedKeyboard.build();
-        }
-        void stopKeyboard() {
-            showKeyboard = false;
-        }
 
 
 
