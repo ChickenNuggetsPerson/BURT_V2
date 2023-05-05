@@ -24,7 +24,7 @@ class ai {
 
     bool running = false;
 
-    std::string configFoler = "config/";
+    std::string configFoler = "autonConfig/";
     std::string configFileType = ".txt";
 
     int totalConfigs = 8;

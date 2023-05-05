@@ -28,8 +28,8 @@ Page homePage;
 Page mapPage;
 Page debugPage;
 Page odometryPage;
-Page autonConfig;
-Page systemConfig;
+Page autonConfigPage;
+Page systemConfigPage;
 
 Page testPage;
 
@@ -41,6 +41,7 @@ void screenPressed() {mainRenderer.screenPressed();}
 bool checkInertial() {return inertialSensor.isCalibrating();}
 bool checkSDCard() {return Brain.SDcard.isInserted();}
 bool checkMainController() {return mainController.installed();}
+bool checkFeild() {return Competition.isFieldControl();}
 int notificationCheck() {
     
     int checkSpeed = 1;
@@ -50,7 +51,8 @@ int notificationCheck() {
 
     NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, false, yellow, green);
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
-    NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController);
+    NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
+    NotChecker.addCheck("Connected To Feild", "Feild Disconnect", checkFeild, false, purple, red, true);
 
     while (true) {
         NotChecker.check();
@@ -116,7 +118,7 @@ void configPageInit(Page* currentPage, ai* robotAI) {
 };
 void setConfigs() {
     for (int i = 0; i < botAI.totalConfigs; i++) {
-        autonConfig.setToggleStatus(botAI.configNames[i].c_str(), botAI.getConfig(botAI.configNames[i].c_str()));
+        autonConfigPage.setToggleStatus(botAI.configNames[i].c_str(), botAI.getConfig(botAI.configNames[i].c_str()));
         wait(0.01, seconds);
     }
 };
@@ -125,7 +127,7 @@ void saveConfigs() {
     brainFancyDebug("Saving New Config", color::purple, true);
 
     for (int i = 0; i < botAI.totalConfigs; i++) {
-        botAI.saveConfig(botAI.configNames[i].c_str(), autonConfig.getToggleStatus(botAI.configNames[i].c_str()));
+        botAI.saveConfig(botAI.configNames[i].c_str(), autonConfigPage.getToggleStatus(botAI.configNames[i].c_str()));
     }
 };
 
@@ -194,12 +196,25 @@ int configExitButton(Page* self) {
 };
 
 
+void systemConfigSave(Page* self) {
+    writeFile(std::string(systemConfigFolder + systemArchivePath).c_str(), self->getToggleStatus("Archive Logs"));
+
+
+}
 int loadedSystemConfigPage(Page* self) {
 
     if (!Brain.SDcard.isInserted()) {
         self->setTextData("savedStatus", red, "SD Card Not Inserted");
+        return 1;
     } 
     self->setTextData("savedStatus", white, "Edit System Config Values");
+
+    // Set Archive Toggle
+    if (readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1) {
+        self->setToggleStatus("Archive Logs", true);
+    } else {
+        self->setToggleStatus("Archive Logs", false);
+    }
 
     return 1;
 }
@@ -238,21 +253,24 @@ int systemConfigExitButton(Page* self) {
             if (self->overlayQuestion(confirmOverlay)) {
                 // Option 2
 
+                systemConfigSave(self);
                 
-                
-                botAI.init();
-
+                self->menuSystemPointer->newNotification("Restart Program", 10, white);
                 self->menuSystemPointer->gotoPage("main");
             } else {
                 // Option 1
-                setConfigs();
                 self->menuSystemPointer->gotoPage("main");
             }
         } else {
             self->menuSystemPointer->gotoPage("main");
         }
-    }   
+    }
+
+    return 1;
+
 }
+
+
 
 // Define the update function for the debug page
 int updateDebug(Page* self) {
@@ -403,8 +421,8 @@ int brainDisplayerInit() {
     // Add pages to the main renderer
     mainRenderer.addPage("main", &homePage);
     mainRenderer.addPage("debug", &debugPage);
-    mainRenderer.addPage("config", &autonConfig);
-    mainRenderer.addPage("systemConfig", &systemConfig);
+    mainRenderer.addPage("config", &autonConfigPage);
+    mainRenderer.addPage("systemConfig", &systemConfigPage);
     mainRenderer.addPage("odometry", &odometryPage);
     mainRenderer.addPage("map", &mapPage);
     mainRenderer.addPage("test", &testPage);
@@ -438,19 +456,22 @@ int brainDisplayerInit() {
 
 
     // Configure the auton config page
-    autonConfig.addText("Configure Auton", 20, 40, white, fontType::mono30, "title");
-    autonConfig.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
-    autonConfig.addButton("Back", 380, 210, 100, 30, configExitButton, "mainPageButton");
-    configPageInit(&autonConfig, &botAI);
-    autonConfig.addPageLoadedCB(loadedConfigPage);
+    autonConfigPage.addText("Configure Auton", 20, 40, white, fontType::mono30, "title");
+    autonConfigPage.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
+    autonConfigPage.addButton("Back", 380, 210, 100, 30, configExitButton, "mainPageButton");
+    configPageInit(&autonConfigPage, &botAI);
+    autonConfigPage.addPageLoadedCB(loadedConfigPage);
 
 
     // Configure the system config page
-    systemConfig.addText("Configure System", 20, 40, white, fontType::mono30, "title");
-    systemConfig.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
-    systemConfig.addButton("Back", 380, 210, 100, 30, gotoMainPageButton, "mainPageButton");
-    systemConfig.addPageLoadedCB(loadedSystemConfigPage);
-    systemConfig.addDataUpdaterCB(updateSystemConfig);
+    systemConfigPage.addText("Configure System", 20, 40, white, fontType::mono30, "title");
+    systemConfigPage.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
+    systemConfigPage.addButton("Back", 380, 210, 100, 30, systemConfigExitButton, "mainPageButton");
+
+    systemConfigPage.addToggle("Archive Logs", false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 170, 150, 40);
+    
+    systemConfigPage.addPageLoadedCB(loadedSystemConfigPage);
+    systemConfigPage.addDataUpdaterCB(updateSystemConfig);
 
     
     // Configure the debug page

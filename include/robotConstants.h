@@ -8,6 +8,15 @@ static double PI = 3.14159; // PI variable used for all methods
 static int tileWidth = 24; // Vex Tiles are 2ft across
 
 
+// Config File Paths
+static std::string systemConfigFolder = "systemConfig/";
+static std::string systemArchivePath = "archiveLogs.txt";
+
+
+// Config Log Paths
+static std::string systemLogFolder = "Logs/";
+static std::string systemArchiveFolder = "logStorage/";
+static std::string systemCompLogsFolder = "compLogs/";
 
 
 // Define Robot Measurements 

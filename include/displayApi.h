@@ -23,6 +23,8 @@ struct LogMessage {
 class Logger {
     private:
 
+        bool initialized = false;
+
         int xPos;
         int yPos;
 
@@ -30,6 +32,9 @@ class Logger {
         int currentLine;
 
         const char* logFile;
+        bool isSaving = false;
+        bool compLogs = false;
+        const char* compLogPath;
 
         LogMessage brainLog[11];
 
@@ -40,12 +45,15 @@ class Logger {
         };
 
         void appendLogFile(const char* message) {
-            if (!Brain.SDcard.isInserted()) { return; }
+            if (!isSaving) { return; }
 
             std::ostringstream formattedMessage;
             formattedMessage << "[ " << Brain.timer(seconds) << " ] " << message;
 
             appendFile(logFile, formattedMessage.str().c_str());
+            if (compLogs) {
+                appendFile(compLogPath, formattedMessage.str().c_str()); // Todo: Fix this 
+            }
         };
 
     public:
@@ -56,15 +64,99 @@ class Logger {
 
             logFile = outFile;
 
-            writeFile(logFile, "Start of Logs");
+            reloadLogger(logFile);
+            
         };
 
         void reloadLogger(const char* outFile = "logs.txt") {
             logFile = outFile;
-            writeFile(logFile, "Start of Logs");  
+            isSaving = Brain.SDcard.isInserted();
+            if (!isSaving) { 
+                initialized = true;   
+                return; 
+            }
+
+            compLogs = Competition.isFieldControl();
+
+            std::string path;
+            path += systemConfigFolder;
+            path += systemArchivePath;
+            if (readFile(path.c_str()) == 1) {
+                std::cout << std::endl << std::endl << std::endl;
+                if (fileExists(logFile)) {
+                    // Save the last logs to the archive folder
+                    int logNum = 0;
+                    bool looking = true;
+                    std::cout << "Starting Log Looking" << std::endl;
+                    while (looking) {
+                        logNum ++;
+                        std::string tmpName;
+                        tmpName += systemLogFolder;
+                        tmpName += systemArchiveFolder;
+                        
+                        std::ostringstream str;
+                        str << logNum;
+                        tmpName += str.str();
+
+                        tmpName += ".txt";
+                        std::cout << "Checking " << tmpName.c_str() << std::endl;
+                        looking = fileExists(tmpName.c_str());
+                    }
+                    std::string cpyDest;
+                    cpyDest += systemLogFolder;
+                    cpyDest += systemArchiveFolder;
+
+                    std::ostringstream str;
+                    str << logNum;
+                    cpyDest += str.str();
+
+                    cpyDest += ".txt";
+
+                    copyFile(logFile, cpyDest.c_str());
+                }
+            } else {
+                std::cout << std::endl << std::endl << "Not Archiving" << std::endl;
+            }
+            if (compLogs) {
+                int logNum = 0;
+                bool looking = true;
+                std::cout << "Starting Comp Log Looking" << std::endl;
+                while (looking) {
+                    logNum ++;
+                    std::string tmpName;
+                    tmpName += systemLogFolder;
+                    tmpName += systemCompLogsFolder;
+                    std::ostringstream str;
+                    str << logNum;
+                    tmpName += str.str();
+                    tmpName += ".txt";
+                    std::cout << "Checking " << tmpName.c_str() << std::endl;
+                    looking = fileExists(tmpName.c_str());
+                }
+                std::string cpyDest;
+                cpyDest += systemLogFolder;
+                cpyDest += systemCompLogsFolder;
+                std::ostringstream str;
+                str << logNum;
+                cpyDest += str.str();
+                cpyDest += ".txt";
+
+                compLogPath = cpyDest.c_str();
+                writeFile(compLogPath, "Start of Comp Logs");
+
+            }
+
+            writeFile(logFile, "Start of Logs");
+            initialized = true;  
         }
 
         void newLog(const char* message, vex::color messageColor, int data = 0) {
+
+            //while (!initialized) {
+            //    wait(0.01, seconds);
+            //}
+            
+
             if (currentLine == maxRows) {
                 brainLogShift();
                 currentLine = maxRows - 1;
@@ -86,6 +178,15 @@ class Logger {
                 Brain.Screen.setPenColor(vex::color::white);
             }
         };
+
+
+        const char* getLogPath(bool compPath = false) {
+            if (!compPath) {
+                return logFile;
+            } else {
+                return compLogPath;
+            }
+        }
 
 };
 

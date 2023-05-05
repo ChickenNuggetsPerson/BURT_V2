@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 
 
 // Old Read and Write System
@@ -64,6 +65,35 @@ void appendFile(const char* fileName, const char* content) {
   writeStream << "\n" << content;
   writeStream.close();
 };
+
+bool copyFile(const char* file, const char* dest) {
+  std::string line;
+  std::ifstream origonal{file};
+  std::ofstream outFile{dest};
+
+  if (origonal && outFile) {
+    while (std::getline(origonal, line)) {
+      outFile << line << "\n";
+    }
+    return true;
+  } else {
+    origonal.close();
+    outFile.close();
+    return false;
+  }
+}
+
+
+bool fileExists(const char* name) {
+    if (FILE *file = fopen(name, "r")) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
+    }   
+}
+
+
 
 
 
