@@ -8,6 +8,16 @@ static double PI = 3.14159; // PI variable used for all methods
 static int tileWidth = 24; // Vex Tiles are 2ft across
 
 
+// Define Ports
+static const int32_t leftMotorAPort = vex::PORT1;
+static const int32_t leftMotorBPort = vex::PORT10;
+static const int32_t rightMotorAPort = vex::PORT2;
+static const int32_t rightMotorBPort = vex::PORT8;
+
+static const int32_t inertialPort = vex::PORT3;
+
+
+
 // Config File Paths
 static std::string systemConfigFolder = "systemConfig/";
 static std::string systemArchivePath = "archiveLogs.txt";

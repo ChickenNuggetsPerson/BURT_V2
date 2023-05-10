@@ -11,14 +11,14 @@ ai botAI = ai(&Odometry);
 
 // Drivetrain
 
-inertial inertialSensor = inertial(PORT3);
+inertial inertialSensor = inertial(inertialPort);
 
-motor leftMotorA = motor(PORT1, ratio18_1, false);
-motor leftMotorB = motor(PORT10, ratio18_1, false);
+motor leftMotorA = motor(leftMotorAPort, ratio18_1, false);
+motor leftMotorB = motor(leftMotorBPort, ratio18_1, false);
 motor_group LeftDriveSmart = motor_group(leftMotorA, leftMotorB);
 
-motor rightMotorA = motor(PORT2, ratio18_1, true);
-motor rightMotorB = motor(PORT8, ratio18_1, true);
+motor rightMotorA = motor(rightMotorAPort, ratio18_1, true);
+motor rightMotorB = motor(rightMotorBPort, ratio18_1, true);
 motor_group RightDriveSmart = motor_group(rightMotorA, rightMotorB);
 
 smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSensor, 319.19, 254, 254, mm, 1);
