@@ -27,8 +27,8 @@ void ai::init() {
             } else {
                 configStorage[i] = false;
             } 
-            wait(0.1, seconds);
         }
+        wait(0.1, seconds);
         loaded = true;
         brainFancyDebug("Auton Initialized", cyan, true);
         odometrySystemPointer->restart(getStartPos());
@@ -119,6 +119,11 @@ bool ai::turnTo(double deg) {
     return turnTo(deg, 3);
 }
 bool ai::turnTo(double deg, double turnTimeout) {
+    
+    if (!odometrySystemPointer->isTracking) { 
+        brainError("Skipping Auton Path, Odom not initialized");
+        return false; 
+    }
 
     double timeout = Brain.timer(msec) + (3 * 1000);
 
@@ -169,6 +174,12 @@ bool ai::turnTo(double deg, double turnTimeout) {
 
 bool ai::gotoLoc(TilePosition pos) {return gotoLoc(odometrySystemPointer->tilePosToPos(pos));};
 bool ai::gotoLoc(Position pos) {
+
+    if (!odometrySystemPointer->isTracking) { 
+        brainError("Skipping Auton Path, Odom not initialized");
+        return false; 
+    }
+
     bool wasRunning = running;
     running = true;
     target.x = pos.x;
@@ -250,9 +261,21 @@ bool ai::gotoLoc(Position pos) {
     return true;
 };
 
+void ai::stop() {
+    running = false;
+}
 
 void ai::started() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
+    brainChangePage("map");
+
+
+    // Test Auton Start Code
+
+    gotoLoc(TilePosition(1, 1));
+    gotoLoc(TilePosition(0, 1));
+    gotoLoc(TilePosition(0, 0));
+
 };
 
 

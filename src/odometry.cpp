@@ -44,9 +44,14 @@ int mainTrackingTask(void* system) {
 
     double updateSpeed = 10; // In msec 
 
-    inertialSensor.startCalibration();
+    if (!systemPointer->firstTime) {
+        inertialSensor.startCalibration();
+        systemPointer->firstTime = false;
+    } else {
+        inertialSensor.startCalibration();
+    }
     while (inertialSensor.isCalibrating()) {
-        wait(0.05, seconds);
+        wait(0.02, seconds);
     }
 
     systemPointer->resetEncoders();
@@ -65,8 +70,6 @@ int mainTrackingTask(void* system) {
 OdometrySystem::OdometrySystem() {
     // Start tracking system
 
-    
-
     //trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
 }
 
@@ -75,14 +78,11 @@ void OdometrySystem::restart() {
 };
 void OdometrySystem::restart(Position currentPos) {
     if (isTracking) { trackingTask.stop(); isTracking = false; }
-    wait(0.1, sec);
     globalX = currentPos.x;
     globalY = currentPos.y;
     globalRot = currentPos.rot;
     lastData = odomRawData();
-    
     updateTilePos();
-    wait(0.1, sec);
     trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
 };
 void OdometrySystem::restart(TilePosition currentPos) {
@@ -139,9 +139,7 @@ void OdometrySystem::resetEncoders() {
 };
 
 odomRawData OdometrySystem::getChanges(odomRawData oldData) {
-
-
-
+    
     double circumference = 2 * PI * (wheelDiameter / 2);
 
     // Calc the new encoder positions

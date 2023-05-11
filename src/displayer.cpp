@@ -42,20 +42,28 @@ bool checkInertial() {return inertialSensor.isCalibrating();}
 bool checkSDCard() {return Brain.SDcard.isInserted();}
 bool checkMainController() {return mainController.installed();}
 bool checkFeild() {return Competition.isFieldControl();}
+
 int notificationCheck() {
     
     int checkSpeed = 1;
 
     NotificationChecker NotChecker(&mainRenderer);
+    MotorChecker MotChecker(&mainRenderer);
 
+    //MotChecker.addCheck(&leftMotorA, "LeftMotorA");
+    //MotChecker.addCheck(&leftMotorB, "LeftMotorB");
+    //MotChecker.addCheck(&rightMotorA, "RightMotorA");
+    //MotChecker.addCheck(&rightMotorB, "RightMotorB");
 
-    NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, false, yellow, green);
+    NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, true, yellow, orange, true);
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
     NotChecker.addCheck("Connected To Feild", "Feild Disconnect", checkFeild, false, purple, red, true);
 
     while (true) {
         NotChecker.check();
+        MotChecker.check();
+
         wait(checkSpeed, seconds);
     }
 

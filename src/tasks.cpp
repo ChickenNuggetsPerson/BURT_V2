@@ -41,6 +41,7 @@ void pre_auton(void) {
   mainController.ButtonDown.pressed(downPressed);
 
   startTasks();
+  inertialSensor.startCalibration(); // Start the calibration right away
   botAI.init();
 }
 
@@ -51,6 +52,7 @@ void autonomous(void) {
 
 
 void usercontrol(void) {
+  botAI.stop();
   brainFancyDebug("UserControl Started", vex::color::green, true);
 }
 

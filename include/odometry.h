@@ -88,6 +88,7 @@ class OdometrySystem {
         OdometrySystem();
 
         bool isTracking = false;
+        bool firstTime = true;
 
         void restart();
         void restart(Position currentPos);

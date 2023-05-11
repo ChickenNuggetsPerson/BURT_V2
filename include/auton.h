@@ -56,6 +56,7 @@ class ai {
     Position getTargetPos();
 
     void started();
+    void stop();
 
     bool turnTo(double deg);
     bool turnTo(double deg, double turnTimeout);

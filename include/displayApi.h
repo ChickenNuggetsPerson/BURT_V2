@@ -36,12 +36,10 @@ class Logger {
         bool compLogs = false;
         const char* compLogPath;
 
-        LogMessage brainLog[11];
+        std::vector <LogMessage> brainLog;
 
         void brainLogShift() {
-            for (int i=0; i < maxRows - 1; i++) {
-                brainLog[i] = brainLog[i + 1];
-            }
+            brainLog.erase(brainLog.begin());
         };
 
         void appendLogFile(const char* message) {
@@ -99,7 +97,7 @@ class Logger {
                         tmpName += str.str();
 
                         tmpName += ".txt";
-                        std::cout << "Checking " << tmpName.c_str() << std::endl;
+                        //std::cout << "Checking " << tmpName.c_str() << std::endl;
                         looking = fileExists(tmpName.c_str());
                     }
                     std::string cpyDest;
@@ -111,6 +109,8 @@ class Logger {
                     cpyDest += str.str();
 
                     cpyDest += ".txt";
+
+                    std::cout << "Archiving to:  " << cpyDest << std::endl;
 
                     copyFile(logFile, cpyDest.c_str());
                 }
@@ -130,7 +130,7 @@ class Logger {
                     str << logNum;
                     tmpName += str.str();
                     tmpName += ".txt";
-                    std::cout << "Checking " << tmpName.c_str() << std::endl;
+                    //std::cout << "Checking " << tmpName.c_str() << std::endl;
                     looking = fileExists(tmpName.c_str());
                 }
                 std::string cpyDest;
@@ -142,6 +142,9 @@ class Logger {
                 cpyDest += ".txt";
 
                 compLogPath = cpyDest.c_str();
+
+                std::cout << "Archiving To: " << compLogPath << std::endl;
+
                 writeFile(compLogPath, "Start of Comp Logs");
 
             }
@@ -152,17 +155,12 @@ class Logger {
 
         void newLog(const char* message, vex::color messageColor, int data = 0) {
 
-            //while (!initialized) {
-            //    wait(0.01, seconds);
-            //}
-            
-
             if (currentLine == maxRows) {
                 brainLogShift();
                 currentLine = maxRows - 1;
             }
 
-            brainLog[currentLine] = LogMessage(message, messageColor, data);
+            brainLog.push_back(LogMessage(message, messageColor, data));
             currentLine ++;
 
             appendLogFile(message);
@@ -171,10 +169,10 @@ class Logger {
         void render() {
             
              // Display Log Messages
-            for (int i = 0; i < maxRows; i++) {
+            for (int i = 0; i < brainLog.size(); i++) {
                 Brain.Screen.setCursor(i + yPos, xPos);
-                Brain.Screen.setPenColor(brainLog[i].displayColor);
-                Brain.Screen.print(brainLog[i].text.c_str(), brainLog[i].displayNumber);     
+                Brain.Screen.setPenColor(brainLog.at(i).displayColor);
+                Brain.Screen.print(brainLog.at(i).text.c_str(), brainLog.at(i).displayNumber);     
                 Brain.Screen.setPenColor(vex::color::white);
             }
         };
@@ -1363,6 +1361,52 @@ class MenuSystem {
 };
 
 
+struct MotorCheck {
+    motor* ptr;
+    const char* name;
+    int warnTemp;
+    double nextWarn = 0;
+    MotorCheck(motor* motorPtr, const char* motorName, int customWarnTemp = NAN) {
+        ptr = motorPtr;
+        name = motorName;
+        if (isnan(customWarnTemp)) {
+            warnTemp = motorWarnTemp;
+        } else {
+            warnTemp = customWarnTemp;
+        }
+    }
+};
+
+class MotorChecker {
+    private:
+        MenuSystem* menuSystemPtr;
+        std::vector <MotorCheck> motorList;
+    public:
+        MotorChecker(MenuSystem* ptr) {
+            menuSystemPtr = ptr;
+        };
+
+        void addCheck(motor* motorPtr, const char* motorName, int customWarnTemp = NAN) {
+            motorList.push_back(MotorCheck(motorPtr, motorName, customWarnTemp));
+        }
+
+        void check() {
+            for (int i = 0; i < motorList.size(); i++) {
+                int temperature = motorList.at(i).ptr->temperature(fahrenheit);
+                if (temperature >= motorList.at(i).warnTemp && Brain.timer(msec) > motorList.at(i).nextWarn) {
+                    std::stringstream notString;
+                    notString << "Warning: " << motorList.at(i).name << " Temperature Too High: " << temperature;
+                    
+                    brainFancyDebug(notString.str().c_str(), red, true);
+
+
+
+                    motorList.at(i).nextWarn = Brain.timer(msec) + (30 * 1000);
+                }
+            }
+        };
+
+};
 
 struct NotCheck {
     const char* trueMessage;
@@ -1377,7 +1421,7 @@ struct NotCheck {
 
 class NotificationChecker {
     private:
-        NotCheck checksStorage[10];
+        NotCheck checksStorage[20];
         int checksStored = 0;
 
         MenuSystem* menuSystemPtr;
