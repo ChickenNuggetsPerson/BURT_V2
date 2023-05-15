@@ -556,6 +556,11 @@ struct Toggle {
 };
 
 class Plot {
+
+    private:
+
+    MenuSystem* systemPtr;
+
     public:
         const char* id;
         const char* label;
@@ -576,7 +581,10 @@ class Plot {
 
         bool drawStoredLine = false;
 
-        Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0, bool showLabels = false) {
+        bool drawFeild = false;
+        int mainColor = TEAM_NULL;
+
+        Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0, bool showLabels = false, int teamColor = NAN, MenuSystem* menuSystemPointer = nullptr) {
             id = plotId;
             label = plotLabel;
             width = plotWidth;
@@ -585,8 +593,65 @@ class Plot {
             maxY = plotMaxY;
             subdiv = plotSubdiv;
             labels = showLabels;
+            drawFeild = !isnan(teamColor);
+            if (drawFeild) {
+                mainColor = teamColor;
+                systemPtr = menuSystemPointer;
+            }
         }
-        
+
+        void drawGameElements() {
+
+            // Draw the Over Under Feild Elements
+
+            vex::color ourColor;
+            vex::color altColor;
+
+            if (botAI.teamColor == TEAM_BLUE) {
+                ourColor = blue;
+                altColor = red;
+            } else {
+                ourColor = red;
+                altColor = blue;
+            }
+
+            Brain.Screen.setPenWidth(2);
+
+            // Left Goal
+            Brain.Screen.setFillColor(transparent);
+            Brain.Screen.setPenColor(altColor);
+            Brain.Screen.drawRectangle(x + 1, y + 5 + height/3, width/6, height/3);
+
+            // Right Goal
+            Brain.Screen.setPenColor(ourColor);
+            Brain.Screen.drawRectangle(x + 5*(width/6) + 1, y + 5 + height/3, width/6, height/3);
+
+            // Our Matchloads
+            Brain.Screen.setPenColor(ourColor);
+            Brain.Screen.drawLine(x + width/6, y + 5, x, y + 5 + height/6);
+            Brain.Screen.drawLine(x, y + 5 + 5*(height/6), x + width/6, y + 5 + height);
+
+            // Alt Matchloads
+            Brain.Screen.setPenColor(altColor);
+            Brain.Screen.drawLine(x + 5*(width/6), y + 5, x + width, y + 5 + height/6);
+            Brain.Screen.drawLine(x + width, y + 5 + 5*(height/6), x + 5*(width/6), y + 5 + height);
+
+            // Middle Section
+            Brain.Screen.setPenColor(ourColor);
+            Brain.Screen.drawLine(x + width/2, y + 5 + 5*(height/6), x + width/2, y + 5 + height);
+            Brain.Screen.setPenColor(altColor);
+            Brain.Screen.drawLine(x + width/2, y + 5, x + width/2, y + 5 + height/6);
+
+            Brain.Screen.setPenColor(white);
+            Brain.Screen.drawLine(x + width/2, y + 5 + height/6, x + width/2, y + 5 + 5*(height/6));
+            Brain.Screen.drawLine(x + width/3, y + 5 + height/6, x + 2*(width/3), y + 5 + height/6);
+            Brain.Screen.drawLine(x + width/3, y + 5 + 5*(height/6), x + 2*(width/3), y + 5 + 5*(height/6));
+
+
+            Brain.Screen.setPenWidth(1);
+            Brain.Screen.setPenColor(white);
+        }
+
         void draw() {
             Brain.Screen.printAt(x, y, label);
             if (subdiv != 0) {
@@ -596,6 +661,8 @@ class Plot {
                 vex::color gray;
                 gray.rgb(150, 150, 150);
                 Brain.Screen.setPenColor(gray);
+                
+                // Vertical Lines
                 for (int i = 0; i < subdiv; i++) {
                     if (labels) {
                         Brain.Screen.printAt(x + moveX*i, y + 3 + height, "%d", i);
@@ -603,6 +670,7 @@ class Plot {
                     Brain.Screen.drawLine(x + moveX*i, y + 5, x + moveX*i, y + 5 + height);
                 }
 
+                // Horizontal Lines
                 for (int i = 1; i < subdiv; i++) {
                     if (labels) {
                         Brain.Screen.printAt(x, y + 3 + moveY*i, "%d", subdiv - i);
@@ -611,7 +679,12 @@ class Plot {
                 }
                 Brain.Screen.setPenColor(white);
             }
-            
+
+
+            if (drawFeild) {
+                drawGameElements();
+            }
+
             Brain.Screen.setFillColor(vex::color::transparent);
             Brain.Screen.drawRectangle(x, y + 5, width, height);
             Brain.Screen.setFillColor(black);
@@ -1021,7 +1094,7 @@ class Page {
             toggleStorage[togglesStored].height = height;
             togglesStored++;
         };
-        void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false) {
+        void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false, int teamColor = 0) {
             plotStorage[plotsStored] = Plot();
             plotStorage[plotsStored].id = plotId;
             plotStorage[plotsStored].label = label;
@@ -1033,6 +1106,11 @@ class Page {
             plotStorage[plotsStored].maxY = plotMaxY;
             plotStorage[plotsStored].subdiv = plotSubdiv;
             plotStorage[plotsStored].labels = showLabels;
+
+            if (teamColor != 0) {
+                plotStorage[plotsStored].mainColor = teamColor;
+                plotStorage[plotsStored].drawFeild = true;
+            }
 
             plotsStored++;
         };
@@ -1280,6 +1358,8 @@ class MenuSystem {
 
     public:
 
+        int teamColor = 0;
+
         MenuSystem(bool displayNotifications) {
             showingNotifications = displayNotifications;
         };
@@ -1392,10 +1472,10 @@ class MotorChecker {
 
         void check() {
             for (int i = 0; i < motorList.size(); i++) {
-                int temperature = motorList.at(i).ptr->temperature(fahrenheit);
+                int temperature = motorList.at(i).ptr->temperature(percent);
                 if (temperature >= motorList.at(i).warnTemp && Brain.timer(msec) > motorList.at(i).nextWarn) {
                     std::stringstream notString;
-                    notString << "Warning: " << motorList.at(i).name << " Temperature Too High: " << temperature;
+                    notString << motorList.at(i).name << " Temp Too High: " << temperature;
                     
                     brainFancyDebug(notString.str().c_str(), red, true);
 

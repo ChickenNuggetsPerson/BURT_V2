@@ -50,6 +50,9 @@ int notificationCheck() {
     NotificationChecker NotChecker(&mainRenderer);
     MotorChecker MotChecker(&mainRenderer);
 
+
+    // Fix this, (Causes Memory Leak)
+
     //MotChecker.addCheck(&leftMotorA, "LeftMotorA");
     //MotChecker.addCheck(&leftMotorB, "LeftMotorB");
     //MotChecker.addCheck(&rightMotorA, "RightMotorA");
@@ -455,7 +458,7 @@ int brainDisplayerInit() {
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, white, fontType::mono30, "title");
     mapPage.addText("Status", 22, 65, white, fontType::mono15, "status");
-    mapPage.addPlot("map", "Robot Pos", 175, 15, 200, 200, tileWidth*6, tileWidth*6, 6, true);
+    mapPage.addPlot("map", "Robot Pos", 175, 15, 200, 200, tileWidth*6, tileWidth*6, 6, true, TEAM_RED);
     mapPage.addText("X:   %f", 20, 100, white, fontType::mono20, "xpos");
     mapPage.addText("Y:   %f", 20, 130, white, fontType::mono20, "ypos");
     mapPage.addText("Rot: %f", 20, 160, white, fontType::mono20, "rot");

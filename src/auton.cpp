@@ -35,6 +35,16 @@ void ai::init() {
     } else {
         brainError("No SD Card");
         odometrySystemPointer->restart();
+        return;
+    }
+
+    // Initalize Auton Variables
+
+    if (getConfig("Red")) {
+        teamColor = TEAM_RED;
+    }
+    if (getConfig("Blue")) {
+        teamColor = TEAM_BLUE;
     }
 
     
@@ -66,16 +76,24 @@ void ai::saveConfig(const char* configName, bool value) {
 
 Position ai::getStartPos() {
 
-    // TODO: Once game released, determin starting positions and make a lookup based on config 
 
-    // Other Idea: if the robot starts against the wall, use the distance sensor to measure distance
-    //             from perpendicular wall, which will provide a more accurate starting position
+    // Idea: if the robot starts against the wall, use the distance sensor to measure distance
+    //           from perpendicular wall, which will provide a more accurate starting position
 
     if (!Brain.SDcard.isInserted()) { return Position(); }
 
-    Position tempPos = Position(10, 20, 90);
+    bool left = getConfig("Left");
+    bool right = getConfig("Right"); 
 
-    return tempPos;
+    if (left) {
+        return odometrySystemPointer->tilePosToPos(AUTON_START_LEFT);
+    } 
+    if (right) {
+        return odometrySystemPointer->tilePosToPos(AUTON_START_RIGHT);
+    }
+
+    return odometrySystemPointer->tilePosToPos(TilePosition(0, 0, 0));
+    
 }
 
 // Returns true if the autonomous is ready

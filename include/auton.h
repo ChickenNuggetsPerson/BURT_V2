@@ -7,9 +7,6 @@
 class ai {
   private:
 
-    int teamColor;
-    int startPos;
-
     bool loaded = false;
 
     OdometrySystem* odometrySystemPointer;
@@ -23,20 +20,17 @@ class ai {
   public:
 
     bool running = false;
+    int teamColor = 0;
 
     std::string configFoler = "autonConfig/";
     std::string configFileType = ".txt";
 
-    int totalConfigs = 8;
+    int totalConfigs = 4;
     std::string configNames[10] { // Random config names for now
-      "Is_Comp",
-      "other",
-      "ghjkk",
-      "erwtw",
-      "jrtyj",
-      "egsdg",
-      "asl;d",
-      "yeet",
+      "Left",
+      "Right",
+      "Red",
+      "Blue",
     };
 
     bool configStorage[10];

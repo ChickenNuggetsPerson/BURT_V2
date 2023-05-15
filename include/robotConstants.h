@@ -16,7 +16,7 @@ static double backEncoderDist = 4.5; // use if we decide to use back encoders
 static double PI = 3.14159; // PI variable used for all methods
 static int tileWidth = 24; // Vex Tiles are 2ft across
 
-static int motorWarnTemp = 110; // The temp to start warning the user about motor temperatures
+static int motorWarnTemp = 70; // The percent temp to start warning the user about motor temperatures
 
 
 // Define Ports
@@ -39,8 +39,8 @@ static PIDConfig AUTON_TURNTO_PID_CONFIG(0.10, 0, 0.25);
 static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.2, 0.00, 0.00);
 static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.05, 0.00, 0.00);
 
-static Position AUTON_START_POS1(0, 0, 0); // Configure these when the game releases
-static Position AUTON_START_POS2(0, 0, 0);
+static TilePosition AUTON_START_LEFT(1, 0, 0);
+static TilePosition AUTON_START_RIGHT(4, 0, 0);
 
 
 
@@ -57,3 +57,9 @@ static std::string systemCompLogsFolder = "compLogs/";
 
 
 
+
+
+// Other Constants
+static int TEAM_RED = 1;
+static int TEAM_BLUE = 2;
+static int TEAM_NULL = 0;
