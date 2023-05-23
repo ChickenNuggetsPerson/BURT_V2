@@ -60,6 +60,9 @@ int mainTrackingTask(void* system) {
     notColor.rgb(24, 222, 166);
     brainFancyDebug("Starting Odometry System", notColor, true);
     systemPointer->isTracking = true;
+    if (systemPointer->usingDrive) {
+        brainError("Using Drive for Odom");
+    }
     while (true) {
         systemPointer->track();
         wait(updateSpeed, msec);
@@ -71,6 +74,10 @@ OdometrySystem::OdometrySystem() {
     // Start tracking system
 
     //trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
+
+
+
+    usingDrive = !(leftEncoder.installed() && rightEncoder.installed());
 }
 
 void OdometrySystem::restart() {
@@ -136,6 +143,9 @@ void OdometrySystem::resetEncoders() {
     rightMotorB.resetPosition();
     leftMotorA.resetPosition();
     leftMotorB.resetPosition();
+    
+    leftEncoder.resetPosition();
+    rightEncoder.resetPosition();
 };
 
 odomRawData OdometrySystem::getChanges(odomRawData oldData) {
@@ -146,8 +156,16 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     //double newRightEncoder = ((rightMotorA.position(rotationUnits::rev) + rightMotorB.position(rotationUnits::rev)) / 2) * circumference;
     //double newLeftEncoder = ((leftMotorA.position(rotationUnits::rev) + leftMotorB.position(rotationUnits::rev)) / 2) * circumference;
     
-    double newRightEncoder = rightMotorB.position(rotationUnits::rev) * circumference;
-    double newLeftEncoder = leftMotorB.position(rotationUnits::rev) * circumference;
+    double newRightEncoder;
+    double newLeftEncoder; 
+
+    if (usingDrive) {
+        newRightEncoder = rightMotorB.position(rotationUnits::rev) * circumference;
+        newLeftEncoder = leftMotorB.position(rotationUnits::rev) * circumference;
+    } else {
+        newRightEncoder = rightEncoder.position(rotationUnits::rev) * circumference;
+        newLeftEncoder = leftEncoder.position(rotationUnits::rev) * circumference;
+    }
     
     //double newBackEncoder = (testEncoder.position(rotationUnits::rev)) * circumference;
 

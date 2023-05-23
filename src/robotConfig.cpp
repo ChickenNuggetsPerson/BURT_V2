@@ -13,6 +13,9 @@ ai botAI = ai(&Odometry);
 
 inertial inertialSensor = inertial(inertialPort);
 
+rotation leftEncoder = rotation(leftEncoderPort);
+rotation rightEncoder = rotation(rightEncoderPort);
+
 motor leftMotorA = motor(leftMotorAPort, ratio18_1, false);
 motor leftMotorB = motor(leftMotorBPort, ratio18_1, false);
 motor_group LeftDriveSmart = motor_group(leftMotorA, leftMotorB);

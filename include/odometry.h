@@ -73,7 +73,6 @@ class OdometrySystem {
         double inertialAvg;
         void calcInertialAvg();
 
-
         TilePosition currentTilePosition;
        
         void updateTilePos();
@@ -89,6 +88,7 @@ class OdometrySystem {
 
         bool isTracking = false;
         bool firstTime = true;
+        bool usingDrive = false;
 
         void restart();
         void restart(Position currentPos);
