@@ -1,8 +1,60 @@
 
 #include "auton.h"
 #include "robotConfig.h"
+#include "paths.h"
 
 using namespace vex;
+
+
+autonPath::autonPath() {};
+autonPath::autonPath(ai* autonPointer) {
+    pointer = autonPointer;
+};
+void autonPath::addMovement(autonMovement movement) {
+    movements[totalMovements] = movement;
+    totalMovements++;
+};
+bool autonPath::runMovement(int movementNum) {
+    autonMovement movement = movements[movementNum];
+
+    if (movement.movementType == AUTON_DELAY) {
+        wait(movement.val, timeUnits::msec);
+        return true;
+    }
+    if (movement.movementType == AUTON_DRIVE_DIST) {
+        return pointer->driveDist(movement.val);
+    }
+    if (movement.movementType == AUTON_GOTO) {
+
+        if (movement.tilePosBool) {
+            return pointer->gotoLoc(movement.tilePos);
+        } else {
+            return pointer->gotoLoc(movement.pos);
+        }
+    }
+    if (movement.movementType == AUTON_TURNTO) {
+        return pointer->turnTo(movement.pos.rot);
+    }
+    if (movement.movementType == AUTON_PICKUP) {
+        // Figure out once we have a working robot
+        return true;
+    }
+    if (movement.movementType == AUTON_DROPOFF) {
+        // Figure out
+        return true;
+    }
+
+    return false;
+};
+bool autonPath::step() {
+    if (currentStep >= totalMovements) {
+        return false;
+    }
+    currentStep++;
+    return runMovement(currentStep - 1);
+};
+
+
 
 ai::ai(OdometrySystem* systemPointer) {
     odometrySystemPointer = systemPointer;
@@ -49,6 +101,13 @@ void ai::init() {
         teamColor = TEAM_BLUE;
     }
 
+    // Build Path
+    if (getConfig("Left")) {
+        path = buildPath(AUTON_PATH_LEFT, this);
+    }
+    if (getConfig("Right")) {
+        path = buildPath(AUTON_PATH_RIGHT, this);
+    }
     
 };
 
@@ -141,6 +200,18 @@ Position ai::getTargetPos() {
 }
 
 
+
+// Drives the distance
+// Math Visualization: https://www.desmos.com/calculator/uywraxwtws
+bool ai::driveDist(double dist) {
+    Position currentPosition = odometrySystemPointer->currentPos();
+    double heading = degreeToRad(currentPosition.rot);
+    
+    double desiredX = currentPosition.x + dist * cos(2.5*PI - heading);
+    double desiredY = currentPosition.y + dist * sin(2.5*PI - heading);
+    
+    return gotoLoc(Position(desiredX, desiredY, NAN));
+}
 // Turns to the desired rotation in degrees
 bool ai::turnTo(double deg) {
     return turnTo(deg, 3);
@@ -290,18 +361,26 @@ void ai::stop() {
     running = false;
 }
 
+bool ai::playPath(autonPath path) {
+
+    return true;
+}
+
+
 // Run when the autonomous period is started
 void ai::started() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
     brainChangePage("map");
 
 
-    // Test Auton Start Code
+    // Step throught the path
+    while (true) {
+        if (!path.step()) {
+            break;
+        }   
+    }
 
-    gotoLoc(TilePosition(1, 1));
-    gotoLoc(TilePosition(0, 1));
-    gotoLoc(TilePosition(0, 0));
-
+    // Auton is done?
 };
 
 

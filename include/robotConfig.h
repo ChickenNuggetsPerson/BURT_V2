@@ -7,6 +7,7 @@
 #include "displayer.h"
 #include "auton.h"
 #include "odometry.h"
+#include "paths.h"
 #include "pid.h"
 #include "mainController.h"
 #include "altController.h"
