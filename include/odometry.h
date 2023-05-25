@@ -33,7 +33,7 @@ Y
 
 */
 
-// Since Vex games are allways based on the 6x6 tiles that are 2x2ft I plan on having a tile cord system too
+// Positions based on tiles
 struct TilePosition {
     double x = 0;   // In Tiles
     double y = 0;   // In Tiles
@@ -44,40 +44,44 @@ struct TilePosition {
 };
 
 
+// Used by the odometry system for keeping track of changes in location
 struct odomRawData {
     double rightEncoder = 0.00;
     double leftEncoder = 0.00;
-    double backEncoder = 0.00;
     double heading = 0.00;
     double locX = 0.00;
     double locY = 0.00;
 
     double deltaRight;
     double deltaLeft;
-    double deltaBack;
     double deltaHeading;
 };
 
 
+// The main system for tracking the position of the robot over time
+// It is required for the autonomous to stay consistent over time
 class OdometrySystem {
     private:
 
+        // The main task for tracking the robot
         vex::task trackingTask;
 
+        // The internal storage for robot location
         double globalX = 0.00;
         double globalY = 0.00;
         double globalRot = 0.00;
 
+        // Internal storage for the tile position
+        TilePosition currentTilePosition;
+        void updateTilePos();
+
+        // Keeps a running average of the inertial sensor's readings to reduce noise from the sensor
         const int inertialAvgSize = 10;
         double inertialLastVals[10] = {0.00};
         double inertialAvg;
         void calcInertialAvg();
 
-        TilePosition currentTilePosition;
-       
-        void updateTilePos();
-
-
+        // Tracks changes in position between odom steps
         odomRawData lastData; 
         odomRawData getChanges(odomRawData data);
 

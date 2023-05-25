@@ -50,7 +50,7 @@ int mainTrackingTask(void* system) {
     } else {
         inertialSensor.startCalibration();
     }
-    while (inertialSensor.isCalibrating()) {
+    while (inertialSensor.isCalibrating()) { // Wait for inertial sensor to calibrate
         wait(0.02, seconds);
     }
 
@@ -59,24 +59,22 @@ int mainTrackingTask(void* system) {
     vex::color notColor;
     notColor.rgb(24, 222, 166);
     brainFancyDebug("Starting Odometry System", notColor, true);
+    
     systemPointer->isTracking = true;
     if (systemPointer->usingDrive) {
         brainError("Using Drive for Odom");
     }
+
     while (true) {
-        systemPointer->track();
+        systemPointer->track(); // Find main tracking calculations here 
         wait(updateSpeed, msec);
     }
+    
     return 1;
 }
 
 OdometrySystem::OdometrySystem() {
-    // Start tracking system
-
-    //trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
-
-
-
+    // Determine if the encoders are responding
     usingDrive = !(leftEncoder.installed() && rightEncoder.installed());
 }
 
@@ -84,12 +82,17 @@ void OdometrySystem::restart() {
     restart(ODOM_DEFAULT_RESET_POS);
 };
 void OdometrySystem::restart(Position currentPos) {
-    if (isTracking) { trackingTask.stop(); isTracking = false; }
+    if (isTracking) { trackingTask.stop(); isTracking = false; } // Stop tracking task
+    
+    // Set global pos to the new position
     globalX = currentPos.x;
     globalY = currentPos.y;
     globalRot = currentPos.rot;
     lastData = odomRawData();
+
     updateTilePos();
+    
+    // Start tracking task
     trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
 };
 void OdometrySystem::restart(TilePosition currentPos) {
@@ -97,6 +100,7 @@ void OdometrySystem::restart(TilePosition currentPos) {
 };
 
 
+// Return current position
 Position OdometrySystem::currentPos() {
     return Position(globalX, globalY, globalRot);
 };
@@ -105,6 +109,7 @@ TilePosition OdometrySystem::currentTilePos() {
 };
 
 
+// Position conversions
 TilePosition OdometrySystem::posToTilePos(Position pos) {
     return TilePosition(
         (pos.x - (tileWidth / 2)) / tileWidth,
@@ -118,13 +123,12 @@ Position OdometrySystem::tilePosToPos(TilePosition tilePos) {
         (tilePos.y * tileWidth) + (tileWidth / 2), 
         tilePos.rot);
 };
-
 void OdometrySystem::updateTilePos() {
     currentTilePosition = posToTilePos(Position(globalX, globalY, globalRot));
 };
 
 
-
+// Keeps a running average of the last 10 readings of the inertial sensor
 void OdometrySystem::calcInertialAvg() {
     for (int i=0; i < inertialAvgSize - 1; i++) {
         inertialLastVals[i] = inertialLastVals[i + 1];
@@ -138,6 +142,7 @@ void OdometrySystem::calcInertialAvg() {
 }
 
 
+// Reset the encoders
 void OdometrySystem::resetEncoders() {
     rightMotorA.resetPosition();
     rightMotorB.resetPosition();
@@ -148,14 +153,13 @@ void OdometrySystem::resetEncoders() {
     rightEncoder.resetPosition();
 };
 
+
+// Calculate the changes from the last position
 odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     
     double circumference = 2 * PI * (wheelDiameter / 2);
 
     // Calc the new encoder positions
-    //double newRightEncoder = ((rightMotorA.position(rotationUnits::rev) + rightMotorB.position(rotationUnits::rev)) / 2) * circumference;
-    //double newLeftEncoder = ((leftMotorA.position(rotationUnits::rev) + leftMotorB.position(rotationUnits::rev)) / 2) * circumference;
-    
     double newRightEncoder;
     double newLeftEncoder; 
 
@@ -166,15 +170,15 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
         newRightEncoder = rightEncoder.position(rotationUnits::rev) * circumference;
         newLeftEncoder = leftEncoder.position(rotationUnits::rev) * circumference;
     }
+    // Use all four drivetrain wheels
+    //double newRightEncoder = ((rightMotorA.position(rotationUnits::rev) + rightMotorB.position(rotationUnits::rev)) / 2) * circumference;
+    //double newLeftEncoder = ((leftMotorA.position(rotationUnits::rev) + leftMotorB.position(rotationUnits::rev)) / 2) * circumference;
     
-    //double newBackEncoder = (testEncoder.position(rotationUnits::rev)) * circumference;
-
     odomRawData newData;
     
     // Calculate the arc lengths
     newData.deltaRight = newRightEncoder - oldData.rightEncoder;
     newData.deltaLeft = newLeftEncoder - oldData.leftEncoder;
-    //newData.deltaBack = newBackEncoder - oldData.backEncoder;
     calcInertialAvg();
     newData.heading = inertialAvg;    
     newData.deltaHeading = newData.heading - oldData.heading;
@@ -183,8 +187,6 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     // Set the current data
     newData.rightEncoder = newRightEncoder; // Right encoder
     newData.leftEncoder = newLeftEncoder;   // Left encoder
-    //newData.backEncoder = newBackEncoder;   // Back encoder
-    //newData.heading = globalRot;  // Heading
     newData.locX = globalX;
     newData.locY = globalY;
 
@@ -192,7 +194,7 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
 }
 
 
-// Main Tracking Loop
+// Main Tracking Calculations
 void OdometrySystem::track() {
 
     // Get the current movement arc
@@ -202,18 +204,16 @@ void OdometrySystem::track() {
     //double rotChange = ((currentData.deltaLeft - currentData.deltaRight) / (encoderDist))/2;
     globalRot = currentData.heading;
 
-
+    // Change in distance
     double deltaDist = (currentData.deltaLeft + currentData.deltaRight) / 2.0;
 
+    // Use Trig to find change in X and Y
     double deltaX = deltaDist * sin(currentData.heading);
     double deltaY = deltaDist * cos(currentData.heading);
 
+    // Apply deltas to the global positions
     globalX += deltaX;
     globalY += deltaY;    
-
-    //std::cout << std::endl;
-    //std::cout << deltaX << " " << deltaY << " " << currentData.heading << std::endl;
-    //std::cout << globalX << " " << globalY << " " << globalRot << std::endl;
 
     lastData = currentData;
 

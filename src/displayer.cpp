@@ -51,7 +51,7 @@ int notificationCheck() {
     MotorChecker MotChecker(&mainRenderer);
 
 
-    // Fix this, (Causes Memory Leak)
+    // Fix this, (Causes Memory Leak) 
 
     //MotChecker.addCheck(&leftMotorA, "LeftMotorA");
     //MotChecker.addCheck(&leftMotorB, "LeftMotorB");

@@ -31,7 +31,7 @@ controller altController = controller(partner);
 
 
 
-
+// Start all of the background tasks
 void startTasks( void ) {
 
     task mainControllerTask(controllerTask);

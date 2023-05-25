@@ -43,6 +43,7 @@ double PID::iterate(double newVal, double newDesired) {
 
 // Credit to Connor 1814D on youtube for this simple yet concise PID code bellow
 // https://www.youtube.com/watch?v=_Itn-0d340g&ab_channel=Connor1814D
+// I adapted it into a class object that can be easily created and used
 double PID::iterate(double newVal) {
 
     error = newVal - desiredVal;

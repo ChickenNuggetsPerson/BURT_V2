@@ -8,6 +8,7 @@ ai::ai(OdometrySystem* systemPointer) {
     odometrySystemPointer = systemPointer;
 }
 
+// Load Auton Configs
 void ai::init() {
 
     if (loaded) { 
@@ -18,6 +19,7 @@ void ai::init() {
         }
         brainFancyDebug("Auton Reset", blue, true);
     }
+
     // Load auton Config
     if (Brain.SDcard.isInserted()) {
         for (int i = 0; i < totalConfigs; i++) {
@@ -51,7 +53,7 @@ void ai::init() {
 };
 
 
-
+// Return the config value based on the name
 bool ai::getConfig(const char* configName) {
     for (int i = 0; i < totalConfigs; i++) {
         if (configNames[i] == std::string(configName)) {
@@ -60,6 +62,9 @@ bool ai::getConfig(const char* configName) {
     }
     return false;
 };
+
+// Saves the value to the sd card
+// Does not update internal storage so make sure to reintialize auton after writing configs
 void ai::saveConfig(const char* configName, bool value) {
 
         std::cout << "Saving: " << configName << " " << value << std::endl;
@@ -74,6 +79,7 @@ void ai::saveConfig(const char* configName, bool value) {
 
 };
 
+// Returns the auton start position based on the config
 Position ai::getStartPos() {
 
 
@@ -129,13 +135,17 @@ double ai::distBetweenPoints(Position pos1, Position pos2) {
     return sqrt(pow((pos2.x - pos1.x), 2) + pow((pos2.y - pos1.y), 2));
 }
 
+// Returns the position the auton is driving to
 Position ai::getTargetPos() {
     return target;
 }
 
+
+// Turns to the desired rotation in degrees
 bool ai::turnTo(double deg) {
     return turnTo(deg, 3);
 }
+// Turns to the desired rotation in degrees
 bool ai::turnTo(double deg, double turnTimeout) {
     
     if (!odometrySystemPointer->isTracking) { 
@@ -190,7 +200,11 @@ bool ai::turnTo(double deg, double turnTimeout) {
     return true;
 };
 
+
+
 bool ai::gotoLoc(TilePosition pos) {return gotoLoc(odometrySystemPointer->tilePosToPos(pos));};
+// Goes to the desired location
+// Set a NAN rotation to skip final turnto rotation
 bool ai::gotoLoc(Position pos) {
 
     if (!odometrySystemPointer->isTracking) { 
@@ -217,16 +231,14 @@ bool ai::gotoLoc(Position pos) {
 
     double travelDist = distBetweenPoints(currentPos, pos);
     double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos));
-
-    //std::cout << desiredHeading << std::endl;
     
     turnTo(desiredHeading, 2);
 
-    // Straight Drive
-
+    // PID to control drive speed
     PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
     double drivePower = 0.00;
 
+    // PID to keep the robot driving straight
     PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
     double turnPower = 0.00;
 
@@ -250,17 +262,11 @@ bool ai::gotoLoc(Position pos) {
         double turnWant = findNearestRot(radToDegree(tempPos.rot), desiredHeading);
         turnPower = turnPid.iterate(turnCurrent, turnWant);
 
-
         double leftPower = drivePower - turnPower;
         double rightPower = drivePower + turnPower;
 
         LeftDriveSmart.spin(fwd, leftPower, voltageUnits::volt);
         RightDriveSmart.spin(fwd, rightPower, voltageUnits::volt);
-
-
-        //std::cout << std::endl;
-        //std::cout << turnCurrent << " " << turnWant << " " << desiredHeading << std::endl;
-        //std::cout << leftPower << " " << rightPower << " " << travelDist << std::endl;
 
         if (drivePower < 0.5) {
             stopped++;
@@ -272,9 +278,10 @@ bool ai::gotoLoc(Position pos) {
         wait(0.05, seconds);
     }
 
-
-    turnTo(pos.rot, 1.5);
-
+    if (!isnan(pos.rot)) {
+        turnTo(pos.rot, 1.5);
+    }
+    
     running = wasRunning;
     return true;
 };
@@ -283,6 +290,7 @@ void ai::stop() {
     running = false;
 }
 
+// Run when the autonomous period is started
 void ai::started() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
     brainChangePage("map");

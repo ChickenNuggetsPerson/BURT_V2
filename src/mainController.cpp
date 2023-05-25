@@ -34,7 +34,7 @@ int controllerTask() {
   rightMotorB.setVelocity(0, percent);
 
 
-
+  // Main driving loop
   while(true) {
 
     if(Competition.isDriverControl()) {
@@ -75,6 +75,7 @@ int controllerTask() {
   return 0;
 }
 
+// The main controller rendering task
 void mainControllerRender() {
   mainController.Screen.clearScreen();
   mainController.Screen.setCursor(1, 1);
@@ -87,6 +88,7 @@ void mainControllerRender() {
   mainController.Screen.newLine();
   mainController.Screen.print(limitAngle(radToDegree(currentPos.rot)));            
 
+  // Test Controller Overlay Choice
   if (mainController.ButtonA.pressing()) {
     bool chosen = displayOverlay(ControllerOverlay("Choose", "Launch", "Other"), &mainController);
 
@@ -98,6 +100,7 @@ void mainControllerRender() {
 
   }
 
+  // Test Controller Choose from list
   if (mainController.ButtonB.pressing()) {
     std::vector <const char *> options;
 

@@ -25,6 +25,7 @@ void downPressed() {
   //botAI.gotoLoc(TilePosition(0, 0, 0));
 }
 
+// Setup callbacks and initialize auton
 void pre_auton(void) {
 
   brainDebug("Initializing Burt", true);
@@ -46,18 +47,13 @@ void pre_auton(void) {
 }
 
 
-void autonomous(void) {
-  botAI.started();
-}
+void autonomous(void) { botAI.started(); }
 
 
 void usercontrol(void) {
-  botAI.stop();
+  botAI.stop(); // Force auton to stop
   brainFancyDebug("UserControl Started", vex::color::green, true);
 }
 
 
-void whenStarted(void){
-  
-}
-
+void whenStarted(void) {}
