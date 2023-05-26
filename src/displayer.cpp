@@ -124,7 +124,7 @@ void configPageInit(Page* currentPage, ai* robotAI) {
     for (int i = 0; i < robotAI->totalConfigs; i++) {
         currentPage->addToggle(robotAI->configNames[i].c_str(), false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20 + (110 * x), 80 + (60 * y), 100, 40);
         x++;
-        if (x == 4) { y++; x = 0; }
+        if (x == 2) { y++; x = 0; }
     }
 };
 void setConfigs() {

@@ -7,6 +7,7 @@
 class ai;
 
 // Path Names
+static int AUTON_PATH_TEST = 0;
 static int AUTON_PATH_LEFT = 1;
 static int AUTON_PATH_RIGHT = 2;
 
@@ -55,6 +56,7 @@ class autonPath {
     autonPath();
     autonPath(ai* autonPointer);
     void addMovement(autonMovement movement);
+    void reset();
     bool step();
 };
 
@@ -83,10 +85,10 @@ class ai {
 
     int totalConfigs = 4;
     std::string configNames[10] { // Random config names for now
-      "Left",
-      "Right",
       "Red",
       "Blue",
+      "Left",
+      "Right",
     };
 
     bool configStorage[10];

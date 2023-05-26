@@ -46,6 +46,9 @@ bool autonPath::runMovement(int movementNum) {
 
     return false;
 };
+void autonPath::reset() {
+    currentStep = 0;
+}
 bool autonPath::step() {
     if (currentStep >= totalMovements) {
         return false;
@@ -89,6 +92,7 @@ void ai::init() {
     } else {
         brainError("No SD Card");
         odometrySystemPointer->restart();
+        path = buildPath(AUTON_PATH_TEST, this);
         return;
     }
 
@@ -102,11 +106,16 @@ void ai::init() {
     }
 
     // Build Path
-    if (getConfig("Left")) {
+    bool left = getConfig("Left");
+    bool right = getConfig("Right");
+    if (left) {
         path = buildPath(AUTON_PATH_LEFT, this);
     }
-    if (getConfig("Right")) {
+    if (right) {
         path = buildPath(AUTON_PATH_RIGHT, this);
+    }
+    if ((!right && !left) || (right && left)) {
+        path = buildPath(AUTON_PATH_TEST, this);
     }
     
 };
@@ -372,6 +381,7 @@ void ai::started() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
     brainChangePage("map");
 
+    path.reset();
 
     // Step throught the path
     while (true) {
