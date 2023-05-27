@@ -19,7 +19,7 @@ void leftPressed() {
   brainChangePage("map");
 };
 void upPressed() {
-  //botAI.gotoLoc(TilePosition(1, 5, 0));
+  botAI.driveDist(24);
 }
 void downPressed() {
   //botAI.gotoLoc(TilePosition(0, 0, 0));

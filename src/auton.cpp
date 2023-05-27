@@ -14,38 +14,34 @@ void autonPath::addMovement(autonMovement movement) {
     movements[totalMovements] = movement;
     totalMovements++;
 };
+
 bool autonPath::runMovement(int movementNum) {
     autonMovement movement = movements[movementNum];
 
-    if (movement.movementType == AUTON_DELAY) {
-        wait(movement.val, timeUnits::msec);
-        return true;
-    }
-    if (movement.movementType == AUTON_DRIVE_DIST) {
-        return pointer->driveDist(movement.val);
-    }
-    if (movement.movementType == AUTON_GOTO) {
-
-        if (movement.tilePosBool) {
-            return pointer->gotoLoc(movement.tilePos);
-        } else {
-            return pointer->gotoLoc(movement.pos);
-        }
-    }
-    if (movement.movementType == AUTON_TURNTO) {
-        return pointer->turnTo(movement.pos.rot);
-    }
-    if (movement.movementType == AUTON_PICKUP) {
-        // Figure out once we have a working robot
-        return true;
-    }
-    if (movement.movementType == AUTON_DROPOFF) {
-        // Figure out
-        return true;
+    switch (movement.movementType) {
+        case AUTON_DELAY:
+            wait(movement.val, timeUnits::msec);
+            return true;
+        case AUTON_DRIVE_DIST:
+            return pointer->driveDist(movement.val);
+        case AUTON_GOTO:
+            if (movement.tilePosBool) {
+                return pointer->gotoLoc(movement.tilePos);
+            } else {
+                return pointer->gotoLoc(movement.pos);
+            }
+        case AUTON_TURNTO:
+            return pointer->turnTo(movement.pos.rot);
+        case AUTON_PICKUP:
+            return true;
+        case AUTON_DROPOFF:
+            return true;
+        default:
+            return false;
     }
 
-    return false;
 };
+
 void autonPath::reset() {
     currentStep = 0;
 }
@@ -214,11 +210,8 @@ Position ai::getTargetPos() {
 // Math Visualization: https://www.desmos.com/calculator/uywraxwtws
 bool ai::driveDist(double dist) {
     Position currentPosition = odometrySystemPointer->currentPos();
-    double heading = degreeToRad(currentPosition.rot);
-    
-    double desiredX = currentPosition.x + dist * cos(2.5*PI - heading);
-    double desiredY = currentPosition.y + dist * sin(2.5*PI - heading);
-    
+    double desiredX = currentPosition.x + dist * cos(2.5*PI - currentPosition.rot);
+    double desiredY = currentPosition.y + dist * sin(2.5*PI - currentPosition.rot);
     return gotoLoc(Position(desiredX, desiredY, NAN));
 }
 // Turns to the desired rotation in degrees
@@ -233,7 +226,7 @@ bool ai::turnTo(double deg, double turnTimeout) {
         return false; 
     }
 
-    double timeout = Brain.timer(msec) + (3 * 1000);
+    double timeout = Brain.timer(msec) + (turnTimeout * 1000);
 
     bool wasRunning = running;
     running = true;
@@ -244,7 +237,7 @@ bool ai::turnTo(double deg, double turnTimeout) {
 
 
     double accuracy = 0.35;
-    int checks = 20;
+    int checks = 10;
 
 
     int totalChecks = 0;
@@ -298,7 +291,7 @@ bool ai::gotoLoc(Position pos) {
     target.y = pos.y;
     target.rot = pos.rot;
 
-    std::cout << "Target: " << pos.x << " " << pos.y << std::endl;
+    //std::cout << "Target: " << pos.x << " " << pos.y << std::endl;
 
     // Required: Odomotry system needs to be working to do this
 
@@ -312,7 +305,7 @@ bool ai::gotoLoc(Position pos) {
     double travelDist = distBetweenPoints(currentPos, pos);
     double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos));
     
-    turnTo(desiredHeading, 2);
+    turnTo(desiredHeading, 1);
 
     // PID to control drive speed
     PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
@@ -380,6 +373,8 @@ bool ai::playPath(autonPath path) {
 void ai::started() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
     brainChangePage("map");
+
+    while (!odometrySystemPointer->isTracking) { wait(0.01, seconds); }
 
     path.reset();
 

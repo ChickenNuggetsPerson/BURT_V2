@@ -49,6 +49,7 @@ static TilePosition AUTON_START_RIGHT(4, 0, 0);
 // Config File Paths
 static std::string systemConfigFolder = "systemConfig/";
 static std::string systemArchivePath = "archiveLogs.txt";
+static std::string systemDriveModePath = "driveMode.txt";
 
 
 // Config Log Paths

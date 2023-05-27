@@ -7,17 +7,19 @@
 class ai;
 
 // Path Names
-static int AUTON_PATH_TEST = 0;
-static int AUTON_PATH_LEFT = 1;
-static int AUTON_PATH_RIGHT = 2;
+static const int AUTON_PATH_TEST = 0;
+static const int AUTON_PATH_LEFT = 1;
+static const int AUTON_PATH_RIGHT = 2;
 
-// Types of movements
-static int AUTON_DELAY = 0;
-static int AUTON_DRIVE_DIST = 1;
-static int AUTON_GOTO = 2;
-static int AUTON_TURNTO = 3;
-static int AUTON_PICKUP = 4;
-static int AUTON_DROPOFF = 5;
+// Type of movements
+static const int AUTON_DELAY = 0;
+static const int AUTON_DRIVE_DIST = 1;
+static const int AUTON_GOTO = 2;
+static const int AUTON_TURNTO = 3;
+static const int AUTON_PICKUP = 4;
+static const int AUTON_DROPOFF = 5;
+
+
 
 struct autonMovement {
   int movementType = 0;

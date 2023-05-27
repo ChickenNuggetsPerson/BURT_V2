@@ -209,7 +209,7 @@ int configExitButton(Page* self) {
 
 void systemConfigSave(Page* self) {
     writeFile(std::string(systemConfigFolder + systemArchivePath).c_str(), self->getToggleStatus("Archive Logs"));
-
+    writeFile(std::string(systemConfigFolder + systemDriveModePath).c_str(), self->getToggleStatus("Arcade Drive"));
 
 }
 int loadedSystemConfigPage(Page* self) {
@@ -221,11 +221,8 @@ int loadedSystemConfigPage(Page* self) {
     self->setTextData("savedStatus", white, "Edit System Config Values");
 
     // Set Archive Toggle
-    if (readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1) {
-        self->setToggleStatus("Archive Logs", true);
-    } else {
-        self->setToggleStatus("Archive Logs", false);
-    }
+    self->setToggleStatus("Archive Logs", (readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1));
+    self->setToggleStatus("Arcade Drive", (readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1));
 
     return 1;
 }
@@ -420,6 +417,7 @@ int testPageUpdater(Page* self) {
 
 int brainDisplayerInit() {
 
+    uint64_t startTime = Brain.Timer.systemHighResolution();
 
     Brain.Screen.pressed(screenPressed);
     task notificationTask(notificationCheck, task::taskPrioritylow);
@@ -452,7 +450,7 @@ int brainDisplayerInit() {
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
 
-    homePage.addButton("test", 20, 150, 100, 30, gotoTestPageButton, "test");
+    //homePage.addButton("test", 20, 150, 100, 30, gotoTestPageButton, "test");
 
 
     // Configure the map page
@@ -480,7 +478,8 @@ int brainDisplayerInit() {
     systemConfigPage.addButton("Back", 380, 210, 100, 30, systemConfigExitButton, "mainPageButton");
 
     systemConfigPage.addToggle("Archive Logs", false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 170, 150, 40);
-    
+    systemConfigPage.addToggle("Arcade Drive", true, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 120, 150, 40, "Tank Drive");
+
     systemConfigPage.addPageLoadedCB(loadedSystemConfigPage);
     systemConfigPage.addDataUpdaterCB(updateSystemConfig);
 
@@ -515,6 +514,8 @@ int brainDisplayerInit() {
     odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
     odometryPage.addButton("Map", 280, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
+
+    std::cout << "Page Build Time: " << Brain.Timer.systemHighResolution() - startTime << std::endl;
 
     return 1;
 };

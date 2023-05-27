@@ -545,6 +545,9 @@ struct OverlayQuestion {
 
 struct Toggle {
     const char* displayText;
+    const char* trueText;
+    bool showAlt = false;
+
     bool status;
     vex::color offColor;
     vex::color onColor;
@@ -868,7 +871,11 @@ class Page {
             }
 
             Brain.Screen.drawRectangle(toggleButton.x, toggleButton.y, toggleButton.width, toggleButton.height);
-            Brain.Screen.printAt(toggleButton.x + (toggleButton.width / 2) - (Brain.Screen.getStringWidth(toggleButton.displayText) / 2), toggleButton.y + (toggleButton.height / 2) + (Brain.Screen.getStringHeight(toggleButton.displayText) / 4), toggleButton.displayText);
+            if (toggleButton.showAlt) {
+                Brain.Screen.printAt(toggleButton.x + (toggleButton.width / 2) - (Brain.Screen.getStringWidth(toggleButton.status ? toggleButton.trueText : toggleButton.displayText) / 2), toggleButton.y + (toggleButton.height / 2) + (Brain.Screen.getStringHeight(toggleButton.displayText) / 4), toggleButton.status ? toggleButton.trueText : toggleButton.displayText);
+            } else {
+                Brain.Screen.printAt(toggleButton.x + (toggleButton.width / 2) - (Brain.Screen.getStringWidth(toggleButton.displayText) / 2), toggleButton.y + (toggleButton.height / 2) + (Brain.Screen.getStringHeight(toggleButton.displayText) / 4), toggleButton.displayText);
+            }
             Brain.Screen.setFillColor(black);
         }
 
@@ -1082,7 +1089,7 @@ class Page {
             displayBoxStorage[displayBoxsStored].penColor = penColor;
             displayBoxsStored++;
         }
-        void addToggle( const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height) {
+        void addToggle( const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height, const char* trueText = "") {
             toggleStorage[togglesStored] = Toggle();
             toggleStorage[togglesStored].displayText = displayText;
             toggleStorage[togglesStored].status = startStatus;
@@ -1092,6 +1099,10 @@ class Page {
             toggleStorage[togglesStored].y = y;
             toggleStorage[togglesStored].width = width;
             toggleStorage[togglesStored].height = height;
+            if (strcmp(trueText, "") != 0) {
+                toggleStorage[togglesStored].showAlt = true;
+                toggleStorage[togglesStored].trueText = trueText;
+            }
             togglesStored++;
         };
         void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false, int teamColor = 0) {

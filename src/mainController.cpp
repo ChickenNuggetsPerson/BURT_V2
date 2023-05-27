@@ -34,6 +34,11 @@ int controllerTask() {
   rightMotorB.setVelocity(0, percent);
 
 
+  bool tankDrive = true;
+  if (Brain.SDcard.isInserted()) {
+    tankDrive = (readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1);
+  }
+
   // Main driving loop
   while(true) {
 
@@ -41,19 +46,27 @@ int controllerTask() {
 
       if (!inertialSensor.isCalibrating()) {
         leftFB = mainController.Axis3.position();
-        rightFB = mainController.Axis3.position();
+        rightFB = mainController.Axis2.position();
 
         turn = mainController.Axis1.position();
       }
 
     }
     
+    if (tankDrive) {
+      motorFL = leftFB;
+      motorFR = rightFB;
 
-    motorFL = leftFB + turn;
-    motorFR = rightFB - turn;
+      motorBL = leftFB;
+      motorBR = rightFB;
+    } else {
+      motorFL = leftFB + turn;
+      motorFR = leftFB - turn;
 
-    motorBL = leftFB + turn;
-    motorBR = rightFB - turn;
+      motorBL = leftFB + turn;
+      motorBR = leftFB - turn;      
+    }
+
 
     if ( !botAI.running ) {
 
@@ -110,15 +123,26 @@ void mainControllerRender() {
     options.push_back("(6, 6)");
     options.push_back("(3, 2)");
 
-    int chosen = pickOption(options, &mainController);
+    switch (pickOption(options, &mainController)) {
+      case 0:
+        botAI.gotoLoc(TilePosition(0, 0));
+        break;
+      case 1:
+        botAI.gotoLoc(TilePosition(1, 1));
+        break;
+      case 2:
+        botAI.gotoLoc(TilePosition(2, 5));
+        break;
+      case 3:
+        botAI.gotoLoc(TilePosition(6, 6));
+        break;
+      case 4:
+        botAI.gotoLoc(TilePosition(3, 2));
+        break;     
+      default:
 
-    if (chosen == 0) { botAI.gotoLoc(TilePosition(0, 0)); }
-    if (chosen == 1) { botAI.gotoLoc(TilePosition(1, 1)); }
-    if (chosen == 2) { botAI.gotoLoc(TilePosition(2, 5)); }
-    if (chosen == 3) { botAI.gotoLoc(TilePosition(6, 6)); }
-    if (chosen == 4) { botAI.gotoLoc(TilePosition(3, 2)); }
-
-
+        break; 
+    }
   }
 
 }
