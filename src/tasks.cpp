@@ -12,17 +12,20 @@ void test(){
 };
 
 void rightPressed() {
- botAI.gotoLoc(TilePosition(4, 3, 0));
- //botAI.turnTo(90);
+ if (!botAI.running) {
+    botAI.turnTo(90);
+ }
 };
 void leftPressed() {
-  brainChangePage("map");
+ if (!botAI.running) {
+    botAI.turnTo(270);
+ }
 };
 void upPressed() {
-  botAI.driveDist(24);
+
 }
 void downPressed() {
-  //botAI.gotoLoc(TilePosition(0, 0, 0));
+
 }
 
 // Setup callbacks and initialize auton

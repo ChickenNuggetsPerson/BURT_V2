@@ -175,17 +175,24 @@ double ai::findNearestRot(double currentRot, double targetRot) {
 
     int currentMult = trunc(currentRot / 360);
 
-    double smallerVal = (( currentMult ) * 360) + targetRot;
+    double smallerVal = (( currentMult - 1 ) * 360) + targetRot;
+    double middleVal = (( currentMult ) * 360) + targetRot;
     double biggerVal = (( currentMult + 1 ) * 360) + targetRot;
 
     double smallerDiff = fabs(smallerVal - currentRot);
+    double middleDiff = fabs(middleVal - currentRot);
     double biggerDiff = fabs(biggerVal - currentRot);
 
-    if (smallerDiff < biggerDiff) {
+    if (smallerDiff < middleDiff && smallerDiff < biggerDiff) {
         return smallerVal;
-    } else {
+    }
+    if (middleDiff < smallerDiff && middleDiff < biggerDiff) {
+        return middleVal;
+    }
+    if (biggerDiff < smallerDiff && biggerDiff < middleDiff) {
         return biggerVal;
     }
+    return middleVal;
 };
 
 // https://www.desmos.com/calculator/gdryojf8i3 << My tests for figuring out the math
@@ -305,7 +312,7 @@ bool ai::gotoLoc(Position pos) {
     double travelDist = distBetweenPoints(currentPos, pos);
     double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos));
     
-    turnTo(desiredHeading, 1);
+    turnTo(desiredHeading, 1.5);
 
     // PID to control drive speed
     PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
@@ -341,7 +348,7 @@ bool ai::gotoLoc(Position pos) {
         LeftDriveSmart.spin(fwd, leftPower, voltageUnits::volt);
         RightDriveSmart.spin(fwd, rightPower, voltageUnits::volt);
 
-        if (drivePower < 0.5) {
+        if (drivePower < 1) {
             stopped++;
         }
         if (stopped > 10) {
