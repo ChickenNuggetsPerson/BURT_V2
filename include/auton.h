@@ -1,5 +1,6 @@
 #include "odometry.h"
 #include <string>
+#include <vector>
 #pragma once
 
 // This is the file that defines the ai class
@@ -15,9 +16,10 @@ static const int AUTON_PATH_RIGHT = 2;
 static const int AUTON_DELAY = 0;
 static const int AUTON_DRIVE_DIST = 1;
 static const int AUTON_GOTO = 2;
-static const int AUTON_TURNTO = 3;
-static const int AUTON_PICKUP = 4;
-static const int AUTON_DROPOFF = 5;
+static const int AUTON_LONGGOTO = 3;
+static const int AUTON_TURNTO = 4;
+static const int AUTON_PICKUP = 5;
+static const int AUTON_DROPOFF = 6;
 
 
 
@@ -25,6 +27,7 @@ struct autonMovement {
   int movementType = 0;
   Position pos;
   TilePosition tilePos;
+  std::vector<TilePosition> drivePath;
   bool tilePosBool = false;
   double val = 0;
   autonMovement(int type, Position position) {
@@ -41,6 +44,10 @@ struct autonMovement {
     movementType = type;
     val = value;
   };
+  autonMovement(int type, std::vector<TilePosition> path) {
+    movementType = type;
+    drivePath = path;
+  }
   autonMovement(int type) {
     movementType = type;
   }
@@ -114,10 +121,15 @@ class ai {
     void stop();
 
     bool driveDist(double dist);
+
     bool turnTo(double deg);
     bool turnTo(double deg, double turnTimeout);
+    
     bool gotoLoc(TilePosition pos);
     bool gotoLoc(Position pos);
+    
+    bool longGoto(std::vector<TilePosition> pos);
+    bool longGoto(std::vector<Position> pos);
 
     bool playPath(autonPath path);
 };

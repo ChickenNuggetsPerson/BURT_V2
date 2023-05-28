@@ -2,6 +2,7 @@
 #include "auton.h"
 #include "robotConfig.h"
 #include "paths.h"
+#include <vector>
 
 using namespace vex;
 
@@ -30,6 +31,8 @@ bool autonPath::runMovement(int movementNum) {
             } else {
                 return pointer->gotoLoc(movement.pos);
             }
+        case AUTON_LONGGOTO:
+            return pointer->longGoto(movement.drivePath);
         case AUTON_TURNTO:
             return pointer->turnTo(movement.pos.rot);
         case AUTON_PICKUP:
@@ -340,7 +343,7 @@ bool ai::gotoLoc(Position pos) {
 
         double turnCurrent = radToDegree(odometrySystemPointer->currentPos().rot);
         double turnWant = findNearestRot(radToDegree(tempPos.rot), desiredHeading);
-        turnPower = turnPid.iterate(turnCurrent, turnWant);
+        turnPower = turnPid.iterate(turnCurrent, turnWant) * 1.5;
 
         double leftPower = drivePower - turnPower;
         double rightPower = drivePower + turnPower;
@@ -365,6 +368,97 @@ bool ai::gotoLoc(Position pos) {
     running = wasRunning;
     return true;
 };
+
+
+bool ai::longGoto(std::vector<TilePosition> pos) {
+    std::vector<Position> tmpVec;
+
+    for (int i = 0; i < pos.size(); i++) {
+        tmpVec.push_back(odometrySystemPointer->tilePosToPos(pos.at(i)));
+    }
+
+    return longGoto(tmpVec);
+};
+// Goes to the desired location
+// Set a NAN rotation to skip final turnto rotation
+bool ai::longGoto(std::vector<Position> pos) {
+
+    if (!odometrySystemPointer->isTracking) { 
+        brainError("Skipping Auton Path, Odom not initialized");
+        return false; 
+    }
+
+    bool wasRunning = running;
+    running = true;
+    target.x = pos.at(0).x;
+    target.y = pos.at(0).y;
+    target.rot = pos.at(0).rot;
+
+    Position currentPos = odometrySystemPointer->currentPos();
+
+    double travelDist = distBetweenPoints(currentPos, pos.at(0));
+    double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos.at(0)));
+    
+    turnTo(desiredHeading, 1.5);
+
+    // PID to control drive speed
+    PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
+    double drivePower = 0.00;
+
+    // PID to keep the robot driving straight
+    PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
+    double turnPower = 0.00;
+
+    int stopped = 0;
+    bool traveling = true;
+
+    int targetNum = 0;
+    int numOfTargets = pos.size();
+
+    while (traveling) {
+        
+        Position tempPos = odometrySystemPointer->currentPos();
+
+        travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
+        desiredHeading = radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
+
+        drivePower = drivePid.iterate(travelDist);
+
+        double turnCurrent = radToDegree(odometrySystemPointer->currentPos().rot);
+        double turnWant = findNearestRot(radToDegree(tempPos.rot), desiredHeading);
+        turnPower = turnPid.iterate(turnCurrent, turnWant) * 1.5;
+
+        double leftPower = drivePower - turnPower;
+        double rightPower = drivePower + turnPower;
+
+        LeftDriveSmart.spin(fwd, leftPower, voltageUnits::volt);
+        RightDriveSmart.spin(fwd, rightPower, voltageUnits::volt);
+
+        if (drivePower < 1) {
+            stopped++;
+        }
+
+
+        if (travelDist < 1) {
+            stopped = 0;
+            targetNum++;
+        }
+        if (stopped > 10) {
+            stopped = 0;
+            targetNum++;
+        }
+
+        if (targetNum >= numOfTargets) {
+            traveling = false;
+        }
+
+        wait(0.05, seconds);
+    }
+    
+    running = wasRunning;
+    return true;
+};
+
 
 void ai::stop() {
     running = false;

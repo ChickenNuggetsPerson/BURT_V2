@@ -12,14 +12,16 @@ void test(){
 };
 
 void rightPressed() {
- if (!botAI.running) {
-    botAI.turnTo(90);
- }
+
 };
 void leftPressed() {
- if (!botAI.running) {
-    botAI.turnTo(270);
- }
+  std::vector<TilePosition> path;
+  
+  path.push_back(TilePosition(0, 0));
+  path.push_back(TilePosition(0, 5));
+  path.push_back(TilePosition(0, 0));
+
+  botAI.longGoto(path);
 };
 void upPressed() {
 

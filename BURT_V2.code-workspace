@@ -63,7 +63,24 @@
 			"shared_mutex": "cpp",
 			"system_error": "cpp",
 			"thread": "cpp",
-			"typeindex": "cpp"
+			"typeindex": "cpp",
+			"iterator": "cpp",
+			"memory": "cpp",
+			"queue": "cpp",
+			"xhash": "cpp",
+			"random": "cpp",
+			"xlocale": "cpp",
+			"xlocnum": "cpp",
+			"xstring": "cpp",
+			"xutility": "cpp",
+			"concepts": "cpp",
+			"ios": "cpp",
+			"xfacet": "cpp",
+			"xiosbase": "cpp",
+			"xlocinfo": "cpp",
+			"xmemory": "cpp",
+			"xstddef": "cpp",
+			"xtr1common": "cpp"
 		}
 	}
 }
