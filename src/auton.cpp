@@ -345,7 +345,7 @@ bool ai::longGoto(std::vector<Position> pos) {
         travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
 
         if (targetNum != numOfTargets - 1) {
-            travelDist += distBetweenPoints(pos.at(targetNum), pos.at(targetNum + 1));
+            travelDist = travelDist + 10;
         }
 
         desiredHeading = radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
@@ -367,7 +367,7 @@ bool ai::longGoto(std::vector<Position> pos) {
         }
 
 
-        if (travelDist < 1) {
+        if (targetNum != numOfTargets - 1 && travelDist < 15) {
             stopped = 0;
             targetNum++;
             if (targetNum == numOfTargets) {            

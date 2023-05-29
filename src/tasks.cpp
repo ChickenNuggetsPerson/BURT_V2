@@ -12,13 +12,15 @@ void test(){
 };
 
 void rightPressed() {
-
+  brainChangePage("map");
 };
 void leftPressed() {
   std::vector<TilePosition> path;
   
   path.push_back(TilePosition(0, 0));
-  path.push_back(TilePosition(0, 5));
+  path.push_back(TilePosition(0, 1));
+  path.push_back(TilePosition(1, 1));
+  path.push_back(TilePosition(1, 0));
   path.push_back(TilePosition(0, 0));
 
   botAI.longGoto(path);

@@ -38,7 +38,7 @@ static TilePosition ODOM_DEFAULT_RESET_POS(0, 0, 0);
 static PIDConfig AUTON_TURNTO_PID_CONFIG(0.15, 0, 0.25);
 
 static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.2, 0.00, 0.06);
-static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.05, 0.00, 0.00);
+static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 
 static TilePosition AUTON_START_LEFT(1, 0, 0);
 static TilePosition AUTON_START_RIGHT(4, 0, 0);

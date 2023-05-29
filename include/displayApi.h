@@ -1388,7 +1388,7 @@ class MenuSystem {
 
         void render() {
 
-            double startTime = Brain.timer(msec);
+            //double startTime = Brain.timer(msec);
 
             // Render Page
             if (displayPage == -1) {
@@ -1409,9 +1409,9 @@ class MenuSystem {
                 }
             }
 
-            if (frameCap) {
-                wait((1000 / fpsCap) - (Brain.timer(msec) - startTime), msec);
-            }
+            //if (frameCap) {
+            //    wait((1000 / fpsCap) - (Brain.timer(msec) - startTime), msec);
+            //}
         };
 
         void addPage(const char* pageId, Page* page) {
