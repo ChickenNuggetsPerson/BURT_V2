@@ -31,7 +31,6 @@ Page odometryPage;
 Page autonConfigPage;
 Page systemConfigPage;
 
-Page testPage;
 
 
 // Called when the screen is pressed
@@ -58,14 +57,14 @@ int notificationCheck() {
     //MotChecker.addCheck(&rightMotorA, "RightMotorA");
     //MotChecker.addCheck(&rightMotorB, "RightMotorB");
 
-    NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, true, yellow, orange, true);
+    NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, true, yellow, green, true);
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
     NotChecker.addCheck("Connected To Feild", "Feild Disconnect", checkFeild, false, purple, red, true);
 
     while (true) {
         NotChecker.check();
-        MotChecker.check();
+        //MotChecker.check();
 
         wait(checkSpeed, seconds);
     }
@@ -403,21 +402,7 @@ int updateMap(Page* self) {
 }
 
 
-
-
-int loadedTestPage(Page* self) {
-
-    return 1;
-}
-int testPageUpdater(Page* self) {
-
-    return 1;
-}
-
-
 int brainDisplayerInit() {
-
-    uint64_t startTime = Brain.Timer.systemHighResolution();
 
     Brain.Screen.pressed(screenPressed);
     task notificationTask(notificationCheck, task::taskPrioritylow);
@@ -425,7 +410,9 @@ int brainDisplayerInit() {
     // Init Gradients
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
-    Gradient graphGradient = Gradient(10, 300, 10, 100);
+
+    // Add Framerate Cap
+    mainRenderer.setFrameRate(true, 30);
 
     // Add pages to the main renderer
     mainRenderer.addPage("main", &homePage);
@@ -434,11 +421,6 @@ int brainDisplayerInit() {
     mainRenderer.addPage("systemConfig", &systemConfigPage);
     mainRenderer.addPage("odometry", &odometryPage);
     mainRenderer.addPage("map", &mapPage);
-    mainRenderer.addPage("test", &testPage);
-
-
-    testPage.addPageLoadedCB(loadedTestPage);
-    testPage.addDataUpdaterCB(testPageUpdater);
 
 
     // Configure the home page
@@ -514,8 +496,6 @@ int brainDisplayerInit() {
     odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
     odometryPage.addButton("Map", 280, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
-
-    std::cout << "Page Build Time: " << Brain.Timer.systemHighResolution() - startTime << std::endl;
 
     return 1;
 };

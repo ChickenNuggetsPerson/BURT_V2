@@ -24,8 +24,9 @@ int main() {
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);
 
-  pre_auton();
   
+  pre_auton();
+
   whenStarted();
 
   // Prevent main from exiting with an infinite loop.

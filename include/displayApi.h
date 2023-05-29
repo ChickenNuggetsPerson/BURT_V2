@@ -61,8 +61,10 @@ class Logger {
             maxRows = maxLogs;
 
             logFile = outFile;
+            isSaving = Brain.SDcard.isInserted();
+            writeFile(logFile, "Start of Logs");
 
-            reloadLogger(logFile);
+            //reloadLogger(logFile);
             
         };
 
@@ -187,6 +189,7 @@ class Logger {
         }
 
 };
+
 
 // Stores a color and the range it is acceptable in
 class colorRange {
@@ -1317,6 +1320,9 @@ int mainDataUpdater(void* pageToUpdate) {
 
 class MenuSystem {
     private:
+
+        bool frameCap = false;
+        int fpsCap = NAN;
         
         Page* pageStorage[10];
         const char* pageIdStorage[10];
@@ -1374,9 +1380,15 @@ class MenuSystem {
         MenuSystem(bool displayNotifications) {
             showingNotifications = displayNotifications;
         };
-        
+
+        void setFrameRate(bool capFramerate, int fps) {
+            frameCap = capFramerate;
+            fpsCap = fps;
+        }        
 
         void render() {
+
+            double startTime = Brain.timer(msec);
 
             // Render Page
             if (displayPage == -1) {
@@ -1395,6 +1407,10 @@ class MenuSystem {
                         notifNumber--;
                     }
                 }
+            }
+
+            if (frameCap) {
+                wait((1000 / fpsCap) - (Brain.timer(msec) - startTime), msec);
             }
         };
 

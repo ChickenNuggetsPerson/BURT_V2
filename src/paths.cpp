@@ -14,8 +14,10 @@ autonPath buildPath(int pathID, ai* autonPtr) {
         path.addMovement(autonMovement(AUTON_GOTO, TilePosition(0.5, 0.5, 225)));
         path.addMovement(autonMovement(AUTON_DRIVE_DIST, 10));
         path.addMovement(autonMovement(AUTON_PICKUP));
-        path.addMovement(autonMovement(AUTON_GOTO, TilePosition(1, 1, NAN)));
-        path.addMovement(autonMovement(AUTON_GOTO, TilePosition(2, 1, 90)));
+        std::vector<TilePosition> tmpPath;
+        tmpPath.push_back(TilePosition(1, 1));
+        tmpPath.push_back(TilePosition(2, 1, 90));
+        path.addMovement(autonMovement(AUTON_LONGGOTO, tmpPath));
     }
 
     if (pathID == AUTON_PATH_RIGHT) {

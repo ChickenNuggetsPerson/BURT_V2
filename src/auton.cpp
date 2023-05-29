@@ -285,91 +285,14 @@ bool ai::turnTo(double deg, double turnTimeout) {
 
 
 
-bool ai::gotoLoc(TilePosition pos) {return gotoLoc(odometrySystemPointer->tilePosToPos(pos));};
-// Goes to the desired location
-// Set a NAN rotation to skip final turnto rotation
-bool ai::gotoLoc(Position pos) {
-
-    if (!odometrySystemPointer->isTracking) { 
-        brainError("Skipping Auton Path, Odom not initialized");
-        return false; 
-    }
-
-    bool wasRunning = running;
-    running = true;
-    target.x = pos.x;
-    target.y = pos.y;
-    target.rot = pos.rot;
-
-    //std::cout << "Target: " << pos.x << " " << pos.y << std::endl;
-
-    // Required: Odomotry system needs to be working to do this
-
-    // TODO:
-    //  1. Figure out the math for finding the angle and distance to the point
-    //  2. Develop a "stright drive" function that uses the inertial sensor and track wheel to drive stright
-    //  3  Compare desired position to the final position and correct
-
-    Position currentPos = odometrySystemPointer->currentPos();
-
-    double travelDist = distBetweenPoints(currentPos, pos);
-    double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos));
-    
-    turnTo(desiredHeading, 1.5);
-
-    // PID to control drive speed
-    PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
-    double drivePower = 0.00;
-
-    // PID to keep the robot driving straight
-    PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
-    double turnPower = 0.00;
-
-    int stopped = 0;
-    bool traveling = true;
-    while (traveling) {
-
-        
-        Position tempPos = odometrySystemPointer->currentPos();
-
-        travelDist = distBetweenPoints(tempPos, pos);
-        desiredHeading = radToDegree(angleBetweenPoints(tempPos, pos));
-
-        if (travelDist < 1) {
-            traveling = false;
-        }
-
-        drivePower = drivePid.iterate(travelDist);
-
-        double turnCurrent = radToDegree(odometrySystemPointer->currentPos().rot);
-        double turnWant = findNearestRot(radToDegree(tempPos.rot), desiredHeading);
-        turnPower = turnPid.iterate(turnCurrent, turnWant) * 1.5;
-
-        double leftPower = drivePower - turnPower;
-        double rightPower = drivePower + turnPower;
-
-        LeftDriveSmart.spin(fwd, leftPower, voltageUnits::volt);
-        RightDriveSmart.spin(fwd, rightPower, voltageUnits::volt);
-
-        if (drivePower < 1) {
-            stopped++;
-        }
-        if (stopped > 10) {
-            traveling = false;
-        }
-
-        wait(0.05, seconds);
-    }
-
-    if (!isnan(pos.rot)) {
-        turnTo(pos.rot, 1.5);
-    }
-    
-    running = wasRunning;
-    return true;
+bool ai::gotoLoc(TilePosition pos) {
+    return gotoLoc(odometrySystemPointer->tilePosToPos(pos));
 };
-
-
+bool ai::gotoLoc(Position pos) {
+    std::vector<Position> tmp;
+    tmp.push_back(pos);
+    return longGoto(tmp);
+};
 bool ai::longGoto(std::vector<TilePosition> pos) {
     std::vector<Position> tmpVec;
 
@@ -379,8 +302,8 @@ bool ai::longGoto(std::vector<TilePosition> pos) {
 
     return longGoto(tmpVec);
 };
-// Goes to the desired location
-// Set a NAN rotation to skip final turnto rotation
+
+// Main goto logic
 bool ai::longGoto(std::vector<Position> pos) {
 
     if (!odometrySystemPointer->isTracking) { 
@@ -398,7 +321,7 @@ bool ai::longGoto(std::vector<Position> pos) {
 
     double travelDist = distBetweenPoints(currentPos, pos.at(0));
     double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos.at(0)));
-    
+
     turnTo(desiredHeading, 1.5);
 
     // PID to control drive speed
@@ -420,6 +343,11 @@ bool ai::longGoto(std::vector<Position> pos) {
         Position tempPos = odometrySystemPointer->currentPos();
 
         travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
+
+        if (targetNum != numOfTargets - 1) {
+            travelDist += distBetweenPoints(pos.at(targetNum), pos.at(targetNum + 1));
+        }
+
         desiredHeading = radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
 
         drivePower = drivePid.iterate(travelDist);
@@ -442,10 +370,20 @@ bool ai::longGoto(std::vector<Position> pos) {
         if (travelDist < 1) {
             stopped = 0;
             targetNum++;
+            if (targetNum == numOfTargets) {            
+                target = pos.at(targetNum - 1);
+            } else {
+                target = pos.at(targetNum);
+            }
         }
         if (stopped > 10) {
             stopped = 0;
             targetNum++;
+            if (targetNum == numOfTargets) {            
+                target = pos.at(targetNum - 1);
+            } else {
+                target = pos.at(targetNum);
+            }
         }
 
         if (targetNum >= numOfTargets) {
@@ -453,6 +391,10 @@ bool ai::longGoto(std::vector<Position> pos) {
         }
 
         wait(0.05, seconds);
+    }
+
+    if (!isnan(pos.at(pos.size() - 1).rot)) {
+        turnTo(pos.at(pos.size() - 1).rot, 1.5);
     }
     
     running = wasRunning;
