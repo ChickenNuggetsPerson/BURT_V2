@@ -32,9 +32,6 @@ Page autonConfigPage;
 Page systemConfigPage;
 
 
-int displaySize() {
-    
-}
 
 
 // Called when the screen is pressed

@@ -11,6 +11,7 @@ void rightPressed() {
   brainChangePage("map");
 };
 void leftPressed() {
+
 };
 void upPressed() {
 

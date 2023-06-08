@@ -1,8 +1,6 @@
 
 #include "vex.h"
 
-int displaySize();
-
 int controllerDisplay();
 int brainDisplayer();
 
