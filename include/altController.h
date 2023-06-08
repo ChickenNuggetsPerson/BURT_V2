@@ -1,4 +1,4 @@
-
+void altControllerRender();
 
 void debugDisable();
 void debugDriver();

@@ -1,6 +1,8 @@
 
 #include "vex.h"
 
+int displaySize();
+
 int controllerDisplay();
 int brainDisplayer();
 
@@ -15,6 +17,7 @@ void brainPageChangeText(const char* pageName, const char* textId, int data);
 
 
 void brainError(const char* message);
+void brainError(const char* message, bool showOnController);
 void brainDebug(const char* message);
 void brainDebug(const char* message, bool notification);
 void brainFancyDebug(const char* message, vex::color messageColor);

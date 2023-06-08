@@ -3,6 +3,7 @@
 #include "robotConfig.h"
 #include "vector"
 
+using namespace vex;
 
 // A base log message class
 // It contains the actual text of the log and the display color
@@ -1468,52 +1469,6 @@ class MenuSystem {
 };
 
 
-struct MotorCheck {
-    motor* ptr;
-    const char* name;
-    int warnTemp;
-    double nextWarn = 0;
-    MotorCheck(motor* motorPtr, const char* motorName, int customWarnTemp = NAN) {
-        ptr = motorPtr;
-        name = motorName;
-        if (isnan(customWarnTemp)) {
-            warnTemp = motorWarnTemp;
-        } else {
-            warnTemp = customWarnTemp;
-        }
-    }
-};
-
-class MotorChecker {
-    private:
-        MenuSystem* menuSystemPtr;
-        std::vector <MotorCheck> motorList;
-    public:
-        MotorChecker(MenuSystem* ptr) {
-            menuSystemPtr = ptr;
-        };
-
-        void addCheck(motor* motorPtr, const char* motorName, int customWarnTemp = NAN) {
-            motorList.push_back(MotorCheck(motorPtr, motorName, customWarnTemp));
-        }
-
-        void check() {
-            for (int i = 0; i < motorList.size(); i++) {
-                int temperature = motorList.at(i).ptr->temperature(percent);
-                if (temperature >= motorList.at(i).warnTemp && Brain.timer(msec) > motorList.at(i).nextWarn) {
-                    std::stringstream notString;
-                    notString << motorList.at(i).name << " Temp Too High: " << temperature;
-                    
-                    brainFancyDebug(notString.str().c_str(), red, true);
-
-
-
-                    motorList.at(i).nextWarn = Brain.timer(msec) + (30 * 1000);
-                }
-            }
-        };
-
-};
 
 struct NotCheck {
     const char* trueMessage;
@@ -1526,12 +1481,31 @@ struct NotCheck {
     
 };
 
+bool notMotorCheck(void* motorToCheck) {
+    motor* motorPointer = (motor*)motorToCheck;
+    return motorPointer->temperature(temperatureUnits::fahrenheit) >= motorWarnTemp;
+}
+
+struct MotCheck {
+    const char* motorName;
+    motor* motorPointer;
+    int warnTimeout;
+    double lastWarn = 0; 
+};
+
 class NotificationChecker {
     private:
-        NotCheck checksStorage[20];
+        NotCheck checksStorage[10];
         int checksStored = 0;
 
+        MotCheck motorCheckStorage[8];
+        int motorCheckStored = 0;
+
         MenuSystem* menuSystemPtr;
+
+        bool checkMotor(MotCheck check) {
+            return check.motorPointer->temperature(temperatureUnits::fahrenheit) >= motorWarnTemp;
+        }
 
     public:
         NotificationChecker(MenuSystem* ptr) {
@@ -1550,6 +1524,14 @@ class NotificationChecker {
             checksStorage[checksStored] = newCheck;
             checksStored++;
         }
+        void addMotor(const char* motorName, motor* motorPtr, int warnTime = 30) {
+            MotCheck newCheck = MotCheck();
+            newCheck.motorName = motorName;
+            newCheck.motorPointer = motorPtr;
+            newCheck.warnTimeout = warnTime;
+            motorCheckStorage[motorCheckStored] = newCheck;
+            motorCheckStored++;
+        }
         void check() {
             for (int i = 0; i < checksStored; i++) {
                 bool newVal = checksStorage[i].checkCB();
@@ -1561,6 +1543,17 @@ class NotificationChecker {
                     } 
                 }
                 checksStorage[i].lastVal = newVal;
+            }
+            for (int i = 0; i < motorCheckStored; i++) {
+                if (checkMotor(motorCheckStorage[i]) && motorCheckStorage[i].lastWarn < Brain.timer(timeUnits::msec)) {
+                    
+                    std::stringstream tmpString;
+                    tmpString << motorCheckStorage[i].motorName << " Overheated";
+
+                    brainError(tmpString.str().c_str(), true);
+
+                    motorCheckStorage[i].lastWarn = Brain.timer(timeUnits::msec);
+                }
             }
         }
 };

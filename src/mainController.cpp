@@ -88,12 +88,27 @@ int controllerTask() {
   return 0;
 }
 
+
+
+ControllerMessage displayMessage;
+bool rendering = false;
+bool haltRender = false;
+
 // The main controller rendering task
 void mainControllerRender() {
+
+  if (haltRender) { return; }
+  rendering = true;
+
   mainController.Screen.clearScreen();
   mainController.Screen.setCursor(1, 1);
 
   Position currentPos = Odometry.currentPos();
+
+  if (displayMessage.endTime > Brain.timer(timeUnits::msec)) {
+    mainController.Screen.print(displayMessage.text);
+    return;
+  }
 
   mainController.Screen.print(currentPos.x);
   mainController.Screen.newLine();
@@ -101,48 +116,29 @@ void mainControllerRender() {
   mainController.Screen.newLine();
   mainController.Screen.print(limitAngle(radToDegree(currentPos.rot)));            
 
-  // Test Controller Overlay Choice
-  if (mainController.ButtonA.pressing()) {
-    bool chosen = displayOverlay(ControllerOverlay("Choose", "Launch", "Other"), &mainController);
 
-    if (chosen) {
-      std::cout << "Other" << std::endl;
-    } else {
-      std::cout << "Launch" << std::endl;
-    }
-
-  }
-
-  // Test Controller Choose from list
-  if (mainController.ButtonB.pressing()) {
-    std::vector <const char *> options;
-
-    options.push_back("(0, 0)");
-    options.push_back("(1, 1)");
-    options.push_back("(2, 5)");
-    options.push_back("(6, 6)");
-    options.push_back("(3, 2)");
-
-    switch (pickOption(options, &mainController)) {
-      case 0:
-        botAI.gotoLoc(TilePosition(0, 0));
-        break;
-      case 1:
-        botAI.gotoLoc(TilePosition(1, 1));
-        break;
-      case 2:
-        botAI.gotoLoc(TilePosition(2, 5));
-        break;
-      case 3:
-        botAI.gotoLoc(TilePosition(6, 6));
-        break;
-      case 4:
-        botAI.gotoLoc(TilePosition(3, 2));
-        break;     
-      default:
-
-        break; 
-    }
-  }
-
+  rendering = false;
 }
+
+
+
+
+
+void mainControllerMessage(const char* text, int timeout) {
+  displayMessage.text = text;
+  displayMessage.endTime = Brain.timer(timeUnits::msec) + (1000 * timeout);
+};
+bool mainControllerOverlay(const char* question, const char* trueOption, const char* falseOption) {
+  haltRender = true;
+  while (rendering) { wait(1, timeUnits::msec); }
+  bool result = displayOverlay(ControllerOverlay(question, falseOption, trueOption), &mainController);
+  haltRender = false;
+  return result;
+};
+int mainControllerPickOption(std::vector <const char*> options) {
+  haltRender = true;
+  while (rendering) { wait(1, timeUnits::msec); }
+  int result = pickOption(options, &mainController);
+  haltRender = false;
+  return result;
+};

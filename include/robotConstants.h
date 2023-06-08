@@ -16,7 +16,7 @@ static double backEncoderDist = 4.5; // use if we decide to use back encoders
 static double PI = 3.14159; // PI variable used for all methods
 static int tileWidth = 24; // Vex Tiles are 2ft across
 
-static int motorWarnTemp = 70; // The percent temp to start warning the user about motor temperatures
+static double motorWarnTemp = 110.00; // The temp (in F) to start warning the user about motor temperatures
 
 
 // Define Ports

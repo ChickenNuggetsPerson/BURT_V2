@@ -32,6 +32,10 @@ Page autonConfigPage;
 Page systemConfigPage;
 
 
+int displaySize() {
+    
+}
+
 
 // Called when the screen is pressed
 void screenPressed() {mainRenderer.screenPressed();}
@@ -47,15 +51,13 @@ int notificationCheck() {
     int checkSpeed = 1;
 
     NotificationChecker NotChecker(&mainRenderer);
-    MotorChecker MotChecker(&mainRenderer);
-
 
     // Fix this, (Causes Memory Leak) 
 
-    //MotChecker.addCheck(&leftMotorA, "LeftMotorA");
-    //MotChecker.addCheck(&leftMotorB, "LeftMotorB");
-    //MotChecker.addCheck(&rightMotorA, "RightMotorA");
-    //MotChecker.addCheck(&rightMotorB, "RightMotorB");
+    NotChecker.addMotor("RightMotorA", &rightMotorA);
+    NotChecker.addMotor("RightMotorB", &rightMotorB);
+    NotChecker.addMotor("LeftMotorA", &leftMotorA);
+    NotChecker.addMotor("LeftMotorB", &leftMotorB);
 
     NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, true, yellow, green, true);
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
@@ -105,10 +107,6 @@ int gotoOdometryPageButton(Page* self) {
 }
 int gotoMapPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("map");
-    return 1;
-}
-int gotoTestPageButton(Page* self) {
-    self->menuSystemPointer->gotoPage("test");
     return 1;
 }
 int gotoSystemConfigButton(Page* self) {
@@ -402,6 +400,23 @@ int updateMap(Page* self) {
 }
 
 
+int testButton(Page* self) {
+
+    std::vector <const char *> options;
+
+    options.push_back("(0, 0)");
+    options.push_back("(1, 1)");
+    options.push_back("(2, 5)");
+    options.push_back("(6, 6)");
+    options.push_back("(3, 2)");
+
+    std::cout << options.at(mainControllerPickOption(options)) << std::endl;
+
+
+    return 1;
+}
+
+
 int brainDisplayerInit() {
 
     Brain.Screen.pressed(screenPressed);
@@ -432,7 +447,7 @@ int brainDisplayerInit() {
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
 
-    //homePage.addButton("test", 20, 150, 100, 30, gotoTestPageButton, "test");
+    //homePage.addButton("test", 20, 150, 100, 30, testButton, "test");
 
 
     // Configure the map page
@@ -533,30 +548,16 @@ int brainDisplayer() {
 // Main Loop For Rendering the Controllers
 int controllerDisplay() {
     while (true){
-        
+
+        // Main Controller Displayer
         if (mainController.installed()) {
-            // Main Controller Displayer
+            
             mainControllerRender();
         }
 
         // Alt Controller Displayer
         if (altController.installed()) {
-            altController.Screen.clearScreen();
-            altController.Screen.setCursor(1, 1);
-            altController.Screen.print("Alt Controller");
-            altController.Screen.setCursor(2, 1);
-            altController.Screen.print("Connected to: ");
-            altController.Screen.setCursor(3, 1);
-
-            if (Competition.isFieldControl()) {
-                altController.Screen.print("Field");
-            }
-            if (Competition.isCompetitionSwitch()) {
-                altController.Screen.print("Competition Switch");
-            }
-            if (!Competition.isFieldControl() && !Competition.isCompetitionSwitch()) {
-                altController.Screen.print("Nothing");
-            };
+            altControllerRender();
         }
 
         vex::wait(0.2, seconds);
@@ -610,6 +611,13 @@ void brainError(const char* message) {
 
     cout << "ERROR: " << message << endl;
 }
+void brainError(const char* message, bool showOnController) {
+    BrainLogs.newLog(message, vex::color::red);
+    mainRenderer.newNotification(message, 5, red);
+    mainController.rumble("--");
+    mainControllerMessage(message, 5);
+    cout << "ERROR: " << message << endl;
+}
 
 // Displays debug message on brain screen
 void brainDebug(const char* message) {
@@ -642,7 +650,6 @@ void brainFancyDebug(const char* message, vex::color messageColor, int data) {
 
     cout << "DEBUG: " << message << endl;
 }
-
 void brainFancyDebug(const char* message, vex::color messageColor, bool showNotification) {
   
     BrainLogs.newLog(message, messageColor);

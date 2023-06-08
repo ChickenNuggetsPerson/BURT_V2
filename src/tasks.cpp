@@ -7,23 +7,10 @@
 
 using namespace vex;
 
-void test(){
-    brainFancyDebug("YEET %d", green, rand());
-};
-
 void rightPressed() {
   brainChangePage("map");
 };
 void leftPressed() {
-  std::vector<TilePosition> path;
-  
-  path.push_back(TilePosition(0, 0));
-  path.push_back(TilePosition(0, 1));
-  path.push_back(TilePosition(1, 1));
-  path.push_back(TilePosition(1, 0));
-  path.push_back(TilePosition(0, 0));
-
-  botAI.longGoto(path);
 };
 void upPressed() {
 
@@ -40,8 +27,6 @@ void pre_auton(void) {
   altController.ButtonDown.pressed(debugDisable);
   altController.ButtonLeft.pressed(debugAuton);
   altController.ButtonRight.pressed(debugDriver);
-
-  altController.ButtonR2.pressed(test);
 
   mainController.ButtonRight.pressed(rightPressed);
   mainController.ButtonLeft.pressed(leftPressed);

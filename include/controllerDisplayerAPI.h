@@ -3,6 +3,11 @@
 
 #include "vector"
 
+struct ControllerMessage {
+    const char* text = "";
+    double endTime = 0;
+};
+
 struct ControllerOverlay {
     const char* question;
     const char* option1;
