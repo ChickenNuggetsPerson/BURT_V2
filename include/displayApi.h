@@ -1322,9 +1322,6 @@ int mainDataUpdater(void* pageToUpdate) {
 class MenuSystem {
     private:
 
-        bool frameCap = false;
-        int fpsCap = NAN;
-        
         Page* pageStorage[10];
         const char* pageIdStorage[10];
         int pagesStored = 0;
@@ -1381,16 +1378,8 @@ class MenuSystem {
         MenuSystem(bool displayNotifications) {
             showingNotifications = displayNotifications;
         };
-
-        void setFrameRate(bool capFramerate, int fps) {
-            frameCap = capFramerate;
-            fpsCap = fps;
-        }        
-
+      
         void render() {
-
-            //double startTime = Brain.timer(msec);
-
             // Render Page
             if (displayPage == -1) {
                 Brain.Screen.printAt(20, 100, "No Pages In Storage");
@@ -1409,10 +1398,6 @@ class MenuSystem {
                     }
                 }
             }
-
-            //if (frameCap) {
-            //    wait((1000 / fpsCap) - (Brain.timer(msec) - startTime), msec);
-            //}
         };
 
         void addPage(const char* pageId, Page* page) {

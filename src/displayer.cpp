@@ -423,9 +423,6 @@ int brainDisplayerInit() {
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
 
-    // Add Framerate Cap
-    mainRenderer.setFrameRate(true, 30);
-
     // Add pages to the main renderer
     mainRenderer.addPage("main", &homePage);
     mainRenderer.addPage("debug", &debugPage);
