@@ -24,6 +24,7 @@ Logger BrainLogs(1, 1, "logs.txt", 10);
 MenuSystem mainRenderer(true);
 
 // Define Pages
+Page loadingPage;
 Page homePage;
 Page mapPage;
 Page debugPage;
@@ -49,8 +50,6 @@ int notificationCheck() {
 
     NotificationChecker NotChecker(&mainRenderer);
 
-    // Fix this, (Causes Memory Leak) 
-
     NotChecker.addMotor("RightMotorA", &rightMotorA);
     NotChecker.addMotor("RightMotorB", &rightMotorB);
     NotChecker.addMotor("LeftMotorA", &leftMotorA);
@@ -75,7 +74,6 @@ int notificationCheck() {
 // Define the update function for the home page
 int updateHome(Page* self) {
     self->setProgressBarValue("battery", Brain.Battery.capacity());
-    
     return 1;
 }
 
@@ -199,6 +197,21 @@ int configExitButton(Page* self) {
 
     return 1;
 };
+
+
+int updateLoadingPage(Page* self) {
+
+    double loadTime = 2.5;
+    
+
+    double stopTime = (loadTime * 1000);
+    double percent = Brain.timer(timeUnits::msec) / stopTime;
+    self->setProgressBarValue("load", (-(cos(PI*percent)-1)/2) * 100);
+
+    if (percent > 1) { gotoMainPageButton(self); }
+
+    return 1;
+}
 
 
 void systemConfigSave(Page* self) {
@@ -399,15 +412,11 @@ int updateMap(Page* self) {
 
 int testButton(Page* self) {
 
-    std::vector <const char *> options;
-
-    options.push_back("(0, 0)");
-    options.push_back("(1, 1)");
-    options.push_back("(2, 5)");
-    options.push_back("(6, 6)");
-    options.push_back("(3, 2)");
-
-    std::cout << options.at(mainControllerPickOption(options)) << std::endl;
+    if (mainControllerOverlay("Choose", "(0,0)", "(2,2)")) {
+        botAI.gotoLoc(TilePosition(0, 0));
+    } else {
+        botAI.gotoLoc(TilePosition(2,2));
+    }
 
 
     return 1;
@@ -422,8 +431,10 @@ int brainDisplayerInit() {
     // Init Gradients
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
+    colorRange whiteRange[1] = {colorRange(-200, 200, color::white)};
 
     // Add pages to the main renderer
+    mainRenderer.addPage("loading", &loadingPage);
     mainRenderer.addPage("main", &homePage);
     mainRenderer.addPage("debug", &debugPage);
     mainRenderer.addPage("config", &autonConfigPage);
@@ -431,9 +442,14 @@ int brainDisplayerInit() {
     mainRenderer.addPage("odometry", &odometryPage);
     mainRenderer.addPage("map", &mapPage);
 
+    // Configure the loading page
+    loadingPage.addText("BURT OS", 140, 100, white, fontType::mono60);
+    loadingPage.addText("Developed by Hayden Steele", 140, 130, white, fontType::mono15);
+    loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, whiteRange);
+    loadingPage.addDataUpdaterCB(updateLoadingPage, 0.01);
 
     // Configure the home page
-    homePage.addText("BURT OS", 20, 50, white, fontType::mono40);
+    homePage.addText("BURT OS", 20, 50, color::white, fontType::mono40);
     homePage.addText("Developed by Hayden Steele", 22, 75, white, fontType::mono15);
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
@@ -441,7 +457,7 @@ int brainDisplayerInit() {
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
 
-    //homePage.addButton("test", 20, 150, 100, 30, testButton, "test");
+    homePage.addButton("test", 20, 150, 100, 30, testButton, "test");
 
 
     // Configure the map page

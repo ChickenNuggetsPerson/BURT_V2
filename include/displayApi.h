@@ -775,7 +775,7 @@ class Page {
         Toggle toggleStorage[10];
         int togglesStored = 0;
 
-        Plot plotStorage[10];
+        Plot plotStorage[2];
         int plotsStored = 0;
 
         OverlayQuestion storedOverlay;
@@ -1110,18 +1110,8 @@ class Page {
             togglesStored++;
         };
         void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false, int teamColor = 0) {
-            plotStorage[plotsStored] = Plot();
-            plotStorage[plotsStored].id = plotId;
-            plotStorage[plotsStored].label = label;
-            plotStorage[plotsStored].x = plotX;
-            plotStorage[plotsStored].y = plotY;
-            plotStorage[plotsStored].width = plotWidth;
-            plotStorage[plotsStored].height = plotHeight;
-            plotStorage[plotsStored].maxX = plotMaxX;
-            plotStorage[plotsStored].maxY = plotMaxY;
-            plotStorage[plotsStored].subdiv = plotSubdiv;
-            plotStorage[plotsStored].labels = showLabels;
-
+            plotStorage[plotsStored] = Plot(plotId, label, plotX, plotY, plotWidth, plotHeight, plotMaxX, plotMaxY, plotSubdiv, showLabels);
+        
             if (teamColor != 0) {
                 plotStorage[plotsStored].mainColor = teamColor;
                 plotStorage[plotsStored].drawFeild = true;
@@ -1310,6 +1300,12 @@ struct Notification {
     const char* text;
     vex::color displayColor = white;
     double disapearTime;
+    Notification(const char* displayText, int time, vex::color showColor = white) {
+        text = displayText;
+        displayColor = showColor;
+        disapearTime = time;
+    };
+    Notification();
 };
 
 // I would put this in the MenuSystem Class but I can't call it as a task() in the MenuSystem Class
@@ -1348,15 +1344,8 @@ class MenuSystem {
 
 
         task notificationTask;
-        Notification notifications[10];
-        int notifNumber = 0;
+        std::vector<Notification> notifications;
         bool showingNotifications = false;
-
-        void shiftNotifications() {
-            for (int i=0; i < 10; i++) {
-                notifications[i] = notifications[i + 1];
-            }
-        };
 
         void drawNotification(int rowNum, Notification notif) {
             int screenXSize = 480;
@@ -1388,14 +1377,18 @@ class MenuSystem {
                 if (firstTimeRender) { startUpdaterTask(displayPage); firstTimeRender = false;}
             }
 
+            
+
             // Render Notifications
             if (showingNotifications) {
-                for (int i = 0; i < notifNumber; i++) {
-                    drawNotification(i, notifications[i]);
+                for (int i = notifications.size() - 1; i > -1; i--) {
                     if (notifications[i].disapearTime < Brain.timer(msec)) {
-                        shiftNotifications();
-                        notifNumber--;
+                        notifications.erase(notifications.begin() + i);
+                    } else {
+                        if (displayPage == 0) { return; } // Don't render notifications on the loading page
+                        drawNotification(i, notifications.at(i));
                     }
+                    
                 }
             }
         };
@@ -1444,11 +1437,8 @@ class MenuSystem {
 
 
         void newNotification(const char* text, int displayTime, vex::color displayColor = white) {
-            notifications[notifNumber] = Notification();
-            notifications[notifNumber].text = text;
-            notifications[notifNumber].displayColor = displayColor;
-            notifications[notifNumber].disapearTime = Brain.timer(msec) + (1000.00 * displayTime);
-            notifNumber++;
+            if (!showingNotifications) {return;}
+            notifications.push_back(Notification(text, Brain.timer(msec) + (1000.00 * displayTime), displayColor));
         };
 
 };

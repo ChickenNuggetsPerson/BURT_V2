@@ -415,7 +415,7 @@ bool ai::playPath(autonPath path) {
 // Run when the autonomous period is started
 void ai::started() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
-    brainChangePage("map");
+    //brainChangePage("map");
 
     while (!odometrySystemPointer->isTracking) { wait(0.01, seconds); }
 
