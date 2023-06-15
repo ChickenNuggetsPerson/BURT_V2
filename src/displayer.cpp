@@ -39,7 +39,6 @@ Page systemConfigPage;
 void screenPressed() {mainRenderer.screenPressed();}
 
 // Define Notification Checks
-bool checkInertial() {return inertialSensor.isCalibrating();}
 bool checkSDCard() {return Brain.SDcard.isInserted();}
 bool checkMainController() {return mainController.installed();}
 bool checkFeild() {return Competition.isFieldControl();}
@@ -55,7 +54,6 @@ int notificationCheck() {
     NotChecker.addMotor("LeftMotorA", &leftMotorA);
     NotChecker.addMotor("LeftMotorB", &leftMotorB);
 
-    NotChecker.addCheck("Starting Calibration", "Done Calibrating", checkInertial, true, yellow, green, true);
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
     NotChecker.addCheck("Connected To Feild", "Feild Disconnect", checkFeild, false, purple, red, true);
@@ -81,37 +79,30 @@ int updateHome(Page* self) {
 
 // Define Standard Buttons
 int gotoPrevPageButton(Page* self) {
-    //std::cout << "Prev Button" << std::endl;
     self->menuSystemPointer->gotoPrevPage();
     return 1;
 }
 int gotoMainPageButton(Page* self) {
-    //std::cout << "Main Button" << std::endl;
     self->menuSystemPointer->gotoPage("main");
     return 1;
 };
 int gotoDebugPageButton(Page* self) {
-    //std::cout << "Debug Button" << std::endl;
     self->menuSystemPointer->gotoPage("debug");
     return 1;
 };
 int gotoConfigPageButton(Page* self) {
-    //std::cout << "Config Button" << std::endl;
     self->menuSystemPointer->gotoPage("config");
     return 1;
 };
 int gotoOdometryPageButton(Page* self) {
-    //std::cout << "Odom Button" << std::endl;
     self->menuSystemPointer->gotoPage("odometry");
     return 1;
 }
 int gotoMapPageButton(Page* self) {
-    //std::cout << "Map Button" << std::endl;
     self->menuSystemPointer->gotoPage("map");
     return 1;
 }
 int gotoSystemConfigButton(Page* self) {
-    //std::cout << "SystemConfig Button" << std::endl;
     self->menuSystemPointer->gotoPage("systemConfig");
     return 1;
 }
@@ -187,7 +178,6 @@ int configExitButton(Page* self) {
 
             if (self->overlayQuestion(confirmOverlay)) {
                 // Option 2
-
                 saveConfigs();
                 botAI.init();
 
@@ -208,15 +198,13 @@ int configExitButton(Page* self) {
 
 int updateLoadingPage(Page* self) {
 
-    double loadTime = 2.5;
-    
+    double loadTime = 1.75;
 
     double stopTime = (loadTime * 1000);
     double percent = Brain.timer(timeUnits::msec) / stopTime;
     self->setProgressBarValue("load", (-(cos(PI*percent)-1)/2) * 100);
 
     if (percent > 1) { 
-        //std::cout << "load goto page" << std::endl;
         self->menuSystemPointer->gotoPage("main"); 
         self->stopUpdater();
     }
@@ -421,17 +409,9 @@ int updateMap(Page* self) {
 }
 
 
-int testButton(Page* self) {
-
-    std::stringstream tmp;
-    tmp << self->getAdjustNum("test");
-
-    self->menuSystemPointer->newNotification(tmp.str().c_str(), 5);
-
-    return 1;
-}
 
 
+// Initialize All The Pages
 int brainDisplayerInit() {
 
     Brain.Screen.pressed(screenPressed);
@@ -465,12 +445,6 @@ int brainDisplayerInit() {
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addDataUpdaterCB(updateHome, 1);
-
-    homePage.addButton("test", 20, 150, 100, 30, testButton, "test");
-    
-    homePage.addAdjustableNum("test", 5, 0.1, 10, 0, 20, 100, 75, 30, fontType::mono20, true);
-    homePage.addAdjustableNum("test", 5, 0.1, 10, 0, 120, 100, 75, 30, fontType::mono20, true);
-
 
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, white, fontType::mono30, "title");
