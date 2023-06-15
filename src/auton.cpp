@@ -401,13 +401,30 @@ bool ai::longGoto(std::vector<Position> pos) {
     return true;
 };
 
+bool ai::pickupAcorn() {
+
+    if (!odometrySystemPointer->isTracking) {
+        brainError("Skipping Auton Path, Odom not initialized");
+        return false;
+    }
+    bool wasrunning = running;
+    running = true;
+
+    // Pickup Acorn Logic
+    
+    // Implement this once the robot is built
+
+
+    running = wasrunning;
+    return true;
+
+};
 
 void ai::stop() {
     running = false;
 }
 
 bool ai::playPath(autonPath path) {
-
     return true;
 }
 

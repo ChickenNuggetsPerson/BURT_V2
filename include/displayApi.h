@@ -526,6 +526,7 @@ struct DisplayBox {
 
 class Page; // Forward decloration so the button class can build
 class MenuSystem;
+class AdjustableNum;
 
 struct Button {
     int x;
@@ -561,6 +562,98 @@ struct Toggle {
     int height;
     
 };
+
+
+class AdjustableNum {
+    private:
+
+        const char* title;
+        Page* pagePtr;
+
+        double val = 0.00;
+        double stepSize = 0.00;
+        double maxVal = 0.00;
+        double minVal = 0.00;
+
+        int x,y,width,height = 0;
+        
+        bool showRange = false;
+
+        vex::fontType font = vex::fontType::mono20;
+    
+        bool inRectangle(int posX, int posY, int x, int y, int width, int height) {
+            return (posX > x && posX < x + width) && (posY > y && posY < y + height);
+        };
+
+    public:
+        AdjustableNum() {};
+        AdjustableNum(const char* id, double initialVal, double stepAmount, double maxAmount, double minAmount, int displayX, int displayY, int displayWidth, int displayHeight, vex::fontType displayFont, Page* ptr, bool showingRange) {
+            title = id;
+            val = initialVal;
+            stepSize = stepAmount;
+            maxVal = maxAmount;
+            minVal = minAmount;
+            x = displayX;
+            y = displayY;
+            width = displayWidth;
+            height = displayHeight;
+            font = displayFont;
+            pagePtr = ptr;
+            showRange = showingRange;
+        }
+
+        void render() {
+    
+            std::stringstream displayValStream;
+            displayValStream << val;
+            const char* displayVal = displayValStream.str().c_str();
+
+            Brain.Screen.drawRectangle(x, y, width, height);
+            Brain.Screen.setFont(font);
+            Brain.Screen.printAt(x + (width / 2) - (Brain.Screen.getStringWidth(displayVal) / 2), y + (height / 2) + (Brain.Screen.getStringHeight(displayVal) / 4), displayVal);
+
+        }
+        bool checkPressed(int posX, int posY) {
+            return inRectangle(posX, posY, x, y, width, height);
+        }
+
+        const char* getId() {
+            return title;
+        }
+
+        void increase() {
+            val += stepSize;
+            if (val > maxVal) { val = maxVal; }
+        };
+        void decrease() {
+            val -= stepSize;
+            if (val < minVal) { val = minVal; }
+        }
+
+        double getVal() {
+            return val;
+        }
+        void setVal(double newVal) {
+            double tmpVal = newVal;
+            if (tmpVal > maxVal) { tmpVal = maxVal; }
+            if (tmpVal < minVal) { tmpVal = minVal; }
+            val = tmpVal;
+        }
+        const char* getDisplayVal() {
+            if (showRange) {
+                std::stringstream displayValStream;
+                displayValStream << minVal << " < " << val << " < " << maxVal;
+                return displayValStream.str().c_str();
+            } else {
+                std::stringstream displayValStream;
+                displayValStream << val;
+                return displayValStream.str().c_str();
+            }
+            
+        }
+
+};
+
 
 class Plot {
 
@@ -748,7 +841,7 @@ class Plot {
         };
 };
 
-
+int adjustingNumber(void* pagePointer);
 
 class Page {
     private:
@@ -777,6 +870,10 @@ class Page {
 
         Plot plotStorage[2];
         int plotsStored = 0;
+
+        int activeAdjustNum = NAN;
+        AdjustableNum adjustNumStorage[10];
+        int adjustNumsStored = 0;
 
         OverlayQuestion storedOverlay;
         bool showOverlay = false;
@@ -977,6 +1074,10 @@ class Page {
                 plotStorage[i].draw();
             }
 
+            for (int i = 0; i < adjustNumsStored; i++) {
+                adjustNumStorage[i].render();
+            }
+
             // Render Overlay
             if (showOverlay) {
                 drawOverlay(storedOverlay);
@@ -995,13 +1096,18 @@ class Page {
         };
 
 
+        bool updaterRunning = false;
         int updateData() {
-            while (true) {
+            updaterRunning = true;
+            while (updaterRunning) {
                 dataUpdaterCB(this);
                 wait(updateSpeed, seconds);                
             }
             return 1;
         };
+        void stopUpdater() {
+            updaterRunning = false;
+        }
         void pageLoaded() {
             if (!hasLoadedCB) { return; };
             pageLoadedCB(this);
@@ -1110,8 +1216,17 @@ class Page {
             togglesStored++;
         };
         void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false, int teamColor = 0) {
-            plotStorage[plotsStored] = Plot(plotId, label, plotX, plotY, plotWidth, plotHeight, plotMaxX, plotMaxY, plotSubdiv, showLabels);
-        
+            plotStorage[plotsStored] = Plot();
+            plotStorage[plotsStored].id = plotId;
+            plotStorage[plotsStored].label = label;
+            plotStorage[plotsStored].x = plotX;
+            plotStorage[plotsStored].y = plotY;
+            plotStorage[plotsStored].width = plotWidth;
+            plotStorage[plotsStored].height = plotHeight;
+            plotStorage[plotsStored].maxX = plotMaxX;
+            plotStorage[plotsStored].maxY = plotMaxY;
+            plotStorage[plotsStored].subdiv = plotSubdiv;
+            plotStorage[plotsStored].labels = showLabels;
             if (teamColor != 0) {
                 plotStorage[plotsStored].mainColor = teamColor;
                 plotStorage[plotsStored].drawFeild = true;
@@ -1119,7 +1234,10 @@ class Page {
 
             plotsStored++;
         };
-
+        void addAdjustableNum(const char* id, double initialVal, double stepAmount, double maxAmount, double minAmount, int displayX, int displayY, int displayWidth, int displayHeight, vex::fontType displayFont, bool showRanges = false) {
+            adjustNumStorage[adjustNumsStored] = AdjustableNum(id, initialVal, stepAmount, maxAmount, minAmount, displayX, displayY, displayWidth, displayHeight, displayFont, this, showRanges);
+            adjustNumsStored ++;
+        };
 
 
 
@@ -1242,6 +1360,17 @@ class Page {
             return false;
         }
 
+        AdjustableNum* getCurrentAdjustNum() {
+            if (isnan(activeAdjustNum)) {return nullptr;}
+            return &adjustNumStorage[activeAdjustNum];
+        }
+        double getAdjustNum(const char* id) {
+            for (int i = 0; i < adjustNumsStored; i++) {
+                if (strcmp(adjustNumStorage[i].getId(), id) == 0) {
+                    return adjustNumStorage[i].getVal();
+                }
+            }
+        }
 
         // Returns false for option1 and true for option2
         bool overlayQuestion(OverlayQuestion overlay) {
@@ -1271,6 +1400,36 @@ class Page {
             };
         };
 
+        // Returns -1 for option 1, 1 for option 2, and 0 for off screen
+        int advOverlayQuestion(OverlayQuestion overlay) {
+            storedOverlay = overlay;
+            showOverlay = true;
+
+            int lastX = Brain.Screen.xPosition();
+            int lastY = Brain.Screen.yPosition();
+
+            while (true) {
+
+                int clickX = Brain.Screen.xPosition();
+                int clickY = Brain.Screen.yPosition();
+
+                if (clickX != lastX && clickY != lastY) {
+                    if (inRectangle(clickX, clickY, (screenXSize / 2) - (overlayWidth / 2), (screenYSize / 2), overlayWidth / 2, overlayHeight / 2)) {
+                        showOverlay = false;
+                        return -1;
+                    } 
+                    if (inRectangle(clickX, clickY, screenXSize / 2, screenYSize / 2, overlayWidth / 2, overlayHeight / 2)) {
+                        showOverlay = false;
+                        return 1;
+                    };
+                    showOverlay = false;
+                    return 0;
+                }
+                wait(0.1, seconds);
+
+            };
+        }
+
         void screenPressed(int x, int y) {
             // Check for buttons
             for (int i = 0; i < buttonsStored; i++) {
@@ -1292,9 +1451,50 @@ class Page {
                 }
             }
 
+            // Check Adjustable Numbers
+            for (int i = 0; i < adjustNumsStored; i++) {
+                if (adjustNumStorage[i].checkPressed(x, y)) {
+                    activeAdjustNum = i;
+                    task(adjustingNumber, (void*)this, task::taskPriorityNormal);
+                }
+            }
         }
 
 };
+
+// The Adjusting Number Task
+int adjustingNumber(void* pagePointer) {
+    Page* ptr = (Page*)pagePointer;
+    bool running = true;
+    while (running) {
+        AdjustableNum* adjustPtr = ptr->getCurrentAdjustNum();
+
+        OverlayQuestion overlay;
+        overlay.option1 = "V";
+        overlay.option2 = "^";
+        overlay.option1Color = color::green;
+        overlay.option2Color = color::green;
+        overlay.question = adjustPtr->getDisplayVal();
+        switch (ptr->advOverlayQuestion(overlay))
+        {
+        case 1:
+            adjustPtr->increase();
+            break;
+
+        case -1:
+            adjustPtr->decrease();
+            break;
+        
+        case 0:
+            running = false;
+            break;
+        }
+    }
+
+    return 1;
+};
+
+
 
 struct Notification {
     const char* text;
@@ -1431,7 +1631,11 @@ class MenuSystem {
         }
         
         void screenPressed() {
-            pageStorage[displayPage]->screenPressed(Brain.Screen.xPosition(), Brain.Screen.yPosition());
+            if (displayPage != 0) {
+                pageStorage[displayPage]->screenPressed(Brain.Screen.xPosition(), Brain.Screen.yPosition());
+            } else {
+                gotoPage("main");
+            }
         };
 
 

@@ -81,30 +81,37 @@ int updateHome(Page* self) {
 
 // Define Standard Buttons
 int gotoPrevPageButton(Page* self) {
+    //std::cout << "Prev Button" << std::endl;
     self->menuSystemPointer->gotoPrevPage();
     return 1;
 }
 int gotoMainPageButton(Page* self) {
+    //std::cout << "Main Button" << std::endl;
     self->menuSystemPointer->gotoPage("main");
     return 1;
 };
 int gotoDebugPageButton(Page* self) {
+    //std::cout << "Debug Button" << std::endl;
     self->menuSystemPointer->gotoPage("debug");
     return 1;
 };
 int gotoConfigPageButton(Page* self) {
+    //std::cout << "Config Button" << std::endl;
     self->menuSystemPointer->gotoPage("config");
     return 1;
 };
 int gotoOdometryPageButton(Page* self) {
+    //std::cout << "Odom Button" << std::endl;
     self->menuSystemPointer->gotoPage("odometry");
     return 1;
 }
 int gotoMapPageButton(Page* self) {
+    //std::cout << "Map Button" << std::endl;
     self->menuSystemPointer->gotoPage("map");
     return 1;
 }
 int gotoSystemConfigButton(Page* self) {
+    //std::cout << "SystemConfig Button" << std::endl;
     self->menuSystemPointer->gotoPage("systemConfig");
     return 1;
 }
@@ -208,7 +215,11 @@ int updateLoadingPage(Page* self) {
     double percent = Brain.timer(timeUnits::msec) / stopTime;
     self->setProgressBarValue("load", (-(cos(PI*percent)-1)/2) * 100);
 
-    if (percent > 1) { gotoMainPageButton(self); }
+    if (percent > 1) { 
+        //std::cout << "load goto page" << std::endl;
+        self->menuSystemPointer->gotoPage("main"); 
+        self->stopUpdater();
+    }
 
     return 1;
 }
@@ -412,12 +423,6 @@ int updateMap(Page* self) {
 
 int testButton(Page* self) {
 
-    if (mainControllerOverlay("Choose", "(0,0)", "(2,2)")) {
-        botAI.gotoLoc(TilePosition(0, 0));
-    } else {
-        botAI.gotoLoc(TilePosition(2,2));
-    }
-
 
     return 1;
 }
@@ -458,6 +463,8 @@ int brainDisplayerInit() {
     homePage.addDataUpdaterCB(updateHome, 1);
 
     homePage.addButton("test", 20, 150, 100, 30, testButton, "test");
+    
+    homePage.addAdjustableNum("test", 0, 1, 10, 0, 20, 200, 75, 30, fontType::mono20, true);
 
 
     // Configure the map page
