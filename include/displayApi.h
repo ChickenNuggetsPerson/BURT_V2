@@ -541,7 +541,7 @@ struct Button {
 };
 
 struct OverlayQuestion {
-    const char* question;    
+    std::string question;    
     const char* option1;
     vex::color option1Color = white;    
     const char* option2;
@@ -639,15 +639,25 @@ class AdjustableNum {
             if (tmpVal < minVal) { tmpVal = minVal; }
             val = tmpVal;
         }
-        const char* getDisplayVal() {
+        std::string getDisplayVal() {
             if (showRange) {
-                std::stringstream displayValStream;
-                displayValStream << minVal << " < " << val << " < " << maxVal;
-                return displayValStream.str().c_str();
+                std::ostringstream stream1;
+                stream1 << minVal;
+                std::ostringstream stream2;
+                stream2 << " - " << val ;
+                std::ostringstream stream3;
+                stream3 << " - " << maxVal;
+                std::string finalString;
+
+                finalString += stream1.str();
+                finalString += stream2.str();
+                finalString += stream3.str();
+
+                return finalString;
             } else {
                 std::stringstream displayValStream;
                 displayValStream << val;
-                return displayValStream.str().c_str();
+                return displayValStream.str();
             }
             
         }
@@ -987,7 +997,7 @@ class Page {
         int overlayHeight = 150;
 
         void drawOverlay(OverlayQuestion overlay) {
-            
+
 
             int option1XCenter = (screenXSize / 2) - (overlayWidth / 4);
             int option2XCenter = (screenXSize / 2) + (overlayWidth / 4);
@@ -995,7 +1005,7 @@ class Page {
             Brain.Screen.drawRectangle((screenXSize / 2) - (overlayWidth / 2), (screenYSize / 2) - (overlayHeight / 2), overlayWidth, overlayHeight);
 
             //Brain.Screen.setFont(fontType::mono20);
-            Brain.Screen.printAt((screenXSize / 2) - (Brain.Screen.getStringWidth(overlay.question) / 2), (screenYSize / 2) - (overlayHeight / 2) + 40, overlay.question);
+            Brain.Screen.printAt((screenXSize / 2) - (Brain.Screen.getStringWidth(overlay.question.c_str()) / 2), (screenYSize / 2) - (overlayHeight / 2) + 40, overlay.question.c_str());
             Brain.Screen.setFont(fontType::mono30);
 
             Brain.Screen.setPenColor(overlay.option1Color); 
@@ -1400,9 +1410,13 @@ class Page {
             };
         };
 
-        // Returns -1 for option 1, 1 for option 2, and 0 for off screen
+        // Returns -1 for option 1, 1 for option 2, 0 for off screen, 10 for the box
         int advOverlayQuestion(OverlayQuestion overlay) {
             storedOverlay = overlay;
+            std::cout << overlay.question << std::endl;
+            std::cout << storedOverlay.question << std::endl;
+
+
             showOverlay = true;
 
             int lastX = Brain.Screen.xPosition();
@@ -1422,6 +1436,10 @@ class Page {
                         showOverlay = false;
                         return 1;
                     };
+                    if (inRectangle(clickX, clickY, (screenXSize / 2) - (overlayWidth / 2), (screenYSize / 2) - (overlayHeight / 2), overlayWidth, overlayHeight)) {
+                        showOverlay = false;
+                        return 10;
+                    }
                     showOverlay = false;
                     return 0;
                 }
@@ -1456,6 +1474,7 @@ class Page {
                 if (adjustNumStorage[i].checkPressed(x, y)) {
                     activeAdjustNum = i;
                     task(adjustingNumber, (void*)this, task::taskPriorityNormal);
+                    return;
                 }
             }
         }
@@ -1464,6 +1483,7 @@ class Page {
 
 // The Adjusting Number Task
 int adjustingNumber(void* pagePointer) {
+    wait(0.1, seconds);
     Page* ptr = (Page*)pagePointer;
     bool running = true;
     while (running) {
@@ -1474,7 +1494,7 @@ int adjustingNumber(void* pagePointer) {
         overlay.option2 = "^";
         overlay.option1Color = color::green;
         overlay.option2Color = color::green;
-        overlay.question = adjustPtr->getDisplayVal();
+        overlay.question = adjustPtr->getDisplayVal().c_str();
         switch (ptr->advOverlayQuestion(overlay))
         {
         case 1:
@@ -1485,6 +1505,9 @@ int adjustingNumber(void* pagePointer) {
             adjustPtr->decrease();
             break;
         
+        case 10:
+            break;
+
         case 0:
             running = false;
             break;

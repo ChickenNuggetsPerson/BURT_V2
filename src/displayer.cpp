@@ -423,6 +423,10 @@ int updateMap(Page* self) {
 
 int testButton(Page* self) {
 
+    std::stringstream tmp;
+    tmp << self->getAdjustNum("test");
+
+    self->menuSystemPointer->newNotification(tmp.str().c_str(), 5);
 
     return 1;
 }
@@ -464,7 +468,8 @@ int brainDisplayerInit() {
 
     homePage.addButton("test", 20, 150, 100, 30, testButton, "test");
     
-    homePage.addAdjustableNum("test", 0, 1, 10, 0, 20, 200, 75, 30, fontType::mono20, true);
+    homePage.addAdjustableNum("test", 5, 0.1, 10, 0, 20, 100, 75, 30, fontType::mono20, true);
+    homePage.addAdjustableNum("test", 5, 0.1, 10, 0, 120, 100, 75, 30, fontType::mono20, true);
 
 
     // Configure the map page
