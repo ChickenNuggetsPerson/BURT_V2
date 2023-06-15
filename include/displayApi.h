@@ -1234,7 +1234,7 @@ class Page {
 
             plotsStored++;
         };
-        void addAdjustableNum(const char* id, double initialVal, double stepAmount, double maxAmount, double minAmount, int displayX, int displayY, int displayWidth, int displayHeight, vex::fontType displayFont, bool showRanges = false) {
+        void addAdjustableNum(const char* id, double initialVal, double stepAmount, double maxAmount, double minAmount, int displayX, int displayY, int displayWidth, int displayHeight, vex::fontType displayFont, bool showRanges) {
             adjustNumStorage[adjustNumsStored] = AdjustableNum(id, initialVal, stepAmount, maxAmount, minAmount, displayX, displayY, displayWidth, displayHeight, displayFont, this, showRanges);
             adjustNumsStored ++;
         };

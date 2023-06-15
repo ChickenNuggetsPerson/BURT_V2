@@ -132,6 +132,7 @@ class ai {
     bool longGoto(std::vector<Position> pos);
 
     bool pickupAcorn();
+    bool dropAcorn();
 
     bool playPath(autonPath path);
 };

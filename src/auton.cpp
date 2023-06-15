@@ -36,9 +36,9 @@ bool autonPath::runMovement(int movementNum) {
         case AUTON_TURNTO:
             return pointer->turnTo(movement.pos.rot);
         case AUTON_PICKUP:
-            return true;
+            return pointer->pickupAcorn();
         case AUTON_DROPOFF:
-            return true;
+            return pointer->dropAcorn();
         default:
             return false;
     }
@@ -419,6 +419,23 @@ bool ai::pickupAcorn() {
     return true;
 
 };
+bool ai::dropAcorn() {
+
+    if (!odometrySystemPointer->isTracking) {
+        brainError("Skipping Auton Path, Odom not initialized");
+        return false;
+    }
+    bool wasrunning = running;
+    running = true;
+
+    // Drop Acorn Logic
+    
+    // Implement this once the robot is built
+
+
+    running = wasrunning;
+    return true;
+}
 
 void ai::stop() {
     running = false;
