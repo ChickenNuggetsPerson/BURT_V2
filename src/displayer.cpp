@@ -32,6 +32,8 @@ Page odometryPage;
 Page autonConfigPage;
 Page systemConfigPage;
 
+Page fileSystemPage;
+
 
 
 
@@ -104,6 +106,10 @@ int gotoMapPageButton(Page* self) {
 }
 int gotoSystemConfigButton(Page* self) {
     self->menuSystemPointer->gotoPage("systemConfig");
+    return 1;
+}
+int gotoFileSystemConfigButton(Page* self) {
+    self->menuSystemPointer->gotoPage("fileSystem");
     return 1;
 }
 
@@ -377,7 +383,7 @@ int updateOdometry(Page* self) {
     return 1;
 };
 
-
+// Update the Map Page
 int updateMap(Page* self) {
     if (Odometry.isTracking) {
         self->setTextData("status", green, "Running");
@@ -409,6 +415,19 @@ int updateMap(Page* self) {
 }
 
 
+// Run when the filesystem page is loaded
+int loadedFileSystemPage(Page* self) {
+    if (!Brain.SDcard.isInserted()) {
+        self->setTextData("pageStatus", color::red, "SD Card Not Inserted");
+        return 1;
+    }
+    self->setTextData("pageStatus", color::white, "View and Edit the SD Card");
+
+    getAllDirs();
+
+    return 1;
+}
+
 
 
 // Initialize All The Pages
@@ -430,6 +449,7 @@ int brainDisplayerInit() {
     mainRenderer.addPage("systemConfig", &systemConfigPage);
     mainRenderer.addPage("odometry", &odometryPage);
     mainRenderer.addPage("map", &mapPage);
+    mainRenderer.addPage("fileSystem", &fileSystemPage);
 
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, white, fontType::mono60);
@@ -470,6 +490,8 @@ int brainDisplayerInit() {
     systemConfigPage.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
     systemConfigPage.addButton("Back", 380, 210, 100, 30, systemConfigExitButton, "mainPageButton");
 
+    systemConfigPage.addButton("View SD Card", 310, 20, 150, 30, gotoFileSystemConfigButton);
+
     systemConfigPage.addToggle("Archive Logs", false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 170, 150, 40);
     systemConfigPage.addToggle("Arcade Drive", true, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 120, 150, 40, "Tank Drive");
 
@@ -507,6 +529,13 @@ int brainDisplayerInit() {
     odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
     odometryPage.addButton("Map", 280, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
+
+    
+    // Configure the File System Page
+    fileSystemPage.addText("File System", 20, 40, white, fontType::mono30, "title");
+    fileSystemPage.addText("Status", 22, 65, white, fontType::mono15, "pageStatus");
+    fileSystemPage.addButton("Back", 380, 210, 100, 30, gotoSystemConfigButton, "prevPageButton");
+    fileSystemPage.addPageLoadedCB(loadedFileSystemPage);
 
     return 1;
 };
