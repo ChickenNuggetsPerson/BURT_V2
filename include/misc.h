@@ -111,7 +111,7 @@ class Directory {
         
 };
 
-std::map<std::string, std::string> getAllDirs();
+Directory getAllDirs();
 
 
 double degreeToRad(double degree);

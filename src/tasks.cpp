@@ -9,7 +9,7 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  brainChangePage("map");
+  
 };
 void leftPressed() {
 

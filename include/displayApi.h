@@ -669,7 +669,12 @@ class Plot {
 
     private:
 
-    MenuSystem* systemPtr;
+        MenuSystem* systemPtr;
+        Position posAtDist(Position currentPosition, int dist) {
+            double desiredX = currentPosition.x + dist * cos(2.5*PI - currentPosition.rot);
+            double desiredY = currentPosition.y + dist * sin(2.5*PI - currentPosition.rot);
+            return Position(desiredX, desiredY);
+        }
 
     public:
         const char* id;
@@ -693,6 +698,9 @@ class Plot {
 
         bool drawFeild = false;
         int mainColor = TEAM_NULL;
+
+        bool drawingPath = false;
+        autonPath path;
 
         Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0, bool showLabels = false, int teamColor = NAN, MenuSystem* menuSystemPointer = nullptr) {
             id = plotId;
@@ -800,21 +808,76 @@ class Plot {
             Brain.Screen.setFillColor(black);
 
             if (drawStoredLine) { 
-                int drawX1 = (( point1.x / maxX ) * width) + x;
-                int drawY1 = y + 5 + height - (( point1.y / maxY) * height);
-
-
-                int drawX2 = (( point2.x / maxX ) * width) + x;
-                int drawY2 = y + 5 + height - (( point2.y / maxY) * height);
-
-                Brain.Screen.setPenColor(cyan);
-                Brain.Screen.drawLine(drawX1, drawY1, drawX2, drawY2);
-                Brain.Screen.setPenColor(white);
-
-                wait(0.1, seconds);
-
+                drawLine(point1, point2);
             }
-            drawPoints();
+            if (drawingPath) {
+                int lineWidth = 3;
+
+                Position currentPos = path.startPos;
+                int i = 0;
+                while (true) {
+                    autonMovement move = path.getStep(i);
+                    if (move.movementType == AUTON_END) { break; }
+                    Position newPos;
+                    switch (move.movementType) {
+                        case AUTON_DELAY:
+                            
+                            break;
+                        case AUTON_DRIVE_DIST:
+                            newPos = posAtDist(currentPos, move.val);
+                            drawLine(currentPos, newPos, lineWidth);
+                            currentPos = newPos;
+                            break;
+                        case AUTON_GOTO:
+                            if (move.tilePosBool) {
+                                newPos = path.pointer->odometrySystemPointer->tilePosToPos(move.tilePos);
+                                drawLine(currentPos, newPos, lineWidth);
+                                currentPos = newPos;
+                            } else {
+                                drawLine(currentPos, move.pos, lineWidth);
+                                currentPos = move.pos;                                
+                            }
+                            break;
+                        case AUTON_LONGGOTO:
+                            for (int i = 0; i < move.drivePath.size(); i++) {
+                                newPos = path.pointer->odometrySystemPointer->tilePosToPos(move.drivePath.at(i));
+                                drawLine(currentPos, newPos, lineWidth);
+                                currentPos = newPos;
+                            }
+                            break;
+                        case AUTON_TURNTO:
+                            //return pointer->turnTo(move.pos.rot);
+                            break;
+                        case AUTON_PICKUP_ACORN:
+                            //return pointer->pickupAcorn();
+                            break;
+                        case AUTON_DROPOFF_ACORN:
+                            //return pointer->dropAcorn();
+                            break;
+                    }
+                    i++;
+                    
+
+                }
+                    
+            } else {
+                drawPoints();
+            }
+            
+        };
+        void drawLine(Position pos1, Position pos2, int penWidth = 1) {
+            int drawX1 = (( pos1.x / maxX ) * width) + x;
+            int drawY1 = y + 5 + height - (( pos1.y / maxY) * height);
+
+
+            int drawX2 = (( pos2.x / maxX ) * width) + x;
+            int drawY2 = y + 5 + height - (( pos2.y / maxY) * height);
+
+            Brain.Screen.setPenWidth(penWidth);
+            Brain.Screen.setPenColor(cyan);
+            Brain.Screen.drawLine(drawX1, drawY1, drawX2, drawY2);
+            Brain.Screen.setPenColor(white);
+            Brain.Screen.setPenWidth(1);
         }
         void updatePoint(int pointNum, bool draw, Position newPoint = Position()) {
             if (pointNum == 1) {
@@ -849,6 +912,11 @@ class Plot {
                 drawPoint(point1, green);
             }
         };
+
+        void showPath(autonPath displayPath) {
+            path = displayPath;
+            drawingPath = true;
+        }
 };
 
 int adjustingNumber(void* pagePointer);
@@ -1354,7 +1422,6 @@ class Page {
 
 
 
-
         void massSetData(const char* id, int data) {
             setProgressBarValue(id, data);
             setLineGraphValue(id, data);
@@ -1413,10 +1480,6 @@ class Page {
         // Returns -1 for option 1, 1 for option 2, 0 for off screen, 10 for the box
         int advOverlayQuestion(OverlayQuestion overlay) {
             storedOverlay = overlay;
-            std::cout << overlay.question << std::endl;
-            std::cout << storedOverlay.question << std::endl;
-
-
             showOverlay = true;
 
             int lastX = Brain.Screen.xPosition();

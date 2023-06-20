@@ -35,9 +35,9 @@ bool autonPath::runMovement(int movementNum) {
             return pointer->longGoto(movement.drivePath);
         case AUTON_TURNTO:
             return pointer->turnTo(movement.pos.rot);
-        case AUTON_PICKUP:
+        case AUTON_PICKUP_ACORN:
             return pointer->pickupAcorn();
-        case AUTON_DROPOFF:
+        case AUTON_DROPOFF_ACORN:
             return pointer->dropAcorn();
         default:
             return false;
@@ -54,6 +54,13 @@ bool autonPath::step() {
     }
     currentStep++;
     return runMovement(currentStep - 1);
+};
+autonMovement autonPath::getStep(int stepCount) {
+    if (stepCount >= totalMovements) {
+        return autonMovement(AUTON_END);
+    } else {
+        return movements[stepCount];
+    }
 };
 
 

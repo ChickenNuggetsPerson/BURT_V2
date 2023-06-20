@@ -75,24 +75,19 @@ bool fileExists(const char* name) {
 }
 
 
-std::map<std::string, std::string> getAllDirs() {
+Directory getAllDirs() {
   std::map<std::string, std::string> dirs;
 
   std::cout << std::endl;
   Directory mainDirectory = Directory(std::string("main"));
-  mainDirectory.addFile("test.txt");
-  mainDirectory.addFile("other/test.txt");
-  mainDirectory.addFile("other/yeet.txt");
-  mainDirectory.addFile("other/yeet/yeet.txt");
-  mainDirectory.addFile("other/yeet/fun/stuff/among/us.txt");
-  mainDirectory.addFile("main/fun.txt");
-
-  std::vector<std::string> result = mainDirectory.listEverything();
-  for (int i = 0; i < result.size(); i++) {
-    std::cout << result.at(i).c_str() << std::endl;
-  }
-
-  return dirs;
+  mainDirectory.addFile("logs.txt");
+  mainDirectory.addFile("systemConfig/archiveLogs.txt");
+  mainDirectory.addFile("systemConfig/driveMode.txt");
+  mainDirectory.addFile("logs/compLogs/1.txt");
+  mainDirectory.addFile("logs/logStorage/1.txt");
+  mainDirectory.addFile("autonConfig/");
+  
+  return mainDirectory;
 };
 
 

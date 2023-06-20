@@ -13,13 +13,14 @@ static const int AUTON_PATH_LEFT = 1;
 static const int AUTON_PATH_RIGHT = 2;
 
 // Type of movements
+static const int AUTON_END = -1;
 static const int AUTON_DELAY = 0;
 static const int AUTON_DRIVE_DIST = 1;
 static const int AUTON_GOTO = 2;
 static const int AUTON_LONGGOTO = 3;
 static const int AUTON_TURNTO = 4;
-static const int AUTON_PICKUP = 5;
-static const int AUTON_DROPOFF = 6;
+static const int AUTON_PICKUP_ACORN = 5;
+static const int AUTON_DROPOFF_ACORN = 6;
 
 
 
@@ -56,25 +57,25 @@ struct autonMovement {
 
 class autonPath {
   private:
-    ai* pointer;
     int currentStep = 0;
     int totalMovements = 0;
     autonMovement movements[10];
     bool runMovement(int movementNum);
   public:
+    ai* pointer;
+    Position startPos;
     autonPath();
     autonPath(ai* autonPointer);
     void addMovement(autonMovement movement);
     void reset();
     bool step();
+    autonMovement getStep(int stepCount);
 };
 
 class ai {
   private:
 
     bool loaded = false;
-
-    OdometrySystem* odometrySystemPointer;
 
     double findNearestRot(double currentRot, double targetRot);
     double angleBetweenPoints(Position pos1, Position pos2);
@@ -85,6 +86,8 @@ class ai {
     autonPath path;
 
   public:
+
+    OdometrySystem* odometrySystemPointer;
 
     bool running = false;
     int teamColor = 0;

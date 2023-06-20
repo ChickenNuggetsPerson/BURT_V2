@@ -51,10 +51,10 @@ int notificationCheck() {
 
     NotificationChecker NotChecker(&mainRenderer);
 
-    NotChecker.addMotor("RightMotorA", &rightMotorA);
-    NotChecker.addMotor("RightMotorB", &rightMotorB);
-    NotChecker.addMotor("LeftMotorA", &leftMotorA);
-    NotChecker.addMotor("LeftMotorB", &leftMotorB);
+    //NotChecker.addMotor("RightMotorA", &rightMotorA);
+    //NotChecker.addMotor("RightMotorB", &rightMotorB);
+    //NotChecker.addMotor("LeftMotorA", &leftMotorA);
+    //NotChecker.addMotor("LeftMotorB", &leftMotorB);
 
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
@@ -110,6 +110,10 @@ int gotoSystemConfigButton(Page* self) {
 }
 int gotoFileSystemConfigButton(Page* self) {
     self->menuSystemPointer->gotoPage("fileSystem");
+    return 1;
+}
+int gotoAutonPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("auton");
     return 1;
 }
 
@@ -413,6 +417,38 @@ int updateMap(Page* self) {
 
     return 1;
 }
+int mapShowPath(Page* self) {
+    Plot* plotPtr = self->getPlotPointer("map");
+    if (self->pageChanged) {
+        self->pageChanged = false;
+        plotPtr->drawingPath = false;
+        return 1;
+    }
+
+    std::vector<const char *> pathList;
+    pathList.push_back("AUTON_PATH_TEST");
+    pathList.push_back("AUTON_PATH_LEFT");
+    pathList.push_back("AUTON_PATH_RIGHT");
+    
+
+    switch (mainControllerPickOption(pathList))
+    {
+    case AUTON_PATH_TEST:
+        plotPtr->showPath(buildPath(AUTON_PATH_TEST, &botAI));
+        self->pageChanged = true;
+        break;
+    case AUTON_PATH_LEFT:
+        plotPtr->showPath(buildPath(AUTON_PATH_LEFT, &botAI));
+        self->pageChanged = true;
+        break;
+    case AUTON_PATH_RIGHT:
+        plotPtr->showPath(buildPath(AUTON_PATH_RIGHT, &botAI));
+        self->pageChanged = true;
+        break;
+    }
+
+    return 1;
+}
 
 
 // Run when the filesystem page is loaded
@@ -423,7 +459,11 @@ int loadedFileSystemPage(Page* self) {
     }
     self->setTextData("pageStatus", color::white, "View and Edit the SD Card");
 
-    getAllDirs();
+    return 1;
+}
+int initFileSystemPage(Page* self) {
+
+    Directory directories = getAllDirs();
 
     return 1;
 }
@@ -474,6 +514,7 @@ int brainDisplayerInit() {
     mapPage.addText("Y:   %f", 20, 130, white, fontType::mono20, "ypos");
     mapPage.addText("Rot: %f", 20, 160, white, fontType::mono20, "rot");
     mapPage.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
+    mapPage.addButton("Show Path", 20, 180, 100, 30, mapShowPath, "showPathBtn");
     mapPage.addDataUpdaterCB(updateMap, 0.2);
 
 
@@ -535,6 +576,7 @@ int brainDisplayerInit() {
     fileSystemPage.addText("File System", 20, 40, white, fontType::mono30, "title");
     fileSystemPage.addText("Status", 22, 65, white, fontType::mono15, "pageStatus");
     fileSystemPage.addButton("Back", 380, 210, 100, 30, gotoSystemConfigButton, "prevPageButton");
+    fileSystemPage.addAdjustableNum("test", 5, 1, 10, 0, 200, 200, 100, 30, fontType::mono20, true);
     fileSystemPage.addPageLoadedCB(loadedFileSystemPage);
 
     return 1;
