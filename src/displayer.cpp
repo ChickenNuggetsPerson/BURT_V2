@@ -44,6 +44,7 @@ void screenPressed() {mainRenderer.screenPressed();}
 bool checkSDCard() {return Brain.SDcard.isInserted();}
 bool checkMainController() {return mainController.installed();}
 bool checkFeild() {return Competition.isFieldControl();}
+bool checkBattery() {return Brain.Battery.capacity(percentUnits::pct) < 20;}
 
 int notificationCheck() {
     
@@ -59,6 +60,7 @@ int notificationCheck() {
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
     NotChecker.addCheck("Connected To Feild", "Feild Disconnect", checkFeild, false, purple, red, true);
+    NotChecker.addCheck("", "Battery Low", checkBattery, true, color::white, color::red, true);
 
     while (true) {
         NotChecker.check();

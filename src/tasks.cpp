@@ -9,16 +9,25 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  
+  botAI.gotoLoc(TilePosition(1, 4.75, NAN));
+  botAI.gotoLoc(TilePosition(4, 4.75, NAN));
+  botAI.gotoLoc(TilePosition(4, 0, NAN));
+  botAI.gotoLoc(TilePosition(1, 0));
 };
 void leftPressed() {
-
+  botAI.gotoLoc(botAI.getStartPos());
 };
 void upPressed() {
 
+  std::vector<TilePosition> tmpPath;
+  tmpPath.push_back(TilePosition(1, 1));
+  tmpPath.push_back(TilePosition(2, 1));
+  tmpPath.push_back(TilePosition(2, 0));
+  tmpPath.push_back(TilePosition(1, 0));
+  botAI.longGoto(tmpPath);
 }
 void downPressed() {
-
+  
 }
 
 // Setup callbacks and initialize auton
@@ -49,5 +58,4 @@ void usercontrol(void) {
   brainFancyDebug("UserControl Started", vex::color::green, true);
 }
 
-
-void whenStarted(void) {}
+void whenStarted(void) { }

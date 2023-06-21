@@ -38,3 +38,5 @@ extern controller altController;
 extern inertial inertialSensor;
 extern rotation leftEncoder;
 extern rotation rightEncoder;
+extern distance leftDistSensor;
+extern distance rightDistSensor;

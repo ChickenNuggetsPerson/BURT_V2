@@ -3,11 +3,28 @@
 #pragma once
 
 
+static bool devRobot = false;
+
 // Define Robot Measurements 
 
-static double wheelDiameter = 4;
+// Main Robot Consts
+//  wheelDiameter: 2.5
+//  encoderDist: 5.25
+//  ratio: 5/3
 
-static double encoderDist = 4.5;
+// Dev Robot Const
+//  wheelDiameter: 4
+//  encoderDist: 4.5
+//  ratio 1/1
+
+// Set the ratio to 1/1 if using shaft encoders
+
+
+static double wheelDiameter = 2.5;
+static double motorRatio = 5;
+static double wheelRatio = 3;
+
+static double encoderDist = 5.25;
 static double backEncoderDist = 4.5; // use if we decide to use back encoders
 
 
@@ -26,6 +43,8 @@ static const int32_t rightMotorAPort = vex::PORT2;
 static const int32_t rightMotorBPort = vex::PORT8;
 
 static const int32_t inertialPort = vex::PORT3;
+static const int32_t leftDistSensorPort = vex::PORT5;
+static const int32_t rightDistSensorPort = vex::PORT6;
 
 static const int32_t leftEncoderPort = vex::PORT11;
 static const int32_t rightEncoderPort = vex::PORT12;
@@ -34,12 +53,23 @@ static const int32_t rightEncoderPort = vex::PORT12;
 // Odom Constants
 static TilePosition ODOM_DEFAULT_RESET_POS(0, 0, 0);
 
-// Auton Constants
+// Auton Constants For Test Bot
+/*
 static PIDConfig AUTON_TURNTO_PID_CONFIG(0.15, 0, 0.25);
 
 static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.2, 0.00, 0.06);
 static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
+*/
 
+// Auton Constants For Main Bot
+
+static PIDConfig AUTON_TURNTO_PID_CONFIG(0.15, 0, 0.25); 
+
+static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.35, 0.00, 0.0);
+static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.20, 0.0, 0.00);
+
+
+// Auton Start Positions
 static TilePosition AUTON_START_LEFT(1, 0, 0);
 static TilePosition AUTON_START_RIGHT(4, 0, 0);
 

@@ -166,8 +166,8 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     double newLeftEncoder; 
 
     if (usingDrive) {
-        newRightEncoder = rightMotorB.position(rotationUnits::rev) * circumference;
-        newLeftEncoder = leftMotorB.position(rotationUnits::rev) * circumference;
+        newRightEncoder = (rightMotorB.position(rotationUnits::rev) / wheelRatio ) * motorRatio * circumference;
+        newLeftEncoder = (leftMotorB.position(rotationUnits::rev) / wheelRatio ) * motorRatio * circumference;
     } else {
         newRightEncoder = rightEncoder.position(rotationUnits::rev) * circumference;
         newLeftEncoder = leftEncoder.position(rotationUnits::rev) * circumference;

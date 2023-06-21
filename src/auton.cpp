@@ -301,17 +301,32 @@ bool ai::gotoLoc(Position pos) {
     return longGoto(tmp);
 };
 bool ai::longGoto(std::vector<TilePosition> pos) {
-    std::vector<Position> tmpVec;
+    return longGoto(pos, false);
+};
+bool ai::longGoto(std::vector<Position> pos) {
+    return longGoto(pos, false);
+};
 
+bool ai::longGoto(std::vector<TilePosition> pos, bool objectAvoid) {
+    std::vector<Position> tmpVec;
     for (int i = 0; i < pos.size(); i++) {
         tmpVec.push_back(odometrySystemPointer->tilePosToPos(pos.at(i)));
     }
-
-    return longGoto(tmpVec);
+    return longGoto(tmpVec, objectAvoid);
 };
 
 // Main goto logic
-bool ai::longGoto(std::vector<Position> pos) {
+bool ai::longGoto(std::vector<Position> pos, bool objectAvoid) {
+
+    bool avoiding = objectAvoid;
+    if (avoiding) {
+        if (!leftDistSensor.installed() || !rightDistSensor.installed()) {
+            avoiding = false;
+            brainDebug("Not Object Avoiding", true);
+        } else {
+   
+        }
+    }
 
     if (!odometrySystemPointer->isTracking) { 
         brainError("Skipping Auton Path, Odom not initialized");
@@ -333,6 +348,8 @@ bool ai::longGoto(std::vector<Position> pos) {
 
     // PID to control drive speed
     PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
+    drivePid.setMax(12);
+    drivePid.setMin(-12);
     double drivePower = 0.00;
 
     // PID to keep the robot driving straight
@@ -344,6 +361,8 @@ bool ai::longGoto(std::vector<Position> pos) {
 
     int targetNum = 0;
     int numOfTargets = pos.size();
+
+    int speedUp = 10;
 
     while (traveling) {
         
@@ -357,11 +376,11 @@ bool ai::longGoto(std::vector<Position> pos) {
 
         desiredHeading = radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
 
-        drivePower = drivePid.iterate(travelDist);
+        drivePower = drivePid.iterate(travelDist / speedUp);
 
         double turnCurrent = radToDegree(odometrySystemPointer->currentPos().rot);
         double turnWant = findNearestRot(radToDegree(tempPos.rot), desiredHeading);
-        turnPower = turnPid.iterate(turnCurrent, turnWant) * 1.5;
+        turnPower = turnPid.iterate(turnCurrent, turnWant);
 
         double leftPower = drivePower - turnPower;
         double rightPower = drivePower + turnPower;
@@ -369,10 +388,9 @@ bool ai::longGoto(std::vector<Position> pos) {
         LeftDriveSmart.spin(fwd, leftPower, voltageUnits::volt);
         RightDriveSmart.spin(fwd, rightPower, voltageUnits::volt);
 
-        if (drivePower < 1) {
+        if (drivePower < 2 && speedUp < 2) {
             stopped++;
         }
-
 
         if (targetNum != numOfTargets - 1 && travelDist < 15) {
             stopped = 0;
@@ -396,6 +414,9 @@ bool ai::longGoto(std::vector<Position> pos) {
         if (targetNum >= numOfTargets) {
             traveling = false;
         }
+
+        speedUp--;
+        if (speedUp < 1) {speedUp = 1;}
 
         wait(0.05, seconds);
     }
