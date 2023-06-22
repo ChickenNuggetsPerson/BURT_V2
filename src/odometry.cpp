@@ -42,6 +42,9 @@ TilePosition::TilePosition() {};
 int mainTrackingTask(void* system) {
     OdometrySystem* systemPointer = (OdometrySystem*)system;
 
+    // Determine if the encoders are responding
+    systemPointer->usingDrive = !(leftEncoder.installed() && rightEncoder.installed());
+
     double updateSpeed = 10; // In msec 
 
     brainFancyDebug("Starting Calibration", color::yellow, true);
@@ -76,8 +79,7 @@ int mainTrackingTask(void* system) {
 }
 
 OdometrySystem::OdometrySystem() {
-    // Determine if the encoders are responding
-    usingDrive = !(leftEncoder.installed() && rightEncoder.installed());
+       
 }
 
 void OdometrySystem::restart() {

@@ -21,8 +21,8 @@ static bool devRobot = false;
 
 
 static double wheelDiameter = 2.5;
-static double motorRatio = 5;
-static double wheelRatio = 3;
+static double motorRatio = 1;
+static double wheelRatio = 1;
 
 static double encoderDist = 5.25;
 static double backEncoderDist = 4.5; // use if we decide to use back encoders
