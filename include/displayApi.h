@@ -265,7 +265,7 @@ class Gradient {
         bool built = false;
     public:
 
-        colorRange finalGradient[205];
+        std::vector<colorRange> finalGradient;
         int rangeSize = 200;
 
         Gradient(double startHue, double endHue, int startOfRange, int endOfRange) {
@@ -286,7 +286,7 @@ class Gradient {
 
             // Set the starting point
             tempColor.hsv(startHue, 1, 1);
-            finalGradient[0] = colorRange(-10000, rangeStart, tempColor);   
+            finalGradient.push_back(colorRange(-10000, rangeStart, tempColor));   
 
             int i = 1;
             // Loop through everything in the middle 
@@ -294,14 +294,14 @@ class Gradient {
 
                 hueTemp = hueTemp + hueStep;
                 tempColor.hsv(hueTemp, 1, 1);
-                finalGradient[i] = colorRange(rangeStart + i, rangeStart + i, tempColor);
+                finalGradient.push_back(colorRange(rangeStart + i, rangeStart + i, tempColor));
 
                 //vex::wait(0.05, seconds);
             }
 
             // Set the ending point
             tempColor.hsv(endHue, 1, 1);
-            finalGradient[i] = colorRange(rangeEnd, 10000, tempColor);
+            finalGradient.push_back(colorRange(rangeEnd, 10000, tempColor));
 
             built = true;
 
@@ -329,7 +329,7 @@ class Gradient {
 
             // Set the starting point
             tempColor.rgb(redTemp, greenTemp, blueTemp);
-            finalGradient[0] = colorRange(-10000, rangeStart, tempColor);   
+            finalGradient.push_back(colorRange(-10000, rangeStart, tempColor));   
 
             int i = 1;
             // Loop through everything in the middle 
@@ -342,14 +342,14 @@ class Gradient {
                 blueTemp  = (endColor.b - startColor.b) * percent + startColor.b;
 
                 tempColor.rgb(redTemp, greenTemp, blueTemp);
-                finalGradient[i] = colorRange(rangeStart + i, rangeStart + i, tempColor);
+                finalGradient.push_back(colorRange(rangeStart + i, rangeStart + i, tempColor));
 
                 //vex::wait(0.05, seconds);
             }
 
             // Set the ending point
             tempColor.rgb(endColor.r, endColor.g, endColor.b);
-            finalGradient[i] = colorRange(rangeEnd, 10000, tempColor);
+            finalGradient.push_back(colorRange(rangeEnd, 10000, tempColor));
 
             rangeSize = i + 1;
 
@@ -360,7 +360,9 @@ class Gradient {
 // Handles displaying data over time on the screen
 class Graph {
     private:
-        int type;
+
+        const char* graphId;
+        
         int x;
         int y;
         int width;
@@ -373,8 +375,7 @@ class Graph {
         int currentDataPoint = 0;
         int recentPoint = 0;
 
-        colorRange ranges[205];
-        int rangeSize = 0;
+        std::vector<colorRange> ranges;
 
         void shiftDataPoints() {
             for (int i=0; i < maxPoints - 1; i++) {
@@ -382,10 +383,10 @@ class Graph {
             }
         };
         
-        vex::color determinColorFromRange(int value, colorRange ranges[]) {
-            for (int i = 0; !ranges[i].isDefault(); i++) {
-                if (ranges[i].inRange(value)) {
-                    return ranges[i].displayColor;
+        vex::color determinColorFromRange(int value, std::vector<colorRange> ranges) {
+            for (auto range: ranges) {
+                if (range.inRange(value)) {
+                    return range.displayColor;
                 }  
             }
             return vex::color::black;
@@ -397,20 +398,20 @@ class Graph {
         // Graph Types:
         //      1. Line Graph 
 
-        void build(int graphType, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, colorRange colorRanges[] = nullptr, int maxDataPoints = 10) {
-            type = graphType;
-            x = xPos;
-            y = yPos;
-            width = graphWidth;
-            height = graphHeight;
-            name = graphName;
-            maxPoints = maxDataPoints;
+        const char* getId() {
+            return graphId;
+        };
 
-            for (int i = 0; i < 206; i++) {
-                if (!ranges[i].isDefault()) {
-                   ranges[i] = colorRanges[i]; 
-                } else { break; }
-            }
+        void build(const char* graphId, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, std::vector<colorRange> colorRanges, int maxDataPoints = 10) {
+            this->graphId = graphId;
+            this->x = xPos;
+            this->y = yPos;
+            this->width = graphWidth;
+            this->height = graphHeight;
+            this->name = graphName;
+            this->maxPoints = maxDataPoints;
+
+            this->ranges = colorRanges;
 
             if (maxPoints > 50) {maxPoints = 50;}
             if (drawMiddle) {
@@ -436,13 +437,6 @@ class Graph {
 
             double xScale = width / maxPoints;
             double yScale = height / 10;
-
-            //brainFancyDebug("x: %d", x);
-            //brainFancyDebug("y: %d", y);
-            //brainFancyDebug("w: %d", width);
-            //brainFancyDebug("h: %d", height);
-
-            
 
             // Draw Vertical Axis
             for (int i = 0; i < 10; i++) {
@@ -476,7 +470,7 @@ class Graph {
                     Brain.Screen.drawCircle(x + (xScale * i), y + 5 + height*middle - ((dataPoints[i] / 100.00) * height)*middle, 3);
                 }
 
-                if (rangeSize != 0 && i != 0) {
+                if (ranges.size() != 0 && i != 0) {
                     Brain.Screen.setPenColor(determinColorFromRange(dataPoints[i], ranges));
                 }
 
@@ -488,9 +482,7 @@ class Graph {
 };
 
 struct ProgressBar {
-
     const char* id;
-
     bool vertical;
     int x;
     int y;
@@ -499,7 +491,21 @@ struct ProgressBar {
     const char* name;
     double value;
     bool middle = false;
-    colorRange ranges[205];
+    std::vector<colorRange> ranges;
+    
+    ProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool vertical, bool middle, std::vector<colorRange> ranges) {
+        this->id = barId;
+        this->x = x;
+        this->y = y;
+        this->width = width;
+        this->height = height;
+        this->name = name;
+        this->middle = middle;
+        this->vertical = vertical;
+        if (ranges.size() != 0) {
+            this->ranges = ranges;
+        }
+    }
 };
 
 struct DisplayText {
@@ -512,6 +518,16 @@ struct DisplayText {
     const char* id;
     vex::color displayColor;
     fontType displayFont;
+    DisplayText(const char* text, int x, int y, vex::color displayColor = color::white, vex::fontType displayFont = fontType::mono20, const char* id = "") {
+        this->text = text;
+        this->x = x;
+        this->y = y;
+        this->displayData = 0;
+        this->displayColor = displayColor;
+        this->displayFont = displayFont;
+        this->id = id;
+        
+    }
 };
 
 struct DisplayBox {
@@ -522,6 +538,15 @@ struct DisplayBox {
     const char* id;
     vex::color fillColor;
     vex::color penColor;
+    DisplayBox(const char* id, int x, int y, int width, int height, vex::color fillColor, vex::color penColor = color::white) {
+        this->id = id;
+        this->x = x;
+        this->y = y;
+        this->width = width;
+        this->height = height;
+        this->fillColor = fillColor;
+        this->penColor = penColor;
+    }
 };
 
 class Page; // Forward decloration so the button class can build
@@ -538,14 +563,24 @@ struct Button {
     int data;
     vex::color fillColor;
     int (*cb)(Page*);
+    Button(const char* text, int x, int y, int width, int height, int (*cb)(Page*), const char* id = "", vex::color fillColor = black) {
+        this->text = text;
+        this->x = x;
+        this->y = y;
+        this->width = width;
+        this->height = height;
+        this->cb = cb;
+        this->id = id;
+        this->fillColor = fillColor;
+    }
 };
 
 struct OverlayQuestion {
     std::string question;    
     const char* option1;
-    vex::color option1Color = white;    
+    vex::color option1Color = color::white;    
     const char* option2;
-    vex::color option2Color = white;
+    vex::color option2Color = color::white;
 };
 
 struct Toggle {
@@ -560,7 +595,21 @@ struct Toggle {
     int y;
     int width;
     int height;
-    
+    Toggle(const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height, const char* trueText = "") {
+        this->displayText = displayText;
+        this->status = startStatus;
+        this->offColor = offColor;
+        this->onColor = onColor;
+        this->x = x;
+        this->y = y;
+        this->width = width;
+        this->height = height;
+        this->trueText = trueText;
+        if (strcmp(trueText, "") != 0) {
+            this->showAlt = true;
+            this->trueText = trueText;
+        }
+    }
 };
 
 
@@ -703,18 +752,20 @@ class Plot {
         autonPath path;
 
         Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0, bool showLabels = false, int teamColor = NAN, MenuSystem* menuSystemPointer = nullptr) {
-            id = plotId;
-            label = plotLabel;
-            width = plotWidth;
-            height = plotHeight;
-            maxX = plotMaxX;
-            maxY = plotMaxY;
-            subdiv = plotSubdiv;
-            labels = showLabels;
-            drawFeild = !isnan(teamColor);
+            this->id = plotId;
+            this->label = plotLabel;
+            this->x = plotX;
+            this->y = plotY;
+            this->width = plotWidth;
+            this->height = plotHeight;
+            this->maxX = plotMaxX;
+            this->maxY = plotMaxY;
+            this->subdiv = plotSubdiv;
+            this->labels = showLabels;
+            this->drawFeild = !isnan(teamColor);
             if (drawFeild) {
-                mainColor = teamColor;
-                systemPtr = menuSystemPointer;
+                this->mainColor = teamColor;
+                this->systemPtr = menuSystemPointer;
             }
         }
 
@@ -726,11 +777,11 @@ class Plot {
             vex::color altColor;
 
             if (botAI.teamColor == TEAM_BLUE) {
-                ourColor = blue;
-                altColor = red;
+                ourColor = color::blue;
+                altColor = color::red;
             } else {
-                ourColor = red;
-                altColor = blue;
+                ourColor = color::red;
+                altColor = color::blue;
             }
 
             Brain.Screen.setPenWidth(2);
@@ -760,14 +811,14 @@ class Plot {
             Brain.Screen.setPenColor(altColor);
             Brain.Screen.drawLine(x + width/2, y + 5, x + width/2, y + 5 + height/6);
 
-            Brain.Screen.setPenColor(white);
+            Brain.Screen.setPenColor(color::white);
             Brain.Screen.drawLine(x + width/2, y + 5 + height/6, x + width/2, y + 5 + 5*(height/6));
             Brain.Screen.drawLine(x + width/3, y + 5 + height/6, x + 2*(width/3), y + 5 + height/6);
             Brain.Screen.drawLine(x + width/3, y + 5 + 5*(height/6), x + 2*(width/3), y + 5 + 5*(height/6));
 
 
             Brain.Screen.setPenWidth(1);
-            Brain.Screen.setPenColor(white);
+            Brain.Screen.setPenColor(color::white);
         }
 
         void draw() {
@@ -795,7 +846,7 @@ class Plot {
                     }
                     Brain.Screen.drawLine(x, y + 5 + moveY*i, x + width, y + 5 + moveY*i);
                 }
-                Brain.Screen.setPenColor(white);
+                Brain.Screen.setPenColor(color::white);
             }
 
 
@@ -876,7 +927,7 @@ class Plot {
             Brain.Screen.setPenWidth(penWidth);
             Brain.Screen.setPenColor(cyan);
             Brain.Screen.drawLine(drawX1, drawY1, drawX2, drawY2);
-            Brain.Screen.setPenColor(white);
+            Brain.Screen.setPenColor(color::white);
             Brain.Screen.setPenWidth(1);
         }
         void updatePoint(int pointNum, bool draw, Position newPoint = Position()) {
@@ -909,7 +960,7 @@ class Plot {
                 drawPoint(point2, cyan);
             }
             if (drawPoint1) {
-                drawPoint(point1, green);
+                drawPoint(point1, color::green);
             }
         };
 
@@ -924,37 +975,23 @@ int adjustingNumber(void* pagePointer);
 class Page {
     private:
 
-        DisplayText textStorage[10];
-        int textsStored = 0;
-
-        ProgressBar barStorage[10];
-        int barsStored = 0;
-
-        Graph graphStorage[10];
-        const char* graphIdStorage[10];
-        int graphsStored = 0;
-
         Logger* loggerStorage;
         bool hasLogger = false;
 
-        Button buttonStorage[10];
-        int buttonsStored = 0;
-
-        DisplayBox displayBoxStorage[10];
-        int displayBoxsStored = 0;
-
-        Toggle toggleStorage[10];
-        int togglesStored = 0;
-
-        Plot plotStorage[2];
-        int plotsStored = 0;
-
-        int activeAdjustNum = NAN;
-        AdjustableNum adjustNumStorage[10];
-        int adjustNumsStored = 0;
-
         OverlayQuestion storedOverlay;
         bool showOverlay = false;
+
+        std::vector<DisplayText> textStorage;
+        std::vector<ProgressBar> barStorage;
+        std::vector<Graph> graphStorage;
+        std::vector<Button> buttonStorage;
+        std::vector<DisplayBox> displayBoxStorage;
+        std::vector<Toggle> toggleStorage;
+        std::vector<Plot> plotStorage;
+
+        int activeAdjustNum = NAN;
+        std::vector<AdjustableNum> adjustNumStorage;
+        
 
 
 
@@ -965,10 +1002,10 @@ class Page {
         bool hasLoadedCB = false;
 
 
-        vex::color determinColorFromRange(int value, colorRange ranges[]) {
-            for (int i = 0; !ranges[i].isDefault(); i++) {
-                if (ranges[i].inRange(value)) {
-                    return ranges[i].displayColor;
+        vex::color determinColorFromRange(int value, std::vector<colorRange> ranges) {
+            for (auto range: ranges) {
+                if (range.inRange(value)) {
+                    return range.displayColor;
                 }  
             }
             return vex::color::black;
@@ -983,14 +1020,14 @@ class Page {
             Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
             Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
 
-            if (!bar.ranges[0].isDefault()) {
+            if (bar.ranges.size() != 0) {
                 Brain.Screen.setFillColor(determinColorFromRange(bar.value, bar.ranges));
             } else {
                 // Default Battery Color Range
-                colorRange defaultRanges[4];
-                defaultRanges[0] = colorRange(0, 20, red);
-                defaultRanges[1] = colorRange(21, 35, yellow);
-                defaultRanges[2] = colorRange(36, 100, green);
+                std::vector<colorRange> defaultRanges;
+                defaultRanges.push_back(colorRange(0, 20, color::red));
+                defaultRanges.push_back(colorRange(21, 35, color::yellow));
+                defaultRanges.push_back(colorRange(36, 100, color::green));
 
                 Brain.Screen.setFillColor(determinColorFromRange(fabs(bar.value), defaultRanges));
             }
@@ -1007,14 +1044,14 @@ class Page {
             Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
             Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
             
-            if (!bar.ranges[0].isDefault()) {
+            if (bar.ranges.size() != 0) {
                 Brain.Screen.setFillColor(determinColorFromRange(bar.value, bar.ranges));
             } else {
                 // Default Heat Color Range
-                colorRange defaultRanges[4];
-                defaultRanges[0] = colorRange(0, 60, green);
-                defaultRanges[1] = colorRange(61, 80, yellow);
-                defaultRanges[2] = colorRange(81, 100, red);
+                std::vector<colorRange> defaultRanges;
+                defaultRanges.push_back(colorRange(0, 60, color::green));
+                defaultRanges.push_back(colorRange(61, 80, color::yellow));
+                defaultRanges.push_back(colorRange(81, 100, color::red));
 
                 Brain.Screen.setFillColor(determinColorFromRange(fabs(bar.value), defaultRanges));
             }
@@ -1038,7 +1075,7 @@ class Page {
             Brain.Screen.setPenColor(box.penColor);
             Brain.Screen.setFillColor(box.fillColor);
             Brain.Screen.drawRectangle(box.x, box.y, box.width, box.height);
-            Brain.Screen.setPenColor(white);
+            Brain.Screen.setPenColor(color::white);
             Brain.Screen.setFillColor(black);            
         }
         void drawToggle(Toggle toggleButton) {
@@ -1082,7 +1119,7 @@ class Page {
             Brain.Screen.setPenColor(overlay.option2Color);
             Brain.Screen.printAt(option2XCenter - (Brain.Screen.getStringWidth(overlay.option2) / 2), (screenYSize / 2) + (overlayHeight / 2) - 25, overlay.option2);
 
-            Brain.Screen.setPenColor(white);
+            Brain.Screen.setPenColor(color::white);
             Brain.Screen.setFont(fontType::mono20);
 
 
@@ -1106,54 +1143,56 @@ class Page {
             }
 
             // Render Texts
-            for (int i = 0; i < textsStored; i++) {
-                Brain.Screen.setPenColor(textStorage[i].displayColor);
-                Brain.Screen.setFont(textStorage[i].displayFont);
-                if (!textStorage[i].displayInt) {
-                    Brain.Screen.printAt(textStorage[i].x, textStorage[i].y, textStorage[i].text, textStorage[i].displayDoubleData);
+
+            for (auto text: textStorage) {
+                Brain.Screen.setPenColor(text.displayColor);
+                Brain.Screen.setFont(text.displayFont);
+                if (!text.displayInt) {
+                    Brain.Screen.printAt(text.x, text.y, text.text, text.displayDoubleData);
                 } else {
-                    Brain.Screen.printAt(textStorage[i].x, textStorage[i].y, textStorage[i].text, textStorage[i].displayData);
+                    Brain.Screen.printAt(text.x, text.y, text.text, text.displayData);
                 }
-                Brain.Screen.setPenColor(white);
+                Brain.Screen.setPenColor(color::white);
                 Brain.Screen.setFont(fontType::mono20);
             }
 
             // Render Display Boxes
-            for (int i = 0; i < displayBoxsStored; i++) {
-                drawDisplayBox(displayBoxStorage[i]);
+            for (auto displayBox: displayBoxStorage) {
+                drawDisplayBox(displayBox);
             }
 
             // Render Progress Bars
-            for (int i = 0; i < barsStored; i++) {
-                if (barStorage[i].vertical) {
-                    drawVertProgressBar(barStorage[i]);
+            for (auto bar: barStorage) {
+                if (bar.vertical) {
+                    drawVertProgressBar(bar);
                 } else {
-                    drawHorzProgressbar(barStorage[i]);
+                    drawHorzProgressbar(bar);
                 }
             }
 
             // Render Line Graphs
-            for (int i = 0; i < graphsStored; i++) {
-                graphStorage[i].draw();
+            for (auto graph: graphStorage) {
+                graph.draw();
             }
 
             // Render Buttons
-            for (int i = 0; i < buttonsStored; i++) {
-                drawButton(buttonStorage[i]);
+            for (auto button: buttonStorage) {
+                drawButton(button);
             }
 
             // Render Toggles
-            for (int i = 0; i < togglesStored; i++) {
-                drawToggle(toggleStorage[i]);
+            for (auto toggle: toggleStorage) {
+                drawToggle(toggle);
             }
 
             // Render Plots
-            for (int i = 0; i < plotsStored; i++) {
-                plotStorage[i].draw();
+            for (auto &plot: plotStorage) {
+                plot.draw();
             }
 
-            for (int i = 0; i < adjustNumsStored; i++) {
-                adjustNumStorage[i].render();
+            // Render Adjustable Numers
+            for (auto adjustNum: adjustNumStorage) {
+                adjustNum.render();
             }
 
             // Render Overlay
@@ -1196,224 +1235,132 @@ class Page {
             loggerStorage = loggerMemLocation;
             hasLogger = true;
         };
-        void addHorzProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool middle = false, colorRange ranges[] = nullptr) {
-            ProgressBar tempBar;
-            tempBar.x = x;
-            tempBar.y = y;
-            tempBar.width = width;
-            tempBar.height = height;
-            tempBar.name = name;
-            tempBar.middle = middle;
-            tempBar.vertical = false;
-            tempBar.id = barId;
-
-            for (int i = 0; i < 206; i++) {
-                if (!ranges[i].isDefault()) {
-                   tempBar.ranges[i] = ranges[i]; 
-                } else { break; }
-            }
-
-            barStorage[barsStored] = tempBar;
-            barsStored++;
-
+        void addHorzProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool middle, std::vector<colorRange> ranges) {
+            barStorage.push_back(ProgressBar(barId, x, y, width, height, name, false, middle, ranges));
         };
-        void addVertProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool middle = false, colorRange ranges[] = nullptr) {
-            ProgressBar tempBar;
-            tempBar.x = x;
-            tempBar.y = y;
-            tempBar.width = width;
-            tempBar.height = height;
-            tempBar.name = name;
-            tempBar.middle = middle;
-            tempBar.vertical = true;
-            tempBar.id = barId;
-
-            for (int i = 0; i < 206; i++) {
-                if (!ranges[i].isDefault()) {
-                   tempBar.ranges[i] = ranges[i]; 
-                } else { break; }
-            }
-
-            barStorage[barsStored] = tempBar;
-            barsStored++;
+        void addVertProgressBar(const char* barId, int x, int y, int width, int height, const char* name, bool middle, std::vector<colorRange> ranges) {
+            barStorage.push_back(ProgressBar(barId, x, y, width, height, name, true, middle, ranges));
         };
-        void addLineGraph(const char* graphId, int graphType, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, colorRange colorRanges[] = nullptr, int maxDataPoints = 10) {
-            graphStorage[graphsStored] = Graph();
-            graphStorage[graphsStored].build(graphType, graphName, xPos, yPos, graphWidth, graphHeight, drawMiddle, colorRanges, maxDataPoints);
-            graphIdStorage[graphsStored] = graphId;
-            graphsStored++;
+        void addLineGraph(const char* graphId, const char* graphName, int xPos, int yPos, int graphWidth, int graphHeight, bool drawMiddle, std::vector<colorRange> colorRanges, int maxDataPoints = 10) {
+            graphStorage.push_back(Graph());
+            graphStorage.back().build(graphId, graphName, xPos, yPos, graphWidth, graphHeight, drawMiddle, colorRanges, maxDataPoints);
         };
-        void addText(const char* text, int x, int y, vex::color displayColor = white, vex::fontType displayFont = fontType::mono20, const char* id = "") {
-            textStorage[textsStored] = DisplayText();
-            textStorage[textsStored].text = text;
-            textStorage[textsStored].x = x;
-            textStorage[textsStored].y = y;
-            textStorage[textsStored].displayData = 0;
-            textStorage[textsStored].displayColor = displayColor;
-            textStorage[textsStored].displayFont = displayFont;
-            textStorage[textsStored].id = id;
-            textsStored++;
+        void addText(const char* text, int x, int y, vex::color displayColor = color::white, vex::fontType displayFont = fontType::mono20, const char* id = "") {
+            textStorage.push_back(DisplayText(text, x, y, displayColor, displayFont, id));
         }
         void addButton(const char* text, int x, int y, int width, int height, int (*cb)(Page*), const char* id = "", vex::color fillColor = black) {
-            buttonStorage[buttonsStored] = Button();
-            buttonStorage[buttonsStored].text = text;
-            buttonStorage[buttonsStored].x = x;
-            buttonStorage[buttonsStored].y = y;
-            buttonStorage[buttonsStored].width = width;
-            buttonStorage[buttonsStored].height = height;
-            buttonStorage[buttonsStored].id = id;
-            buttonStorage[buttonsStored].fillColor = fillColor;
-            buttonStorage[buttonsStored].cb = cb;
-            buttonsStored++;
+            buttonStorage.push_back(Button(text, x, y, width, height, cb, id, fillColor));
         };
-        void addDisplayBox(const char* id, int x, int y, int width, int height, vex::color fillColor, vex::color penColor = white) {
-            displayBoxStorage[displayBoxsStored] = DisplayBox();
-            displayBoxStorage[displayBoxsStored].x = x;
-            displayBoxStorage[displayBoxsStored].y = y;
-            displayBoxStorage[displayBoxsStored].width = width;
-            displayBoxStorage[displayBoxsStored].height = height;
-            displayBoxStorage[displayBoxsStored].id = id;
-            displayBoxStorage[displayBoxsStored].fillColor = fillColor;
-            displayBoxStorage[displayBoxsStored].penColor = penColor;
-            displayBoxsStored++;
+        void addDisplayBox(const char* id, int x, int y, int width, int height, vex::color fillColor, vex::color penColor = color::white) {
+            displayBoxStorage.push_back(DisplayBox(id, x, y, width, height, fillColor, penColor));
         }
-        void addToggle( const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height, const char* trueText = "") {
-            toggleStorage[togglesStored] = Toggle();
-            toggleStorage[togglesStored].displayText = displayText;
-            toggleStorage[togglesStored].status = startStatus;
-            toggleStorage[togglesStored].offColor = offColor;
-            toggleStorage[togglesStored].onColor = onColor;
-            toggleStorage[togglesStored].x = x;
-            toggleStorage[togglesStored].y = y;
-            toggleStorage[togglesStored].width = width;
-            toggleStorage[togglesStored].height = height;
-            if (strcmp(trueText, "") != 0) {
-                toggleStorage[togglesStored].showAlt = true;
-                toggleStorage[togglesStored].trueText = trueText;
-            }
-            togglesStored++;
+        void addToggle(const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height, const char* trueText = "") {
+            toggleStorage.push_back(Toggle(displayText, startStatus, offColor, onColor, x, y, width, height, trueText));
         };
-        void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false, int teamColor = 0) {
-            plotStorage[plotsStored] = Plot();
-            plotStorage[plotsStored].id = plotId;
-            plotStorage[plotsStored].label = label;
-            plotStorage[plotsStored].x = plotX;
-            plotStorage[plotsStored].y = plotY;
-            plotStorage[plotsStored].width = plotWidth;
-            plotStorage[plotsStored].height = plotHeight;
-            plotStorage[plotsStored].maxX = plotMaxX;
-            plotStorage[plotsStored].maxY = plotMaxY;
-            plotStorage[plotsStored].subdiv = plotSubdiv;
-            plotStorage[plotsStored].labels = showLabels;
-            if (teamColor != 0) {
-                plotStorage[plotsStored].mainColor = teamColor;
-                plotStorage[plotsStored].drawFeild = true;
-            }
-
-            plotsStored++;
+        void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false, int teamColor = NAN) {
+            plotStorage.push_back(Plot(plotId, label, plotX, plotY, plotWidth, plotHeight, plotMaxX, plotMaxY, plotSubdiv, showLabels, teamColor, menuSystemPointer));
         };
         void addAdjustableNum(const char* id, double initialVal, double stepAmount, double maxAmount, double minAmount, int displayX, int displayY, int displayWidth, int displayHeight, vex::fontType displayFont, bool showRanges) {
-            adjustNumStorage[adjustNumsStored] = AdjustableNum(id, initialVal, stepAmount, maxAmount, minAmount, displayX, displayY, displayWidth, displayHeight, displayFont, this, showRanges);
-            adjustNumsStored ++;
+            adjustNumStorage.push_back(AdjustableNum(id, initialVal, stepAmount, maxAmount, minAmount, displayX, displayY, displayWidth, displayHeight, displayFont, this, showRanges));
         };
 
 
 
         void setProgressBarValue(const char* barId, int value) {
-            for (int i = 0; i < barsStored; i++) {
-                if (strcmp(barId, barStorage[i].id) == 0) {
-                    barStorage[i].value = value;
+            for (auto &bar: barStorage) {
+                if (strcmp(barId, bar.id) == 0) {
+                    bar.value = value;
                     return;
                 }
             }
         };
         void setLineGraphValue(const char* graphId, int value) {
-            for (int i = 0; i < graphsStored; i++) {
-                if (strcmp(graphId, graphIdStorage[i]) == 0) {
-                    graphStorage[i].addPoint(value);
+            for (auto &graph: graphStorage) {
+                if (strcmp(graphId, graph.getId()) == 0) {
+                    graph.addPoint(value);
                     return;
                 }
             }
         };
         
         void setTextData(const char* textId, vex::color displayColor) {
-            for (int i = 0; i < textsStored; i++) {
-                if (strcmp(textStorage[i].id, textId) == 0) {
+            for (auto &text: textStorage) {
+                if (strcmp(text.id, textId) == 0) {
                     if (displayColor != NAN) {
-                        textStorage[i].displayColor = displayColor;
+                        text.displayColor = displayColor;
                     }
                     return;
                 }
             }
         };
         void setTextData(const char* textId, vex::color displayColor, const char* newText) {
-            for (int i = 0; i < textsStored; i++) {
-                if (strcmp(textStorage[i].id, textId) == 0) {
+            for (auto &text: textStorage) {
+                if (strcmp(text.id, textId) == 0) {
                     if (displayColor != NAN) {
-                        textStorage[i].displayColor = displayColor;
+                        text.displayColor = displayColor;
                     }
                     if (strcmp(newText, "") != 0) {
-                        textStorage[i].text = newText;
+                        text.text = newText;
                     }
                     return;
                 }
             }
         };
         void setTextData(const char* textId, int data) {
-            for (int i = 0; i < textsStored; i++) {
-                if (strcmp(textStorage[i].id, textId) == 0) {
+            for (auto &text: textStorage) {
+                if (strcmp(text.id, textId) == 0) {
                     if (data != NAN) {
-                        textStorage[i].displayData = data;
+                        text.displayData = data;
                     }
-                    textStorage[i].displayDoubleData = NAN;
-                    textStorage[i].displayInt = true;
+                    text.displayDoubleData = NAN;
+                    text.displayInt = true;
                     return;
                 }
             }
         };
         void setTextData(const char* textId, double doubleData) {
-            for (int i = 0; i < textsStored; i++) {
-                if (strcmp(textStorage[i].id, textId) == 0) {
-                    textStorage[i].displayData = NAN;
+            for (auto &text: textStorage) {
+                if (strcmp(text.id, textId) == 0) {
+                    text.displayData = NAN;
                     if (doubleData != NAN) {
-                        textStorage[i].displayDoubleData = doubleData;
+                        text.displayDoubleData = doubleData;
                     }
-                    textStorage[i].displayInt = false;
+                    text.displayInt = false;
                     return;
                 }
             }
         };
         
         void setButtonData(const char* buttonId, vex::color fillColor, int data = 0) {
-            for (int i = 0; i < buttonsStored; i++) {
-                if (strcmp(buttonStorage[i].text, buttonId) == 0) {
-                    buttonStorage[i].data = data;
-                    buttonStorage[i].fillColor = fillColor;
+            for (auto &button: buttonStorage) {
+                if (strcmp(button.text, buttonId) == 0) {
+                    button.data = data;
+                    button.fillColor = fillColor;
                     return;
                 }
             }
         }
-        void setDisplayBoxData(const char* boxId, vex::color fillColor, vex::color penColor = white) {
-            for (int i = 0; i < displayBoxsStored; i++) {
-                if (strcmp(displayBoxStorage[i].id, boxId) == 0) {
-                    displayBoxStorage[i].fillColor = fillColor;
-                    displayBoxStorage[i].penColor = penColor;
+        void setDisplayBoxData(const char* boxId, vex::color fillColor, vex::color penColor = color::white) {
+            for (auto &displayBox: displayBoxStorage) {
+                if (strcmp(displayBox.id, boxId) == 0) {
+                    displayBox.fillColor = fillColor;
+                    displayBox.penColor = penColor;
                     return;
                 }
             }
         };
         void setToggleStatus(const char* toggleId, bool status) {
-            for (int i = 0; i < togglesStored; i++) {
-                if (strcmp(toggleStorage[i].displayText, toggleId) == 0) {
-                    toggleStorage[i].status = status;
+            for (auto &toggle: toggleStorage) {
+                if (strcmp(toggle.displayText, toggleId) == 0) {
+                    toggle.status = status;
                     return;
                 }
             }
         };
         Plot* getPlotPointer(const char* id) {
-            for (int i = 0; i < plotsStored; i++) {
-                if (strcmp(plotStorage[i].id, id) == 0) {
-                    return &plotStorage[i];
+            for (auto &plot: plotStorage) {
+                if (strcmp(plot.id, id) == 0) {
+                    return &plot;
                 }
             }
             return nullptr;
@@ -1429,9 +1376,9 @@ class Page {
 
 
         bool getToggleStatus(const char* toggleId) {
-            for (int i = 0; i < togglesStored; i++) {
-                if (strcmp(toggleStorage[i].displayText, toggleId) == 0) {
-                    return toggleStorage[i].status;
+            for (auto toggle: toggleStorage) {
+                if (strcmp(toggle.displayText, toggleId) == 0) {
+                    return toggle.status;
                 }
             }
             return false;
@@ -1442,9 +1389,9 @@ class Page {
             return &adjustNumStorage[activeAdjustNum];
         }
         double getAdjustNum(const char* id) {
-            for (int i = 0; i < adjustNumsStored; i++) {
-                if (strcmp(adjustNumStorage[i].getId(), id) == 0) {
-                    return adjustNumStorage[i].getVal();
+            for (auto num: adjustNumStorage) {
+                if (strcmp(num.getId(), id) == 0) {
+                    return num.getVal();
                 }
             }
         }
@@ -1515,32 +1462,34 @@ class Page {
 
         void screenPressed(int x, int y) {
             // Check for buttons
-            for (int i = 0; i < buttonsStored; i++) {
-                if (inRectangle(x, y, buttonStorage[i].x, buttonStorage[i].y, buttonStorage[i].width, buttonStorage[i].height)) {
-                    buttonStorage[i].cb(this);
+            for (auto &button: buttonStorage) {
+                if (inRectangle(x, y, button.x, button.y, button.width, button.height)) {
+                    button.cb(this);
                     return;
                 }
             }
 
             // Check for toggles
-            for (int i = 0; i < togglesStored; i++) {
-                if (inRectangle(x, y, toggleStorage[i].x, toggleStorage[i].y, toggleStorage[i].width, toggleStorage[i].height)) {
+            for (auto &toggle: toggleStorage) {
+                if (inRectangle(x, y, toggle.x, toggle.y, toggle.width, toggle.height)) {
                     pageChanged = true;
-                    if (toggleStorage[i].status) {
-                        toggleStorage[i].status = false;
+                    if (toggle.status) {
+                        toggle.status = false;
                     } else {
-                        toggleStorage[i].status = true;
+                        toggle.status = true;
                     }
                 }
             }
 
             // Check Adjustable Numbers
-            for (int i = 0; i < adjustNumsStored; i++) {
-                if (adjustNumStorage[i].checkPressed(x, y)) {
+            int i = 0;
+            for (auto &num: adjustNumStorage) {
+                if (num.checkPressed(x, y)) {
                     activeAdjustNum = i;
                     task(adjustingNumber, (void*)this, task::taskPriorityNormal);
                     return;
                 }
+                i++;
             }
         }
 
@@ -1586,9 +1535,9 @@ int adjustingNumber(void* pagePointer) {
 
 struct Notification {
     const char* text;
-    vex::color displayColor = white;
+    vex::color displayColor = color::white;
     double disapearTime;
-    Notification(const char* displayText, int time, vex::color showColor = white) {
+    Notification(const char* displayText, int time, vex::color showColor = color::white) {
         text = displayText;
         displayColor = showColor;
         disapearTime = time;
@@ -1645,7 +1594,7 @@ class MenuSystem {
             Brain.Screen.drawRectangle(screenXSize - width, (rowNum * height), width, height);
             Brain.Screen.setPenColor(notif.displayColor);
             Brain.Screen.printAt(screenXSize - (width / 2) - (Brain.Screen.getStringWidth(notif.text) / 2), (rowNum * height) + (height / 2) + (Brain.Screen.getStringHeight(notif.text) / 4), notif.text);
-            Brain.Screen.setPenColor(white);
+            Brain.Screen.setPenColor(color::white);
         }
 
     public:
@@ -1728,7 +1677,7 @@ class MenuSystem {
 
 
 
-        void newNotification(const char* text, int displayTime, vex::color displayColor = white) {
+        void newNotification(const char* text, int displayTime, vex::color displayColor = color::white) {
             if (!showingNotifications) {return;}
             notifications.push_back(Notification(text, Brain.timer(msec) + (1000.00 * displayTime), displayColor));
         };
@@ -1739,9 +1688,9 @@ class MenuSystem {
 
 struct NotCheck {
     const char* trueMessage;
-    vex::color trueColor = green;
+    vex::color trueColor = color::green;
     const char* falseMessage;
-    vex::color falseColor = red;
+    vex::color falseColor = color::red;
     bool log;
     bool lastVal;
     bool (*checkCB)();

@@ -76,6 +76,8 @@ int notificationCheck() {
 // Define the update function for the home page
 int updateHome(Page* self) {
     self->setProgressBarValue("battery", Brain.Battery.capacity());
+    self->setProgressBarValue("test", sin(Brain.timer(timeUnits::sec)) * 100);
+    self->setLineGraphValue("test" , sin(Brain.timer(timeUnits::sec)) * 100);
     return 1;
 }
 
@@ -151,11 +153,11 @@ int loadedConfigPage(Page* self) {
         self->setTextData("savedStatus", red, "SD Card Not Inserted");
         botAI.configMenuStatus = false;
     } else {
-        self->setTextData("savedStatus", white, "Loading Config...");
+        self->setTextData("savedStatus", color::white, "Loading Config...");
         botAI.configMenuStatus = true;
         wait(0.25, seconds);
         setConfigs();
-        self->setTextData("savedStatus", white, "Ready");
+        self->setTextData("savedStatus", color::white, "Ready");
     };
     return 1;
 };
@@ -236,7 +238,7 @@ int loadedSystemConfigPage(Page* self) {
         self->setTextData("savedStatus", red, "SD Card Not Inserted");
         return 1;
     } 
-    self->setTextData("savedStatus", white, "Edit System Config Values");
+    self->setTextData("savedStatus", color::white, "Edit System Config Values");
 
     // Set Archive Toggle
     self->setToggleStatus("Archive Logs", (readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1));
@@ -281,7 +283,7 @@ int systemConfigExitButton(Page* self) {
 
                 systemConfigSave(self);
                 
-                self->menuSystemPointer->newNotification("Restart Program", 10, white);
+                self->menuSystemPointer->newNotification("Restart Program", 10, color::white);
                 self->menuSystemPointer->gotoPage("main");
             } else {
                 // Option 1
@@ -352,7 +354,7 @@ int dubugReloadButton(Page* self) {
         } else {
             secondOverlay.option2Color = red;
         }
-        wait(0.5, sec);
+        wait(0.5, timeUnits::sec);
         if (self->overlayQuestion(secondOverlay)) {
             Odometry.restart(botAI.getStartPos());
         } else {
@@ -481,7 +483,8 @@ int brainDisplayerInit() {
     // Init Gradients
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
-    colorRange whiteRange[1] = {colorRange(-200, 200, color::white)};
+    Gradient rainbowGradient = Gradient(0, 360, -100, 100);
+    std::vector<colorRange> whiteRange = {colorRange(-200, 200, color::white)};
 
     // Add pages to the main renderer
     mainRenderer.addPage("loading", &loadingPage);
@@ -494,43 +497,45 @@ int brainDisplayerInit() {
     mainRenderer.addPage("fileSystem", &fileSystemPage);
 
     // Configure the loading page
-    loadingPage.addText("BURT OS", 140, 100, white, fontType::mono60);
-    loadingPage.addText("Developed by Hayden Steele", 140, 130, white, fontType::mono15);
+    loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
+    loadingPage.addText("Developed by Hayden Steele", 140, 130, color::white, fontType::mono15);
     loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, whiteRange);
     loadingPage.addDataUpdaterCB(updateLoadingPage, 0.01);
 
     // Configure the home page
     homePage.addText("BURT OS", 20, 50, color::white, fontType::mono40);
-    homePage.addText("Developed by Hayden Steele", 22, 75, white, fontType::mono15);
+    homePage.addText("Developed by Hayden Steele", 22, 75, color::white, fontType::mono15);
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
-    homePage.addDataUpdaterCB(updateHome, 1);
+    homePage.addHorzProgressBar("test", 325, 75, 150, 30, "Test: %d%%", true, batteryGradient.finalGradient);
+    homePage.addLineGraph("test", "YEET: %d%%", 22, 100, 200, 100, true, rainbowGradient.finalGradient, 100);
+    homePage.addDataUpdaterCB(updateHome, 0.01);
 
     // Configure the map page
-    mapPage.addText("Feild Map", 20, 40, white, fontType::mono30, "title");
-    mapPage.addText("Status", 22, 65, white, fontType::mono15, "status");
+    mapPage.addText("Feild Map", 20, 40, color::white, fontType::mono30, "title");
+    mapPage.addText("Status", 22, 65, color::white, fontType::mono15, "status");
     mapPage.addPlot("map", "Robot Pos", 175, 15, 200, 200, tileWidth*6, tileWidth*6, 6, true, TEAM_RED);
-    mapPage.addText("X:   %f", 20, 100, white, fontType::mono20, "xpos");
-    mapPage.addText("Y:   %f", 20, 130, white, fontType::mono20, "ypos");
-    mapPage.addText("Rot: %f", 20, 160, white, fontType::mono20, "rot");
+    mapPage.addText("X:   %f", 20, 100, color::white, fontType::mono20, "xpos");
+    mapPage.addText("Y:   %f", 20, 130, color::white, fontType::mono20, "ypos");
+    mapPage.addText("Rot: %f", 20, 160, color::white, fontType::mono20, "rot");
     mapPage.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
     mapPage.addButton("Show Path", 20, 180, 100, 30, mapShowPath, "showPathBtn");
     mapPage.addDataUpdaterCB(updateMap, 0.2);
 
 
     // Configure the auton config page
-    autonConfigPage.addText("Configure Auton", 20, 40, white, fontType::mono30, "title");
-    autonConfigPage.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
+    autonConfigPage.addText("Configure Auton", 20, 40, color::white, fontType::mono30, "title");
+    autonConfigPage.addText("Status", 22, 65, color::white, fontType::mono15, "savedStatus");
     autonConfigPage.addButton("Back", 380, 210, 100, 30, configExitButton, "mainPageButton");
     configPageInit(&autonConfigPage, &botAI);
     autonConfigPage.addPageLoadedCB(loadedConfigPage);
 
 
     // Configure the system config page
-    systemConfigPage.addText("Configure System", 20, 40, white, fontType::mono30, "title");
-    systemConfigPage.addText("Status", 22, 65, white, fontType::mono15, "savedStatus");
+    systemConfigPage.addText("Configure System", 20, 40, color::white, fontType::mono30, "title");
+    systemConfigPage.addText("Status", 22, 65, color::white, fontType::mono15, "savedStatus");
     systemConfigPage.addButton("Back", 380, 210, 100, 30, systemConfigExitButton, "mainPageButton");
 
     systemConfigPage.addButton("View SD Card", 310, 20, 150, 30, gotoFileSystemConfigButton);
@@ -549,10 +554,10 @@ int brainDisplayerInit() {
     debugPage.addVertProgressBar("bl", 400, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
     debugPage.addVertProgressBar("br", 450, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
 
-    debugPage.addText("SD Card",  300, 140, white, fontType::mono20, "sdStatus");
-    debugPage.addText("Odometry Status", 300, 160, white, fontType::mono20, "trackingStatus");
-    debugPage.addText("Auton Status",    300, 180, white, fontType::mono20, "autonStatus");
-    debugPage.addText("Connected to Feild",    300, 200, white, fontType::mono20, "feildStatus");
+    debugPage.addText("SD Card",  300, 140, color::white, fontType::mono20, "sdStatus");
+    debugPage.addText("Odometry Status", 300, 160, color::white, fontType::mono20, "trackingStatus");
+    debugPage.addText("Auton Status",    300, 180, color::white, fontType::mono20, "autonStatus");
+    debugPage.addText("Connected to Feild",    300, 200, color::white, fontType::mono20, "feildStatus");
 
     debugPage.addButton("Reload", 80, 210, 100, 30, dubugReloadButton, "reloadButton");
     debugPage.addButton("System", 180, 210, 100, 30, gotoSystemConfigButton, "systemButton");
@@ -562,21 +567,21 @@ int brainDisplayerInit() {
 
 
     // Config the Odometry Page
-    odometryPage.addText("Odometry Debug", 20, 40, white, fontType::mono30, "title");
-    odometryPage.addText("Status", 22, 65, white, fontType::mono15, "status");
-    odometryPage.addText("X:   %f", 60, 100, white, fontType::mono30, "xpos");
-    odometryPage.addText("Y:   %f", 60, 140, white, fontType::mono30, "ypos");
-    odometryPage.addText("Rot: %f", 60, 180, white, fontType::mono30, "rot");
-    odometryPage.addText("%f", 300, 100, white, fontType::mono30, "xtile");
-    odometryPage.addText("%f", 300, 140, white, fontType::mono30, "ytile");
+    odometryPage.addText("Odometry Debug", 20, 40, color::white, fontType::mono30, "title");
+    odometryPage.addText("Status", 22, 65, color::white, fontType::mono15, "status");
+    odometryPage.addText("X:   %f", 60, 100, color::white, fontType::mono30, "xpos");
+    odometryPage.addText("Y:   %f", 60, 140, color::white, fontType::mono30, "ypos");
+    odometryPage.addText("Rot: %f", 60, 180, color::white, fontType::mono30, "rot");
+    odometryPage.addText("%f", 300, 100, color::white, fontType::mono30, "xtile");
+    odometryPage.addText("%f", 300, 140, color::white, fontType::mono30, "ytile");
     odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
     odometryPage.addButton("Map", 280, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
 
     
     // Configure the File System Page
-    fileSystemPage.addText("File System", 20, 40, white, fontType::mono30, "title");
-    fileSystemPage.addText("Status", 22, 65, white, fontType::mono15, "pageStatus");
+    fileSystemPage.addText("File System", 20, 40, color::white, fontType::mono30, "title");
+    fileSystemPage.addText("Status", 22, 65, color::white, fontType::mono15, "pageStatus");
     fileSystemPage.addButton("Back", 380, 210, 100, 30, gotoSystemConfigButton, "prevPageButton");
     fileSystemPage.addAdjustableNum("test", 5, 1, 10, 0, 200, 200, 100, 30, fontType::mono20, true);
     fileSystemPage.addPageLoadedCB(loadedFileSystemPage);

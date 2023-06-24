@@ -335,6 +335,7 @@ bool ai::longGoto(std::vector<Position> pos, bool objectAvoid) {
 
     bool wasRunning = running;
     running = true;
+    
     target.x = pos.at(0).x;
     target.y = pos.at(0).y;
     target.rot = pos.at(0).rot;
@@ -484,11 +485,7 @@ void ai::started() {
     path.reset();
 
     // Step throught the path
-    while (true) {
-        if (!path.step()) {
-            break;
-        }   
-    }
+    while (path.step()) {}
 
     // Auton is done?
 };
