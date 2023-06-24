@@ -72,6 +72,37 @@ class autonPath {
     autonMovement getStep(int stepCount);
 };
 
+struct autonConfig {
+  std::string id;
+
+  std::string name;
+  bool status = false;
+
+  std::string trueName;
+  bool twoVals = false;
+
+  vex::color falseColor = vex::color(168, 0, 0);
+  vex::color trueColor = vex::color(0, 168, 0);
+  autonConfig(const char* id, const char* name) { this->name = std::string(name); this->id = std::string(id);}
+  autonConfig(const char* id, const char* name, bool defaultVal) { this->name = name; this->status = defaultVal; this->id = id;}
+  autonConfig(const char* id, const char* falseName, const char* trueName, bool defaultVal) {
+    this->name = std::string(falseName);
+    this->trueName = std::string(trueName);
+    this->twoVals = true;
+    this->status = defaultVal;
+    this->id = id;
+  }
+  autonConfig(const char* id, const char* falseName, const char* trueName, bool defaultVal, vex::color falseColor, vex::color trueColor) {
+    this->name = std::string(falseName);
+    this->trueName = std::string(trueName);
+    this->twoVals = true;
+    this->status = defaultVal;
+    this->falseColor = falseColor;
+    this->trueColor = trueColor;
+    this->id = id;
+  }
+};
+
 class ai {
   private:
 
@@ -95,25 +126,20 @@ class ai {
     std::string configFoler = "autonConfig/";
     std::string configFileType = ".txt";
 
-    int totalConfigs = 4;
-    std::string configNames[10] { // Random config names for now
-      "Red",
-      "Blue",
-      "Left",
-      "Right",
+    std::vector<autonConfig> configStorage = { // Random config names for now
+      autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247)),
+      autonConfig("startSide", "Left", "Right", false, vex::color(50, 50, 50), vex::color(0, 0, 0))
     };
-
-    bool configStorage[10];
-
     bool configMenuStatus = false;
+
 
     ai(OdometrySystem* odometrySystemPointer);
 
     void init();
     void constructPaths();
 
-    bool getConfig(const char* configName);
-    void saveConfig(const char* configName, bool value);
+    bool getConfig(const char* configId);
+    void saveConfig(const char* configId, bool value);
 
     bool isReady();
 

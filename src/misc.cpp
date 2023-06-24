@@ -75,23 +75,6 @@ bool fileExists(const char* name) {
 }
 
 
-Directory getAllDirs() {
-  std::map<std::string, std::string> dirs;
-
-  std::cout << std::endl;
-  Directory mainDirectory = Directory(std::string("main"));
-  mainDirectory.addFile("logs.txt");
-  mainDirectory.addFile("systemConfig/archiveLogs.txt");
-  mainDirectory.addFile("systemConfig/driveMode.txt");
-  mainDirectory.addFile("logs/compLogs/1.txt");
-  mainDirectory.addFile("logs/logStorage/1.txt");
-  mainDirectory.addFile("autonConfig/");
-  
-  return mainDirectory;
-};
-
-
-
 
 double degreeToRad(double degree) {
   return degree * ( PI / 180 );

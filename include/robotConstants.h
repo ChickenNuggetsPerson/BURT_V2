@@ -63,9 +63,9 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 
 // Auton Constants For Main Bot
 
-static PIDConfig AUTON_TURNTO_PID_CONFIG(0.15, 0, 0.25); 
+static PIDConfig AUTON_TURNTO_PID_CONFIG(0.3, 0, 0.25); 
 
-static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.35, 0.00, 0.0);
+static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.45, 0.00, 0.0);
 static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.20, 0.0, 0.00);
 
 

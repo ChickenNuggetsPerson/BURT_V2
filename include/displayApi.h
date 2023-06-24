@@ -266,7 +266,6 @@ class Gradient {
     public:
 
         std::vector<colorRange> finalGradient;
-        int rangeSize = 200;
 
         Gradient(double startHue, double endHue, int startOfRange, int endOfRange) {
             rangeStart = startOfRange;
@@ -304,10 +303,6 @@ class Gradient {
             finalGradient.push_back(colorRange(rangeEnd, 10000, tempColor));
 
             built = true;
-
-            rangeSize = i + 1;
-
-            //brainDebug("Gradint Built");
         }
 
         Gradient(rgbColor startColor, rgbColor endColor, int startOfRange, int endOfRange) {
@@ -350,8 +345,6 @@ class Gradient {
             // Set the ending point
             tempColor.rgb(endColor.r, endColor.g, endColor.b);
             finalGradient.push_back(colorRange(rangeEnd, 10000, tempColor));
-
-            rangeSize = i + 1;
 
             built = true;
         }
@@ -584,6 +577,8 @@ struct OverlayQuestion {
 };
 
 struct Toggle {
+    const char* id;
+
     const char* displayText;
     const char* trueText;
     bool showAlt = false;
@@ -595,7 +590,8 @@ struct Toggle {
     int y;
     int width;
     int height;
-    Toggle(const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height, const char* trueText = "") {
+    Toggle(const char* id, const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height, const char* trueText = "") {
+        this->id = id;
         this->displayText = displayText;
         this->status = startStatus;
         this->offColor = offColor;
@@ -1254,8 +1250,8 @@ class Page {
         void addDisplayBox(const char* id, int x, int y, int width, int height, vex::color fillColor, vex::color penColor = color::white) {
             displayBoxStorage.push_back(DisplayBox(id, x, y, width, height, fillColor, penColor));
         }
-        void addToggle(const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height, const char* trueText = "") {
-            toggleStorage.push_back(Toggle(displayText, startStatus, offColor, onColor, x, y, width, height, trueText));
+        void addToggle(const char* id, const char* displayText, bool startStatus, vex::color offColor, vex::color onColor, int x, int y, int width, int height, const char* trueText = "") {
+            toggleStorage.push_back(Toggle(id, displayText, startStatus, offColor, onColor, x, y, width, height, trueText));
         };
         void addPlot(const char* plotId, const char* label, int plotX, int plotY, int plotWidth, int plotHeight, int plotMaxX, int plotMaxY, int plotSubdiv = 0, bool showLabels = false, int teamColor = NAN) {
             plotStorage.push_back(Plot(plotId, label, plotX, plotY, plotWidth, plotHeight, plotMaxX, plotMaxY, plotSubdiv, showLabels, teamColor, menuSystemPointer));
@@ -1351,7 +1347,7 @@ class Page {
         };
         void setToggleStatus(const char* toggleId, bool status) {
             for (auto &toggle: toggleStorage) {
-                if (strcmp(toggle.displayText, toggleId) == 0) {
+                if (strcmp(toggle.id, toggleId) == 0) {
                     toggle.status = status;
                     return;
                 }
@@ -1377,7 +1373,7 @@ class Page {
 
         bool getToggleStatus(const char* toggleId) {
             for (auto toggle: toggleStorage) {
-                if (strcmp(toggle.displayText, toggleId) == 0) {
+                if (strcmp(toggle.id, toggleId) == 0) {
                     return toggle.status;
                 }
             }
@@ -1694,7 +1690,15 @@ struct NotCheck {
     bool log;
     bool lastVal;
     bool (*checkCB)();
-    
+    NotCheck(const char* trueMessage, const char* falseMessage, bool (*cb)(), bool initVal = false, vex::color trueColor = color::green, vex::color falseColor = color::red, bool log = false) {
+        this->trueMessage = trueMessage;
+        this->falseMessage = falseMessage;
+        this->checkCB = cb;
+        this->lastVal = initVal;
+        this->trueColor = trueColor;
+        this->falseColor;
+        this->log = log;
+    }
 };
 
 bool notMotorCheck(void* motorToCheck) {
@@ -1707,15 +1711,18 @@ struct MotCheck {
     motor* motorPointer;
     int warnTimeout;
     double lastWarn = 0; 
+    MotCheck(const char* motorName, motor* motorPtr, int warnTime = 30) {
+        this->motorName = motorName;
+        this->motorPointer = motorPtr;
+        this->warnTimeout = warnTime;
+    }
 };
 
 class NotificationChecker {
     private:
-        NotCheck checksStorage[10];
-        int checksStored = 0;
-
-        MotCheck motorCheckStorage[8];
-        int motorCheckStored = 0;
+        std::vector<NotCheck> checksStorage;
+        std::vector<MotCheck> motorCheckStorage;
+        
 
         MenuSystem* menuSystemPtr;
 
@@ -1728,47 +1735,33 @@ class NotificationChecker {
             menuSystemPtr = ptr;
         };
 
-        void addCheck(const char* trueMessage, const char* falseMessage, bool (*cb)(), bool initVal = false, vex::color trueColor = green, vex::color falseColor = red, bool log = false) {
-            NotCheck newCheck = NotCheck();
-            newCheck.trueMessage = trueMessage;
-            newCheck.falseMessage = falseMessage;
-            newCheck.checkCB = cb;
-            newCheck.falseColor = falseColor;
-            newCheck.trueColor = trueColor;
-            newCheck.lastVal = initVal;
-            newCheck.log = log;
-            checksStorage[checksStored] = newCheck;
-            checksStored++;
+        void addCheck(const char* trueMessage, const char* falseMessage, bool (*cb)(), bool initVal = false, vex::color trueColor = color::green, vex::color falseColor = color::red, bool log = false) {
+            checksStorage.push_back(NotCheck(trueMessage, falseMessage, cb, initVal, trueColor, falseColor, log));
         }
         void addMotor(const char* motorName, motor* motorPtr, int warnTime = 30) {
-            MotCheck newCheck = MotCheck();
-            newCheck.motorName = motorName;
-            newCheck.motorPointer = motorPtr;
-            newCheck.warnTimeout = warnTime;
-            motorCheckStorage[motorCheckStored] = newCheck;
-            motorCheckStored++;
+            motorCheckStorage.push_back(MotCheck(motorName, motorPtr, warnTime));
         }
         void check() {
-            for (int i = 0; i < checksStored; i++) {
-                bool newVal = checksStorage[i].checkCB();
-                if (newVal != checksStorage[i].lastVal) {
-                    if (checksStorage[i].log) {
-                        brainFancyDebug(newVal ? checksStorage[i].trueMessage : checksStorage[i].falseMessage, newVal ? checksStorage[i].trueColor : checksStorage[i].falseColor, true);
+            for (auto &check: checksStorage) {
+                bool newVal = check.checkCB();
+                if (newVal != check.lastVal) {
+                    if (check.log) {
+                        brainFancyDebug(newVal ? check.trueMessage : check.falseMessage, newVal ? check.trueColor : check.falseColor, true);
                     } else {
-                        menuSystemPtr->newNotification(newVal ? checksStorage[i].trueMessage : checksStorage[i].falseMessage, 4, newVal ? checksStorage[i].trueColor : checksStorage[i].falseColor);
+                        menuSystemPtr->newNotification(newVal ? check.trueMessage : check.falseMessage, 4, newVal ? check.trueColor : check.falseColor);
                     } 
                 }
-                checksStorage[i].lastVal = newVal;
+                check.lastVal = newVal;
             }
-            for (int i = 0; i < motorCheckStored; i++) {
-                if (checkMotor(motorCheckStorage[i]) && motorCheckStorage[i].lastWarn < Brain.timer(timeUnits::msec)) {
+            for (auto &check: motorCheckStorage) {
+                if (checkMotor(check) && check.lastWarn < Brain.timer(timeUnits::msec)) {
                     
                     std::stringstream tmpString;
-                    tmpString << motorCheckStorage[i].motorName << " Overheated";
+                    tmpString << check.motorName << " Overheated";
 
                     brainError(tmpString.str().c_str(), true);
 
-                    motorCheckStorage[i].lastWarn = Brain.timer(timeUnits::msec);
+                    check.lastWarn = Brain.timer(timeUnits::msec) + (check.warnTimeout * 1000);
                 }
             }
         }

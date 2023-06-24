@@ -75,21 +75,14 @@ void ai::init() {
     if (loaded) { 
         // Reset auton config
         loaded = false;
-        for (int i = 0; i < totalConfigs; i++) {
-            configStorage[i] = false;
-        }
         brainFancyDebug("Auton Reset", blue, true);
     }
 
     // Load auton Config
     if (Brain.SDcard.isInserted()) {
-        for (int i = 0; i < totalConfigs; i++) {
-            unsigned int valueRead = readFile((configFoler + configNames[i] + configFileType).c_str());
-            if ( valueRead == 1) {
-                configStorage[i] = true;
-            } else {
-                configStorage[i] = false;
-            } 
+        for (auto &config: configStorage) {
+            unsigned int valueRead = readFile((configFoler + config.id + configFileType).c_str());
+            config.status = ( valueRead == 1);
         }
         wait(0.1, seconds);
         loaded = true;
@@ -104,23 +97,20 @@ void ai::init() {
 
     // Initalize Auton Variables
 
-    if (getConfig("Red")) {
+    if (getConfig("teamColor")) {
         teamColor = TEAM_RED;
-    }
-    if (getConfig("Blue")) {
+    } else {
         teamColor = TEAM_BLUE;
     }
 
+
     // Build Path
-    bool left = getConfig("Left");
-    bool right = getConfig("Right");
-    if (left) {
+    if (!getConfig("startSide")) {
         path = buildPath(AUTON_PATH_LEFT, this);
-    }
-    if (right) {
+    } else {
         path = buildPath(AUTON_PATH_RIGHT, this);
     }
-    if ((!right && !left) || (right && left)) {
+    if (!Brain.SDcard.isInserted()) {
         path = buildPath(AUTON_PATH_TEST, this);
     }
     
@@ -128,10 +118,10 @@ void ai::init() {
 
 
 // Return the config value based on the name
-bool ai::getConfig(const char* configName) {
-    for (int i = 0; i < totalConfigs; i++) {
-        if (configNames[i] == std::string(configName)) {
-            return configStorage[i];
+bool ai::getConfig(const char* configId) {
+    for (auto config: configStorage) {
+        if (config.id == std::string(configId)) {
+            return config.status;
         }
     }
     return false;
@@ -139,23 +129,24 @@ bool ai::getConfig(const char* configName) {
 
 // Saves the value to the sd card
 // Does not update internal storage so make sure to reintialize auton after writing configs
-void ai::saveConfig(const char* configName, bool value) {
+void ai::saveConfig(const char* configId, bool value) {
 
-        std::cout << "Saving: " << configName << " " << value << std::endl;
+        std::cout << "Saving: " << configId << " " << value << std::endl;
 
-        for (int i = 0; i < totalConfigs; i++) {
-        if (configNames[i] == std::string(configName)) {
+        for (auto config: configStorage) {
+        if (config.id == std::string(configId)) {
             int writeVal = 0;
-            if (value) { writeVal= 1;}
-            writeFile((configFoler + configNames[i] + configFileType).c_str(), writeVal);
+            if (value) { writeVal = 1;}
+            writeFile((configFoler + config.id + configFileType).c_str(), writeVal);
         }
     }
 
 };
 
+
+
 // Returns the auton start position based on the config
 Position ai::getStartPos() {
-
 
     // Idea: if the robot starts against the wall, use the distance sensor to measure distance
     //           from perpendicular wall, which will provide a more accurate starting position
@@ -233,7 +224,7 @@ bool ai::driveDist(double dist) {
 }
 // Turns to the desired rotation in degrees
 bool ai::turnTo(double deg) {
-    return turnTo(deg, 3);
+    return turnTo(deg, 2);
 }
 // Turns to the desired rotation in degrees
 bool ai::turnTo(double deg, double turnTimeout) {
@@ -253,22 +244,22 @@ bool ai::turnTo(double deg, double turnTimeout) {
     PID turnPID(AUTON_TURNTO_PID_CONFIG, target);
 
 
-    double accuracy = 0.35;
-    int checks = 10;
+    double accuracy = 0.5;
+    int checks = 3;
 
 
+    double lastRot = odometrySystemPointer->currentPos().rot;
     int totalChecks = 0;
     while (true) {
         
         heading = radToDegree(odometrySystemPointer->currentPos().rot);
         double power = turnPID.iterate(heading);
 
-        //std::cout << power << " " << limitAngle(heading) << std::endl;
+        LeftDriveSmart.spin(directionType::fwd, -power, volt);
+        RightDriveSmart.spin(directionType::fwd, power, volt);
 
-        LeftDriveSmart.spin(fwd, -power, volt);
-        RightDriveSmart.spin(fwd, power, volt);
-
-        if (power <= accuracy && power >= -accuracy) {
+        double deltaHeading = lastRot - heading;
+        if (deltaHeading <= accuracy && deltaHeading >= -accuracy) {
             totalChecks++;
             if (totalChecks > checks) {
                 break;
@@ -279,12 +270,13 @@ bool ai::turnTo(double deg, double turnTimeout) {
             break;
         }
 
+        lastRot = heading;
         
         wait(0.05, seconds);
     }
 
-    LeftDriveSmart.spin(fwd, 0, volt);
-    RightDriveSmart.spin(fwd, 0, volt);
+    LeftDriveSmart.spin(directionType::fwd, 0, volt);
+    RightDriveSmart.spin(directionType::fwd, 0, volt);
 
     running = wasRunning;
     return true;
@@ -386,8 +378,8 @@ bool ai::longGoto(std::vector<Position> pos, bool objectAvoid) {
         double leftPower = drivePower - turnPower;
         double rightPower = drivePower + turnPower;
 
-        LeftDriveSmart.spin(fwd, leftPower, voltageUnits::volt);
-        RightDriveSmart.spin(fwd, rightPower, voltageUnits::volt);
+        LeftDriveSmart.spin(directionType::fwd, leftPower, voltageUnits::volt);
+        RightDriveSmart.spin(directionType::fwd, rightPower, voltageUnits::volt);
 
         if (drivePower < 2 && speedUp < 2) {
             stopped++;
@@ -478,7 +470,7 @@ bool ai::playPath(autonPath path) {
 // Run when the autonomous period is started
 void ai::started() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
-    //brainChangePage("map");
+    brainChangePage("map");
 
     while (!odometrySystemPointer->isTracking) { wait(0.01, seconds); }
 

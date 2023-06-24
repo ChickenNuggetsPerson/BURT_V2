@@ -111,7 +111,6 @@ class Directory {
         
 };
 
-Directory getAllDirs();
 
 
 double degreeToRad(double degree);

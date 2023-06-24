@@ -26,6 +26,12 @@ autonPath buildPath(int pathID, ai* autonPtr) {
         // Pick up triball, score it, maybe touch bar
 
         brainFancyDebug("Using AUTON_PATH_Right", vex::color::cyan);
+        
+        std::vector<TilePosition> tmpPath;
+        tmpPath.push_back(TilePosition(4, 1));
+        tmpPath.push_back(TilePosition(3.5, 1.5));
+        tmpPath.push_back(TilePosition(3.5, 2, 90));
+        path.addMovement(autonMovement(AUTON_LONGGOTO, tmpPath));
 
     }
 

@@ -32,9 +32,6 @@ Page odometryPage;
 Page autonConfigPage;
 Page systemConfigPage;
 
-Page fileSystemPage;
-
-
 
 
 // Called when the screen is pressed
@@ -44,7 +41,14 @@ void screenPressed() {mainRenderer.screenPressed();}
 bool checkSDCard() {return Brain.SDcard.isInserted();}
 bool checkMainController() {return mainController.installed();}
 bool checkFeild() {return Competition.isFieldControl();}
-bool checkBattery() {return Brain.Battery.capacity(percentUnits::pct) < 20;}
+bool checkBattery() {
+    if (Brain.Battery.capacity(percentUnits::pct) < 20) {
+        mainControllerMessage("Battery Low", 4);
+        return true;
+    } else {
+        return false;
+    }
+}
 
 int notificationCheck() {
     
@@ -52,10 +56,10 @@ int notificationCheck() {
 
     NotificationChecker NotChecker(&mainRenderer);
 
-    //NotChecker.addMotor("RightMotorA", &rightMotorA);
-    //NotChecker.addMotor("RightMotorB", &rightMotorB);
-    //NotChecker.addMotor("LeftMotorA", &leftMotorA);
-    //NotChecker.addMotor("LeftMotorB", &leftMotorB);
+    NotChecker.addMotor("RightMotorA", &rightMotorA);
+    NotChecker.addMotor("RightMotorB", &rightMotorB);
+    NotChecker.addMotor("LeftMotorA", &leftMotorA);
+    NotChecker.addMotor("LeftMotorB", &leftMotorB);
 
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
@@ -64,8 +68,6 @@ int notificationCheck() {
 
     while (true) {
         NotChecker.check();
-        //MotChecker.check();
-
         wait(checkSpeed, seconds);
     }
 
@@ -76,8 +78,16 @@ int notificationCheck() {
 // Define the update function for the home page
 int updateHome(Page* self) {
     self->setProgressBarValue("battery", Brain.Battery.capacity());
-    self->setProgressBarValue("test", sin(Brain.timer(timeUnits::sec)) * 100);
-    self->setLineGraphValue("test" , sin(Brain.timer(timeUnits::sec)) * 100);
+    self->setLineGraphValue("batAmp", Brain.Battery.current(currentUnits::amp) * 20);
+    if (Brain.Battery.capacity() > 50) {
+        self->setTextData("batStatus", color::green, "OK");
+    } else {
+        if (Brain.Battery.capacity() > 20) {
+            self->setTextData("batStatus", color::orange, "low");
+        } else {
+            self->setTextData("batStatus", color::red, "LOW");
+        }
+    }
     return 1;
 }
 
@@ -112,10 +122,6 @@ int gotoSystemConfigButton(Page* self) {
     self->menuSystemPointer->gotoPage("systemConfig");
     return 1;
 }
-int gotoFileSystemConfigButton(Page* self) {
-    self->menuSystemPointer->gotoPage("fileSystem");
-    return 1;
-}
 int gotoAutonPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("auton");
     return 1;
@@ -125,15 +131,20 @@ int gotoAutonPageButton(Page* self) {
 void configPageInit(Page* currentPage, ai* robotAI) {
     int x = 0;
     int y = 0;
-    for (int i = 0; i < robotAI->totalConfigs; i++) {
-        currentPage->addToggle(robotAI->configNames[i].c_str(), false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20 + (110 * x), 80 + (60 * y), 100, 40);
+    for (auto config: botAI.configStorage) {
+        if (config.twoVals) {
+            currentPage->addToggle(config.id.c_str(), config.name.c_str(), false, config.falseColor, config.trueColor, 20 + (110 * x), 80 + (60 * y), 100, 40, config.trueName.c_str());
+        } else {
+            currentPage->addToggle(config.id.c_str(), config.name.c_str(), false, config.falseColor, config.trueColor, 20 + (110 * x), 80 + (60 * y), 100, 40);
+        }
+        
         x++;
         if (x == 2) { y++; x = 0; }
     }
 };
 void setConfigs() {
-    for (int i = 0; i < botAI.totalConfigs; i++) {
-        autonConfigPage.setToggleStatus(botAI.configNames[i].c_str(), botAI.getConfig(botAI.configNames[i].c_str()));
+    for (auto config: botAI.configStorage) {
+        autonConfigPage.setToggleStatus(config.id.c_str(), botAI.getConfig(config.id.c_str()));
         wait(0.01, seconds);
     }
 };
@@ -141,8 +152,8 @@ void saveConfigs() {
 
     brainFancyDebug("Saving New Config", color::purple, true);
 
-    for (int i = 0; i < botAI.totalConfigs; i++) {
-        botAI.saveConfig(botAI.configNames[i].c_str(), autonConfigPage.getToggleStatus(botAI.configNames[i].c_str()));
+    for (auto config: botAI.configStorage) {
+        botAI.saveConfig(config.id.c_str(), autonConfigPage.getToggleStatus(config.id.c_str()));
     }
 };
 
@@ -212,7 +223,7 @@ int configExitButton(Page* self) {
 
 int updateLoadingPage(Page* self) {
 
-    double loadTime = 1.75;
+    double loadTime = 2;
 
     double stopTime = (loadTime * 1000);
     double percent = Brain.timer(timeUnits::msec) / stopTime;
@@ -228,8 +239,8 @@ int updateLoadingPage(Page* self) {
 
 
 void systemConfigSave(Page* self) {
-    writeFile(std::string(systemConfigFolder + systemArchivePath).c_str(), self->getToggleStatus("Archive Logs"));
-    writeFile(std::string(systemConfigFolder + systemDriveModePath).c_str(), self->getToggleStatus("Arcade Drive"));
+    writeFile(std::string(systemConfigFolder + systemArchivePath).c_str(), self->getToggleStatus("archiveLogs"));
+    writeFile(std::string(systemConfigFolder + systemDriveModePath).c_str(), self->getToggleStatus("arcadeDrive"));
 
 }
 int loadedSystemConfigPage(Page* self) {
@@ -241,8 +252,8 @@ int loadedSystemConfigPage(Page* self) {
     self->setTextData("savedStatus", color::white, "Edit System Config Values");
 
     // Set Archive Toggle
-    self->setToggleStatus("Archive Logs", (readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1));
-    self->setToggleStatus("Arcade Drive", (readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1));
+    self->setToggleStatus("archiveLogs", (readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1));
+    self->setToggleStatus("arcadeDrive", (readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1));
 
     return 1;
 }
@@ -455,23 +466,6 @@ int mapShowPath(Page* self) {
 }
 
 
-// Run when the filesystem page is loaded
-int loadedFileSystemPage(Page* self) {
-    if (!Brain.SDcard.isInserted()) {
-        self->setTextData("pageStatus", color::red, "SD Card Not Inserted");
-        return 1;
-    }
-    self->setTextData("pageStatus", color::white, "View and Edit the SD Card");
-
-    return 1;
-}
-int initFileSystemPage(Page* self) {
-
-    Directory directories = getAllDirs();
-
-    return 1;
-}
-
 
 
 // Initialize All The Pages
@@ -483,8 +477,8 @@ int brainDisplayerInit() {
     // Init Gradients
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
-    Gradient rainbowGradient = Gradient(0, 360, -100, 100);
-    std::vector<colorRange> whiteRange = {colorRange(-200, 200, color::white)};
+    Gradient rainbowGradient = Gradient(0, 360, 00, 100);
+    //std::vector<colorRange> whiteRange = {colorRange(-200, 200, color::white)};
 
     // Add pages to the main renderer
     mainRenderer.addPage("loading", &loadingPage);
@@ -494,12 +488,11 @@ int brainDisplayerInit() {
     mainRenderer.addPage("systemConfig", &systemConfigPage);
     mainRenderer.addPage("odometry", &odometryPage);
     mainRenderer.addPage("map", &mapPage);
-    mainRenderer.addPage("fileSystem", &fileSystemPage);
 
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
     loadingPage.addText("Developed by Hayden Steele", 140, 130, color::white, fontType::mono15);
-    loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, whiteRange);
+    loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, rainbowGradient.finalGradient);
     loadingPage.addDataUpdaterCB(updateLoadingPage, 0.01);
 
     // Configure the home page
@@ -509,9 +502,10 @@ int brainDisplayerInit() {
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
-    homePage.addHorzProgressBar("test", 325, 75, 150, 30, "Test: %d%%", true, batteryGradient.finalGradient);
-    homePage.addLineGraph("test", "YEET: %d%%", 22, 100, 200, 100, true, rainbowGradient.finalGradient, 100);
-    homePage.addDataUpdaterCB(updateHome, 0.01);
+    homePage.addText("Status: ", 325, 70, color::white, fontType::prop20);
+    homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
+    homePage.addLineGraph("batAmp", "Amps: %d%%", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
+    homePage.addDataUpdaterCB(updateHome, 0.5);
 
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, color::white, fontType::mono30, "title");
@@ -537,11 +531,8 @@ int brainDisplayerInit() {
     systemConfigPage.addText("Configure System", 20, 40, color::white, fontType::mono30, "title");
     systemConfigPage.addText("Status", 22, 65, color::white, fontType::mono15, "savedStatus");
     systemConfigPage.addButton("Back", 380, 210, 100, 30, systemConfigExitButton, "mainPageButton");
-
-    systemConfigPage.addButton("View SD Card", 310, 20, 150, 30, gotoFileSystemConfigButton);
-
-    systemConfigPage.addToggle("Archive Logs", false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 170, 150, 40);
-    systemConfigPage.addToggle("Arcade Drive", true, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 120, 150, 40, "Tank Drive");
+    systemConfigPage.addToggle("archiveLogs", "Archive Logs", false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 170, 150, 40);
+    systemConfigPage.addToggle("arcadeDrive", "Arcade Drive", true, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 120, 150, 40, "Tank Drive");
 
     systemConfigPage.addPageLoadedCB(loadedSystemConfigPage);
     systemConfigPage.addDataUpdaterCB(updateSystemConfig);
@@ -577,14 +568,6 @@ int brainDisplayerInit() {
     odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
     odometryPage.addButton("Map", 280, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
-
-    
-    // Configure the File System Page
-    fileSystemPage.addText("File System", 20, 40, color::white, fontType::mono30, "title");
-    fileSystemPage.addText("Status", 22, 65, color::white, fontType::mono15, "pageStatus");
-    fileSystemPage.addButton("Back", 380, 210, 100, 30, gotoSystemConfigButton, "prevPageButton");
-    fileSystemPage.addAdjustableNum("test", 5, 1, 10, 0, 200, 200, 100, 30, fontType::mono20, true);
-    fileSystemPage.addPageLoadedCB(loadedFileSystemPage);
 
     return 1;
 };
