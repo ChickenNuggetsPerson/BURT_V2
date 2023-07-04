@@ -129,6 +129,7 @@ void mainControllerMessage(const char* text, int timeout) {
   displayMessage.endTime = Brain.timer(timeUnits::msec) + (1000 * timeout);
 };
 bool mainControllerOverlay(const char* question, const char* trueOption, const char* falseOption) {
+  if (!mainController.installed()) { return false; }
   haltRender = true;
   while (rendering) { wait(1, timeUnits::msec); }
   bool result = displayOverlay(ControllerOverlay(question, falseOption, trueOption), &mainController);
@@ -136,6 +137,7 @@ bool mainControllerOverlay(const char* question, const char* trueOption, const c
   return result;
 };
 int mainControllerPickOption(std::vector <const char*> options) {
+  if (!mainController.installed()) { return 0; }
   haltRender = true;
   while (rendering) { wait(1, timeUnits::msec); }
   int result = pickOption(options, &mainController);

@@ -5,4 +5,13 @@
 - [ ] Refine Odom System / Fix PIDs
 - [ ] Reduce Notification Clutter
 - [ ] Fix Archiving System
-- [ ] Refactor Display API out of the header file
+- [X] Refactor Display API out of the header file
+  - [X] Logger
+  - [X] ColorRange
+  - [X] Gradient
+  - [X] Graph
+  - [X] Adjustable Number
+  - [X] Plot
+  - [X] Page
+  - [X] MenuSystem
+  - [X] Notifcation Checker

@@ -9,14 +9,10 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  //botAI.started();
-  //if (botAI.running) {return;}
-  //botAI.turnTo(90);
+
 };
 void leftPressed() {
-  botAI.gotoLoc(botAI.getStartPos());
-  //if (botAI.running) {return;}
-  //botAI.turnTo(270);
+
 };
 void upPressed() {
 

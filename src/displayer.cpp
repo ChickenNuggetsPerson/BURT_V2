@@ -62,7 +62,7 @@ int notificationCheck() {
     NotChecker.addMotor("LeftMotorB", &leftMotorB);
 
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
-    NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
+    NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, true, green, red, true);
     NotChecker.addCheck("Connected To Feild", "Feild Disconnect", checkFeild, false, purple, red, true);
     NotChecker.addCheck("", "Battery Low", checkBattery, true, color::white, color::red, true);
 
@@ -580,6 +580,7 @@ int brainDisplayerInit() {
 int brainDisplayer() {
 
     brainDisplayerInit();
+    
     
     double deltaTime = 0.00;
     while(true) {

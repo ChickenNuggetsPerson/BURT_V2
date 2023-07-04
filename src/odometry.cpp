@@ -57,7 +57,7 @@ int mainTrackingTask(void* system) {
     while (inertialSensor.isCalibrating()) { // Wait for inertial sensor to calibrate
         wait(0.02, seconds);
     }
-    brainFancyDebug("Calibrated", color::green, true);
+    brainFancyDebug("Calibrated", color::green);
 
     systemPointer->resetEncoders();
     
