@@ -159,8 +159,6 @@ class ai {
     
     bool longGoto(std::vector<TilePosition> pos);
     bool longGoto(std::vector<Position> pos);
-    bool longGoto(std::vector<TilePosition> pos, bool objectAvoid);
-    bool longGoto(std::vector<Position> pos , bool objectAvoid);
 
     bool pickupAcorn();
     bool dropAcorn();

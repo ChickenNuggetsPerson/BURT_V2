@@ -13,9 +13,6 @@ ai botAI = ai(&Odometry);
 
 inertial inertialSensor = inertial(inertialPort);
 
-distance leftDistSensor = distance(leftDistSensorPort);
-distance rightDistSensor = distance(rightDistSensorPort);
-
 rotation leftEncoder = rotation(leftEncoderPort, true);
 rotation rightEncoder = rotation(rightEncoderPort);
 

@@ -43,8 +43,6 @@ static const int32_t rightMotorAPort = vex::PORT2;
 static const int32_t rightMotorBPort = vex::PORT8;
 
 static const int32_t inertialPort = vex::PORT3;
-static const int32_t leftDistSensorPort = vex::PORT5;
-static const int32_t rightDistSensorPort = vex::PORT6;
 
 static const int32_t leftEncoderPort = vex::PORT11;
 static const int32_t rightEncoderPort = vex::PORT12;

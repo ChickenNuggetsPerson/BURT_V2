@@ -292,33 +292,17 @@ bool ai::gotoLoc(Position pos) {
     tmp.push_back(pos);
     return longGoto(tmp);
 };
-bool ai::longGoto(std::vector<TilePosition> pos) {
-    return longGoto(pos, false);
-};
-bool ai::longGoto(std::vector<Position> pos) {
-    return longGoto(pos, false);
-};
 
-bool ai::longGoto(std::vector<TilePosition> pos, bool objectAvoid) {
+bool ai::longGoto(std::vector<TilePosition> pos) {
     std::vector<Position> tmpVec;
     for (int i = 0; i < pos.size(); i++) {
         tmpVec.push_back(odometrySystemPointer->tilePosToPos(pos.at(i)));
     }
-    return longGoto(tmpVec, objectAvoid);
+    return longGoto(tmpVec);
 };
 
 // Main goto logic
-bool ai::longGoto(std::vector<Position> pos, bool objectAvoid) {
-
-    bool avoiding = objectAvoid;
-    if (avoiding) {
-        if (!leftDistSensor.installed() || !rightDistSensor.installed()) {
-            avoiding = false;
-            brainDebug("Not Object Avoiding", true);
-        } else {
-   
-        }
-    }
+bool ai::longGoto(std::vector<Position> pos) {
 
     if (!odometrySystemPointer->isTracking) { 
         brainError("Skipping Auton Path, Odom not initialized");
