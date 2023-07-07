@@ -35,6 +35,29 @@ autonPath buildPath(int pathID, ai* autonPtr) {
 
     }
 
+    if (pathID == AUTON_PATH_SKILLS) {
+        path.startPos = autonPtr->odometrySystemPointer->tilePosToPos(AUTON_START_SKILLS);
+        brainFancyDebug("Using AUTON_PATH_SKILLS", vex::color::cyan);
+
+        std::vector<TilePosition> leftPath;
+        leftPath.push_back(TilePosition(1, 1));
+        leftPath.push_back(TilePosition(1.5, 1.5));
+        leftPath.push_back(TilePosition(1.5, 3.5));
+        leftPath.push_back(TilePosition(1, 4));
+        leftPath.push_back(TilePosition(1, 5));
+        path.addMovement(autonMovement(AUTON_LONGGOTO, leftPath));
+        path.addMovement(autonMovement(AUTON_GOTO, TilePosition(4, 5)));
+        std::vector<TilePosition> rightPath;
+        rightPath.push_back(TilePosition(4, 4));
+        rightPath.push_back(TilePosition(3.5, 3.5));
+        rightPath.push_back(TilePosition(3.5, 1.5));
+        rightPath.push_back(TilePosition(4, 1));
+        rightPath.push_back(TilePosition(4, 0));
+        path.addMovement(autonMovement(AUTON_LONGGOTO, rightPath));
+        path.addMovement(autonMovement(AUTON_GOTO, TilePosition(1, 0)));
+
+    }
+
     if (pathID == AUTON_PATH_TEST) {
         path.startPos = autonPtr->odometrySystemPointer->tilePosToPos(TilePosition(0,0));
         brainFancyDebug("Using AUTON_PATH_TEST", vex::color::cyan);

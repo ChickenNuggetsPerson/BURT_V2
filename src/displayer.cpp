@@ -44,9 +44,9 @@ bool checkFeild() {return Competition.isFieldControl();}
 bool checkBattery() {
     if (Brain.Battery.capacity(percentUnits::pct) < 20) {
         mainControllerMessage("Battery Low", 4);
-        return true;
-    } else {
         return false;
+    } else {
+        return true;
     }
 }
 
@@ -78,7 +78,14 @@ int notificationCheck() {
 // Define the update function for the home page
 int updateHome(Page* self) {
     self->setProgressBarValue("battery", Brain.Battery.capacity());
-    self->setLineGraphValue("batAmp", Brain.Battery.current(currentUnits::amp) * 20);
+    self->setLineGraphValue("batWatt", Brain.Battery.current(currentUnits::amp) * Brain.Battery.voltage(voltageUnits::volt));
+    
+    if ( botAI.isRunningSkills()) {
+        self->setTextData("skillsStatus", color::green, "( Running Skills )");
+    } else {
+        self->setTextData("skillsStatus", color::white, " ");
+    }
+    
     if (Brain.Battery.capacity() > 50) {
         self->setTextData("batStatus", color::green, "OK");
     } else {
@@ -139,7 +146,7 @@ void configPageInit(Page* currentPage, ai* robotAI) {
         }
         
         x++;
-        if (x == 2) { y++; x = 0; }
+        if (x == 4) { y++; x = 0; }
     }
 };
 void setConfigs() {
@@ -444,6 +451,7 @@ int mapShowPath(Page* self) {
     pathList.push_back("AUTON_PATH_TEST");
     pathList.push_back("AUTON_PATH_LEFT");
     pathList.push_back("AUTON_PATH_RIGHT");
+    pathList.push_back("AUTON_PATH_SKILLS");
     
 
     switch (mainControllerPickOption(pathList))
@@ -460,6 +468,9 @@ int mapShowPath(Page* self) {
         plotPtr->showPath(buildPath(AUTON_PATH_RIGHT, &botAI));
         self->pageChanged = true;
         break;
+    case AUTON_PATH_SKILLS:
+        plotPtr->showPath(buildPath(AUTON_PATH_SKILLS, &botAI));
+        self->pageChanged = true;
     }
 
     return 1;
@@ -498,13 +509,14 @@ int brainDisplayerInit() {
     // Configure the home page
     homePage.addText("BURT OS", 20, 50, color::white, fontType::mono40);
     homePage.addText("Developed by Hayden Steele", 22, 75, color::white, fontType::mono15);
+    homePage.addText("Skills Status", 22, 120, color::white, fontType::mono20, "skillsStatus");
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
     homePage.addText("Status: ", 325, 70, color::white, fontType::prop20);
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
-    homePage.addLineGraph("batAmp", "Amps: %d%%", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
+    homePage.addLineGraph("batWatt", "Watts: %dW", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
     homePage.addDataUpdaterCB(updateHome, 0.5);
 
     // Configure the map page

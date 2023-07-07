@@ -70,7 +70,7 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.20, 0.0, 0.00);
 // Auton Start Positions
 static TilePosition AUTON_START_LEFT(1, 0, 0);
 static TilePosition AUTON_START_RIGHT(4, 0, 0);
-
+static TilePosition AUTON_START_SKILLS(1, 0, 0);
 
 
 

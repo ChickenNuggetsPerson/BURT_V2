@@ -11,6 +11,7 @@ class ai;
 static const int AUTON_PATH_TEST = 0;
 static const int AUTON_PATH_LEFT = 1;
 static const int AUTON_PATH_RIGHT = 2;
+static const int AUTON_PATH_SKILLS = 3;
 
 // Type of movements
 static const int AUTON_END = -1;
@@ -103,10 +104,13 @@ struct autonConfig {
   }
 };
 
+
+
 class ai {
   private:
 
     bool loaded = false;
+    bool runningSkills = false;
 
     double findNearestRot(double currentRot, double targetRot);
     double angleBetweenPoints(Position pos1, Position pos2);
@@ -126,22 +130,19 @@ class ai {
     std::string configFoler = "autonConfig/";
     std::string configFileType = ".txt";
 
-    std::vector<autonConfig> configStorage = { // Random config names for now
-      autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247)),
-      autonConfig("startSide", "Left", "Right", false, vex::color(50, 50, 50), vex::color(0, 0, 0))
-    };
+    std::vector<autonConfig> configStorage;
     bool configMenuStatus = false;
 
 
     ai(OdometrySystem* odometrySystemPointer);
 
     void init();
-    void constructPaths();
 
     bool getConfig(const char* configId);
     void saveConfig(const char* configId, bool value);
 
     bool isReady();
+    bool isRunningSkills();
 
     Position getStartPos();
     Position getTargetPos();

@@ -67,6 +67,12 @@ autonMovement autonPath::getStep(int stepCount) {
 
 ai::ai(OdometrySystem* systemPointer) {
     odometrySystemPointer = systemPointer;
+
+    // Define the Config
+    configStorage.push_back(autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247)));
+    configStorage.push_back(autonConfig("startSide", "Left", "Right", false, vex::color(50, 50, 50), vex::color(0, 0, 0)));
+    configStorage.push_back(autonConfig("isSkills", "Match", "Skills", false));
+    
 }
 
 // Load Auton Configs
@@ -95,8 +101,8 @@ void ai::init() {
         return;
     }
 
-    // Initalize Auton Variables
 
+    // Initalize Auton Variables
     if (getConfig("teamColor")) {
         teamColor = TEAM_RED;
     } else {
@@ -105,14 +111,20 @@ void ai::init() {
 
 
     // Build Path
-    if (!getConfig("startSide")) {
-        path = buildPath(AUTON_PATH_LEFT, this);
+    runningSkills = getConfig("isSkills");
+    if (runningSkills) {
+        path = buildPath(AUTON_PATH_SKILLS, this);
     } else {
-        path = buildPath(AUTON_PATH_RIGHT, this);
+        if (!getConfig("startSide")) {
+            path = buildPath(AUTON_PATH_LEFT, this);
+        } else {
+            path = buildPath(AUTON_PATH_RIGHT, this);
+        }
+        if (!Brain.SDcard.isInserted()) {
+            path = buildPath(AUTON_PATH_TEST, this);
+        }
     }
-    if (!Brain.SDcard.isInserted()) {
-        path = buildPath(AUTON_PATH_TEST, this);
-    }
+    
     
 };
 
@@ -153,22 +165,21 @@ Position ai::getStartPos() {
 
     if (!Brain.SDcard.isInserted()) { return Position(); }
 
-    bool left = getConfig("Left");
-    bool right = getConfig("Right"); 
-
-    if (left) {
+    if (runningSkills) {
+        return odometrySystemPointer->tilePosToPos(AUTON_START_SKILLS);
+    }
+    if (!getConfig("startSide")) {
         return odometrySystemPointer->tilePosToPos(AUTON_START_LEFT);
-    } 
-    if (right) {
+    } else {
         return odometrySystemPointer->tilePosToPos(AUTON_START_RIGHT);
     }
-
-    return odometrySystemPointer->tilePosToPos(TilePosition(0, 0, 0));
-    
 }
 
 // Returns true if the autonomous is ready
 bool ai::isReady() {return loaded;};
+
+// Returns if the auton is configures for skills
+bool ai::isRunningSkills() {return runningSkills;}
 
 // Finds the nearest rotation based on the provided target absolute rotation
 // USES DEGREES AND NOT RADIANS
@@ -292,7 +303,6 @@ bool ai::gotoLoc(Position pos) {
     tmp.push_back(pos);
     return longGoto(tmp);
 };
-
 bool ai::longGoto(std::vector<TilePosition> pos) {
     std::vector<Position> tmpVec;
     for (int i = 0; i < pos.size(); i++) {
