@@ -11,28 +11,6 @@ struct Position {
     Position();
 };
 
-
-
-// Tiles are (0,0) to (5,5) from the bottom left to top right
-// A cordinate of (0,0) will result in the center of the very most bottom left tile
-// (5,5) is the very top right tile
-
-/*
-Feild Tile Cordinates
-
-Y
-
-5 | [] [] [] [] [] []
-4 | [] [] [] [] [] []
-3 | [] [] [] [] [] []
-2 | [] [] [] [] [] []
-1 | [] [] [] [] [] []
-0 | [] [] [] [] [] []
-    -- -- -- -- -- --
-    0  1  2  3  4  5     X 
-
-*/
-
 // Positions based on tiles
 struct TilePosition {
     double x = 0;   // In Tiles

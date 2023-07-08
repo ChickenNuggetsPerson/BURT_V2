@@ -16,7 +16,7 @@ Position::Position(double xPos, double yPos, double rotation) {
 Position::Position(double xPos, double yPos) {
     x = xPos;
     y = yPos;
-    rot = 0;
+    rot = NAN;
 };
 Position::Position() {};
 
@@ -29,7 +29,7 @@ TilePosition::TilePosition(double xPos, double yPos, double rotation) {
 TilePosition::TilePosition(double xPos, double yPos) {
     x = xPos;
     y = yPos;
-    rot = 0;
+    rot = NAN;
 };
 TilePosition::TilePosition() {};
 
@@ -118,8 +118,7 @@ TilePosition OdometrySystem::posToTilePos(Position pos) {
     return TilePosition(
         (pos.x - (tileWidth / 2)) / tileWidth,
         (pos.y - (tileWidth / 2)) / tileWidth,
-        pos.rot
-    );
+        pos.rot);
 };
 Position OdometrySystem::tilePosToPos(TilePosition tilePos) {
     return Position(
