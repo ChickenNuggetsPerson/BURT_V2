@@ -9,10 +9,10 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-
+  queuingSystem.addToQueue(autonMovement(AUTON_MOVE_GOTO, botAI.getStartPos()));
 };
 void leftPressed() {
-
+  queuingSystem.runQueue();
 };
 void upPressed() {
 
@@ -41,11 +41,10 @@ void pre_auton(void) {
 }
 
 
-void autonomous(void) { botAI.started(); }
+void autonomous(void) { queuingSystem.autonStarted(); }
 
 
 void usercontrol(void) {
-  botAI.stop(); // Force auton to stop
   brainFancyDebug("UserControl Started", vex::color::green, true);
 }
 

@@ -543,24 +543,24 @@ void Plot::draw() {
         drawLine(point1, point2);
     }
     if (drawingPath) {
-        int lineWidth = 3;
+        int lineWidth = 4;
 
         Position currentPos = path.startPos;
         int i = 0;
         while (true) {
             autonMovement move = path.getStep(i);
-            if (move.movementType == AUTON_END) { break; }
+            if (move.movementType == AUTON_MOVE_END) { break; }
             Position newPos;
             switch (move.movementType) {
-                case AUTON_DELAY:
+                case AUTON_MOVE_DELAY:
                     
                     break;
-                case AUTON_DRIVE_DIST:
+                case AUTON_MOVE_DRIVE_DIST:
                     newPos = posAtDist(currentPos, move.val);
                     drawLine(currentPos, newPos, lineWidth);
                     currentPos = newPos;
                     break;
-                case AUTON_GOTO:
+                case AUTON_MOVE_GOTO:
                     if (move.tilePosBool) {
                         newPos = path.pointer->odometrySystemPointer->tilePosToPos(move.tilePos);
                         drawLine(currentPos, newPos, lineWidth);
@@ -570,20 +570,20 @@ void Plot::draw() {
                         currentPos = move.pos;                                
                     }
                     break;
-                case AUTON_LONGGOTO:
+                case AUTON_MOVE_LONGGOTO:
                     for (int i = 0; i < move.drivePath.size(); i++) {
                         newPos = path.pointer->odometrySystemPointer->tilePosToPos(move.drivePath.at(i));
                         drawLine(currentPos, newPos, lineWidth);
                         currentPos = newPos;
                     }
                     break;
-                case AUTON_TURNTO:
+                case AUTON_MOVE_TURNTO:
                     //return pointer->turnTo(move.pos.rot);
                     break;
-                case AUTON_PICKUP_ACORN:
+                case AUTON_MOVE_PICKUP_ACORN:
                     //return pointer->pickupAcorn();
                     break;
-                case AUTON_DROPOFF_ACORN:
+                case AUTON_MOVE_DROPOFF_ACORN:
                     //return pointer->dropAcorn();
                     break;
             }
@@ -717,7 +717,7 @@ void Page::drawButton(Button button) {
     Brain.Screen.setFillColor(button.fillColor);
     Brain.Screen.drawRectangle(button.x, button.y, button.width, button.height);
     Brain.Screen.setFillColor(black);
-    Brain.Screen.printAt(button.x + (button.width / 2) - (Brain.Screen.getStringWidth(button.text) / 2), button.y + (button.height / 2) + (Brain.Screen.getStringHeight(button.text) / 3), button.text, button.data);
+    Brain.Screen.printAt(button.x + (button.width / 2) - (Brain.Screen.getStringWidth(button.text.c_str()) / 2), button.y + (button.height / 2) + (Brain.Screen.getStringHeight(button.text.c_str()) / 3), button.text.c_str(), button.data);
 };
 void Page::drawDisplayBox(DisplayBox box) {
     Brain.Screen.setPenColor(box.penColor);
@@ -927,13 +927,22 @@ void Page::setButtonData(const char* buttonId, vex::color fillColor) {
 }
 void Page::setButtonData(const char* buttonId, vex::color fillColor, int data) {
     for (auto &button: buttonStorage) {
-        if (strcmp(button.text, buttonId) == 0) {
+        if (strcmp(button.id, buttonId) == 0) {
             button.data = data;
             button.fillColor = fillColor;
             return;
         }
     }
 }
+void Page::setButtonData(const char* buttonId, vex::color fillColor, const char* newText) {
+    for (auto &button: buttonStorage) {
+        if (strcmp(button.id, buttonId) == 0) {
+            button.text = std::string(newText);
+            button.fillColor = fillColor;
+            return;
+        }
+    }
+};
 void Page::setDisplayBoxData(const char* boxId, vex::color fillColor) {
     setDisplayBoxData(boxId, fillColor, color::white);
 }
@@ -1177,7 +1186,7 @@ void MenuSystem::newNotification(const char* text, int displayTime, vex::color d
 
 // Notification Checker Functions
 bool NotificationChecker::checkMotor(MotCheck check) {
-    return check.motorPointer->temperature(temperatureUnits::fahrenheit) >= motorWarnTemp;
+    return check.motorPointer->temperature(percent) >= motorWarnTemp;
 }
 void NotificationChecker::addCheck(const char* trueMessage, const char* falseMessage, bool (*cb)()) {
     checksStorage.push_back(NotCheck(trueMessage, falseMessage, cb, false, color::green, color::red, false));

@@ -127,6 +127,7 @@ void mainControllerRender() {
 void mainControllerMessage(const char* text, int timeout) {
   displayMessage.text = text;
   displayMessage.endTime = Brain.timer(timeUnits::msec) + (1000 * timeout);
+  mainController.rumble("..");
 };
 bool mainControllerOverlay(const char* question, const char* trueOption, const char* falseOption) {
   if (!mainController.installed()) { return false; }

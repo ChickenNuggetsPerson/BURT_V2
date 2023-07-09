@@ -6,6 +6,7 @@
 // This is the file that defines the ai class
 
 class ai;
+class aiQueueSystem;
 
 // Path Names
 static const int AUTON_PATH_TEST = 0;
@@ -14,14 +15,14 @@ static const int AUTON_PATH_RIGHT = 2;
 static const int AUTON_PATH_SKILLS = 3;
 
 // Type of movements
-static const int AUTON_END = -1;
-static const int AUTON_DELAY = 0;
-static const int AUTON_DRIVE_DIST = 1;
-static const int AUTON_GOTO = 2;
-static const int AUTON_LONGGOTO = 3;
-static const int AUTON_TURNTO = 4;
-static const int AUTON_PICKUP_ACORN = 5;
-static const int AUTON_DROPOFF_ACORN = 6;
+static const int AUTON_MOVE_END = -1;
+static const int AUTON_MOVE_DELAY = 0;
+static const int AUTON_MOVE_DRIVE_DIST = 1;
+static const int AUTON_MOVE_GOTO = 2;
+static const int AUTON_MOVE_LONGGOTO = 3;
+static const int AUTON_MOVE_TURNTO = 4;
+static const int AUTON_MOVE_PICKUP_ACORN = 5;
+static const int AUTON_MOVE_DROPOFF_ACORN = 6;
 
 
 
@@ -58,20 +59,20 @@ struct autonMovement {
 
 class autonPath {
   private:
-    int currentStep = 0;
-    int totalMovements = 0;
-    autonMovement movements[10];
-    bool runMovement(int movementNum);
+    std::vector<autonMovement> movements;
   public:
-    ai* pointer;
     Position startPos;
+    ai* pointer;
     autonPath();
-    autonPath(ai* autonPointer);
+    autonPath(ai* aiPtr) {
+      pointer = aiPtr;
+    }
     void addMovement(autonMovement movement);
-    void reset();
-    bool step();
     autonMovement getStep(int stepCount);
+    int getSize();
 };
+
+
 
 struct autonConfig {
   std::string id;
@@ -118,11 +119,10 @@ class ai {
 
     Position target;
 
-    autonPath path;
-
   public:
 
     OdometrySystem* odometrySystemPointer;
+    aiQueueSystem* queueSystemPtr;
 
     bool running = false;
     int teamColor = 0;
@@ -134,9 +134,10 @@ class ai {
     bool configMenuStatus = false;
 
 
-    ai(OdometrySystem* odometrySystemPointer);
+    ai(OdometrySystem* odometrySystemPointer, aiQueueSystem* queuePtr);
 
     void init();
+    void generatePath();
 
     bool getConfig(const char* configId);
     void saveConfig(const char* configId, bool value);
@@ -146,9 +147,6 @@ class ai {
 
     Position getStartPos();
     Position getTargetPos();
-
-    void started();
-    void stop();
 
     bool driveDist(double dist);
 
@@ -163,6 +161,28 @@ class ai {
 
     bool pickupAcorn();
     bool dropAcorn();
+};
 
-    bool playPath(autonPath path);
+
+class aiQueueSystem {
+  private:
+    ai* aiPtr;
+    OdometrySystem* odomPtr;
+    std::vector<autonMovement> queue;
+    bool running = false;
+    bool runMovement(autonMovement movement);
+
+  public:
+
+    void addPtrs(ai* botAIPtr, OdometrySystem* odometryPointer);
+
+    void runQueue();
+    void clear();
+
+    std::vector<autonMovement> getQueue();
+
+    bool addToQueue(autonPath path);
+    bool addToQueue(autonMovement movement);
+
+    void autonStarted();
 };

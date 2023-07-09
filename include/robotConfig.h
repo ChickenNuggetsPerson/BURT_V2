@@ -19,6 +19,7 @@ void startTasks(void);
 
 extern competition Competition;
 extern brain Brain;
+extern aiQueueSystem queuingSystem;
 extern OdometrySystem Odometry;
 extern ai botAI;
 

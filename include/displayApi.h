@@ -256,12 +256,12 @@ struct Button {
     int width;
     int height;
     const char* id;
-    const char* text;
+    std::string text;
     int data;
     vex::color fillColor;
     int (*cb)(Page*);
     Button(const char* text, int x, int y, int width, int height, int (*cb)(Page*), const char* id = "", vex::color fillColor = black) {
-        this->text = text;
+        this->text = std::string(text);
         this->x = x;
         this->y = y;
         this->width = width;
@@ -539,6 +539,7 @@ class Page {
         void setTextData(const char* textId, double doubleData);
         void setButtonData(const char* buttonId, vex::color fillColor);
         void setButtonData(const char* buttonId, vex::color fillColor, int data);
+        void setButtonData(const char* buttonId, vex::color fillColor, const char* newText);
         void setDisplayBoxData(const char* boxId, vex::color fillColor);
         void setDisplayBoxData(const char* boxId, vex::color fillColor, vex::color penColor);
         void setToggleStatus(const char* toggleId, bool status);

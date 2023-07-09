@@ -8,65 +8,27 @@ using namespace vex;
 
 
 autonPath::autonPath() {};
-autonPath::autonPath(ai* autonPointer) {
-    pointer = autonPointer;
-};
 void autonPath::addMovement(autonMovement movement) {
-    movements[totalMovements] = movement;
-    totalMovements++;
+    movements.push_back(movement);
 };
 
-bool autonPath::runMovement(int movementNum) {
-    autonMovement movement = movements[movementNum];
-
-    switch (movement.movementType) {
-        case AUTON_DELAY:
-            wait(movement.val, timeUnits::msec);
-            return true;
-        case AUTON_DRIVE_DIST:
-            return pointer->driveDist(movement.val);
-        case AUTON_GOTO:
-            if (movement.tilePosBool) {
-                return pointer->gotoLoc(movement.tilePos);
-            } else {
-                return pointer->gotoLoc(movement.pos);
-            }
-        case AUTON_LONGGOTO:
-            return pointer->longGoto(movement.drivePath);
-        case AUTON_TURNTO:
-            return pointer->turnTo(movement.pos.rot);
-        case AUTON_PICKUP_ACORN:
-            return pointer->pickupAcorn();
-        case AUTON_DROPOFF_ACORN:
-            return pointer->dropAcorn();
-        default:
-            return false;
-    }
-
-};
-
-void autonPath::reset() {
-    currentStep = 0;
+int autonPath::getSize() {
+    return movements.size();
 }
-bool autonPath::step() {
-    if (currentStep >= totalMovements) {
-        return false;
-    }
-    currentStep++;
-    return runMovement(currentStep - 1);
-};
 autonMovement autonPath::getStep(int stepCount) {
-    if (stepCount >= totalMovements) {
-        return autonMovement(AUTON_END);
+    if (stepCount >= movements.size()) {
+        return autonMovement(AUTON_MOVE_END);
     } else {
-        return movements[stepCount];
+        return movements.at(stepCount);
     }
 };
 
 
 
-ai::ai(OdometrySystem* systemPointer) {
+ai::ai(OdometrySystem* systemPointer, aiQueueSystem* queuePtr) {
     odometrySystemPointer = systemPointer;
+    queueSystemPtr = queuePtr;
+    queuePtr->addPtrs(this, systemPointer);
 
     // Define the Config
     configStorage.push_back(autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247)));
@@ -86,6 +48,7 @@ void ai::init() {
 
     // Load auton Config
     if (Brain.SDcard.isInserted()) {
+        // Load Configs from SD card
         for (auto &config: configStorage) {
             unsigned int valueRead = readFile((configFoler + config.id + configFileType).c_str());
             config.status = ( valueRead == 1);
@@ -97,7 +60,7 @@ void ai::init() {
     } else {
         brainError("No SD Card");
         odometrySystemPointer->restart();
-        path = buildPath(AUTON_PATH_TEST, this);
+        queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST, this));
         return;
     }
 
@@ -109,25 +72,25 @@ void ai::init() {
         teamColor = TEAM_BLUE;
     }
 
-
+    generatePath();
+};
+void ai::generatePath() {
+    queueSystemPtr->clear();
     // Build Path
     runningSkills = getConfig("isSkills");
     if (runningSkills) {
-        path = buildPath(AUTON_PATH_SKILLS, this);
+        queueSystemPtr->addToQueue(buildPath(AUTON_PATH_SKILLS, this)); 
     } else {
         if (!getConfig("startSide")) {
-            path = buildPath(AUTON_PATH_LEFT, this);
+            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_LEFT, this));
         } else {
-            path = buildPath(AUTON_PATH_RIGHT, this);
+            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_RIGHT, this));
         }
         if (!Brain.SDcard.isInserted()) {
-            path = buildPath(AUTON_PATH_TEST, this);
+            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST, this));
         }
     }
-    
-    
-};
-
+}
 
 // Return the config value based on the name
 bool ai::getConfig(const char* configId) {
@@ -452,28 +415,79 @@ bool ai::dropAcorn() {
     return true;
 }
 
-void ai::stop() {
-    running = false;
-}
 
-bool ai::playPath(autonPath path) {
+
+
+
+
+void aiQueueSystem::addPtrs(ai* botAIPtr, OdometrySystem* odometryPointer) {
+    aiPtr = botAIPtr;
+    odomPtr = odometryPointer;
+};
+void aiQueueSystem::runQueue() {
+    if (running) { return; }
+    running = true;
+
+    int i = 0;
+    while (i < queue.size()) {
+        runMovement(queue.at(i)); 
+        i++;
+    }
+
+    queue.clear();
+    running = false;
+
+}
+void aiQueueSystem::clear() {
+    queue.clear();
+}
+std::vector<autonMovement> aiQueueSystem::getQueue() {
+    return queue;
+};
+bool aiQueueSystem::addToQueue(autonPath path) {
+    for (int i = 0; i < path.getSize(); i++) {
+        queue.push_back(path.getStep(i));
+    }
     return true;
 }
+bool aiQueueSystem::addToQueue(autonMovement movement) {
+    queue.push_back(movement);
+    return true;
+}
+bool aiQueueSystem::runMovement(autonMovement movement) {
+    switch (movement.movementType) {
+        case AUTON_MOVE_DELAY:
+            wait(movement.val, timeUnits::msec);
+            return true;
+        case AUTON_MOVE_DRIVE_DIST:
+            return aiPtr->driveDist(movement.val);
+        case AUTON_MOVE_GOTO:
+            if (movement.tilePosBool) {
+                return aiPtr->gotoLoc(movement.tilePos);
+            } else {
+                return aiPtr->gotoLoc(movement.pos);
+            }
+        case AUTON_MOVE_LONGGOTO:
+            return aiPtr->longGoto(movement.drivePath);
+        case AUTON_MOVE_TURNTO:
+            return aiPtr->turnTo(movement.pos.rot);
+        case AUTON_MOVE_PICKUP_ACORN:
+            return aiPtr->pickupAcorn();
+        case AUTON_MOVE_DROPOFF_ACORN:
+            return aiPtr->dropAcorn();
+        default:
+            return false;
+    }
+}
 
-
-// Run when the autonomous period is started
-void ai::started() {
+void aiQueueSystem::autonStarted() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
     brainChangePage("map");
 
-    while (!odometrySystemPointer->isTracking) { wait(0.01, seconds); }
+    // Wait for the odometry system to startup
+    while (!odomPtr->isTracking) { wait(0.01, seconds); }
 
-    path.reset();
-
-    // Step throught the path
-    while (path.step()) {}
+   runQueue();
 
     // Auton is done?
-};
-
-
+}

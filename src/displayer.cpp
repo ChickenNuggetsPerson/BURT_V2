@@ -28,7 +28,7 @@ Page loadingPage;
 Page homePage;
 Page mapPage;
 Page debugPage;
-Page odometryPage;
+Page queuePage;
 Page autonConfigPage;
 Page systemConfigPage;
 
@@ -43,7 +43,7 @@ bool checkMainController() {return mainController.installed();}
 bool checkFeild() {return Competition.isFieldControl();}
 bool checkBattery() {
     if (Brain.Battery.capacity(percentUnits::pct) < 20) {
-        mainControllerMessage("Battery Low", 4);
+        //mainControllerMessage("Battery Low", 4);
         return false;
     } else {
         return true;
@@ -117,8 +117,8 @@ int gotoConfigPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("config");
     return 1;
 };
-int gotoOdometryPageButton(Page* self) {
-    self->menuSystemPointer->gotoPage("odometry");
+int gotoQueuePageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("queue");
     return 1;
 }
 int gotoMapPageButton(Page* self) {
@@ -388,24 +388,25 @@ int dubugReloadButton(Page* self) {
 
 
 // Define the update function for the odometry page
-int updateOdometry(Page* self) {
-    if (Odometry.isTracking) {
-        self->setTextData("status", green, "Running");
-    } else {
-        self->setTextData("status", red, "Not Running");
+int updateQueuePage(Page* self) {
+    Plot* plotPtr = self->getPlotPointer("map");
+    autonPath path = autonPath(&botAI);
+    path.startPos = botAI.getStartPos();
+    
+    std::vector<autonMovement> movements = queuingSystem.getQueue();
+    for (auto movement: movements) {
+        path.addMovement(movement);
     }
-
-    Position currentPos = Odometry.currentPos();
-
-    self->setTextData("xpos", currentPos.x);
-    self->setTextData("ypos", currentPos.y);
-    self->setTextData("rot", (radToDegree(currentPos.rot)));
-
-    TilePosition currentTile = Odometry.currentTilePos();
-
-    self->setTextData("xtile", currentTile.x);
-    self->setTextData("ytile", currentTile.y);
-
+    self->setTextData("size", (int)movements.size());
+    plotPtr->showPath(path);
+    return 1;
+};
+int regenerateQueueButton(Page* self) {
+    botAI.generatePath();
+    return 1;
+};
+int resetQueueButton(Page* self) {
+    queuingSystem.clear();
     return 1;
 };
 
@@ -444,34 +445,58 @@ int mapShowPath(Page* self) {
     if (self->pageChanged) {
         self->pageChanged = false;
         plotPtr->drawingPath = false;
+        self->setButtonData("showPathBtn", color::black, "Show Path");
         return 1;
     }
 
-    std::vector<const char *> pathList;
-    pathList.push_back("AUTON_PATH_TEST");
-    pathList.push_back("AUTON_PATH_LEFT");
-    pathList.push_back("AUTON_PATH_RIGHT");
-    pathList.push_back("AUTON_PATH_SKILLS");
-    
+    self->setButtonData("showPathBtn", color::black, "Clear Path");
 
-    switch (mainControllerPickOption(pathList))
-    {
-    case AUTON_PATH_TEST:
-        plotPtr->showPath(buildPath(AUTON_PATH_TEST, &botAI));
+    OverlayQuestion overlay;
+    overlay.question = "Overlay?";
+    overlay.option1 = "Queue";
+    overlay.option1Color = color::cyan;
+    overlay.option2 = "Other";
+    overlay.option2Color = color::green;
+
+    if (!self->overlayQuestion(overlay)) {
+
+        autonPath path = autonPath(&botAI);
+        path.startPos = botAI.getStartPos();
+        
+        std::vector<autonMovement> movements = queuingSystem.getQueue();
+        for (auto movement: movements) {
+            path.addMovement(movement);
+        }
+
+        plotPtr->showPath(path);
         self->pageChanged = true;
-        break;
-    case AUTON_PATH_LEFT:
-        plotPtr->showPath(buildPath(AUTON_PATH_LEFT, &botAI));
-        self->pageChanged = true;
-        break;
-    case AUTON_PATH_RIGHT:
-        plotPtr->showPath(buildPath(AUTON_PATH_RIGHT, &botAI));
-        self->pageChanged = true;
-        break;
-    case AUTON_PATH_SKILLS:
-        plotPtr->showPath(buildPath(AUTON_PATH_SKILLS, &botAI));
-        self->pageChanged = true;
+    } else {
+        std::vector<const char *> pathList;
+        pathList.push_back("AUTON_PATH_LEFT");
+        pathList.push_back("AUTON_PATH_RIGHT");
+        pathList.push_back("AUTON_PATH_SKILLS");
+        pathList.push_back("AUTON_PATH_TEST");
+
+        switch (mainControllerPickOption(pathList))
+        {
+        case 0:
+            plotPtr->showPath(buildPath(AUTON_PATH_LEFT, &botAI));
+            self->pageChanged = true;
+            break;
+        case 1:
+            plotPtr->showPath(buildPath(AUTON_PATH_RIGHT, &botAI));
+            self->pageChanged = true;
+            break;
+        case 2:
+            plotPtr->showPath(buildPath(AUTON_PATH_SKILLS, &botAI));
+            self->pageChanged = true;
+            break;
+        case 3:
+            plotPtr->showPath(buildPath(AUTON_PATH_TEST, &botAI));
+            self->pageChanged = true;
+        }
     }
+    
 
     return 1;
 }
@@ -497,7 +522,7 @@ int brainDisplayerInit() {
     mainRenderer.addPage("debug", &debugPage);
     mainRenderer.addPage("config", &autonConfigPage);
     mainRenderer.addPage("systemConfig", &systemConfigPage);
-    mainRenderer.addPage("odometry", &odometryPage);
+    mainRenderer.addPage("queue", &queuePage);
     mainRenderer.addPage("map", &mapPage);
 
     // Configure the loading page
@@ -527,7 +552,7 @@ int brainDisplayerInit() {
     mapPage.addText("Y:   %f", 20, 130, color::white, fontType::mono20, "ypos");
     mapPage.addText("Rot: %f", 20, 160, color::white, fontType::mono20, "rot");
     mapPage.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
-    mapPage.addButton("Show Path", 20, 180, 100, 30, mapShowPath, "showPathBtn");
+    mapPage.addButton("Show Path", 380, 70, 100, 30, mapShowPath, "showPathBtn");
     mapPage.addDataUpdaterCB(updateMap, 0.2);
 
 
@@ -564,22 +589,19 @@ int brainDisplayerInit() {
 
     debugPage.addButton("Reload", 80, 210, 100, 30, dubugReloadButton, "reloadButton");
     debugPage.addButton("System", 180, 210, 100, 30, gotoSystemConfigButton, "systemButton");
-    debugPage.addButton("Odometry", 280, 210, 100, 30, gotoOdometryPageButton, "odometryPageButton");
+    debugPage.addButton("Queue", 280, 210, 100, 30, gotoQueuePageButton, "odometryPageButton");
     debugPage.addButton("Back", 380, 210, 100, 30, gotoMainPageButton, "mainPageButton");
     debugPage.addDataUpdaterCB(updateDebug, 1);
 
 
     // Config the Odometry Page
-    odometryPage.addText("Odometry Debug", 20, 40, color::white, fontType::mono30, "title");
-    odometryPage.addText("Status", 22, 65, color::white, fontType::mono15, "status");
-    odometryPage.addText("X:   %f", 60, 100, color::white, fontType::mono30, "xpos");
-    odometryPage.addText("Y:   %f", 60, 140, color::white, fontType::mono30, "ypos");
-    odometryPage.addText("Rot: %f", 60, 180, color::white, fontType::mono30, "rot");
-    odometryPage.addText("%f", 300, 100, color::white, fontType::mono30, "xtile");
-    odometryPage.addText("%f", 300, 140, color::white, fontType::mono30, "ytile");
-    odometryPage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
-    odometryPage.addButton("Map", 280, 210, 100, 30, gotoMapPageButton, "mapPageButton");
-    odometryPage.addDataUpdaterCB(updateOdometry, 0.05);
+    queuePage.addText("Auton Queue", 20, 40, color::white, fontType::mono30, "title");
+    queuePage.addText("Queue Size: %d", 60, 100, color::white, fontType::mono20, "size");
+    queuePage.addPlot("map", " ", 275, 2, 200, 200, tileWidth*6, tileWidth*6, 6, true, TEAM_RED);
+    queuePage.addButton("Regenerate", 60, 120, 120, 30, regenerateQueueButton);
+    queuePage.addButton("Clear", 60, 160, 120, 30, resetQueueButton);
+    queuePage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
+    queuePage.addDataUpdaterCB(updateQueuePage, 1);
 
     return 1;
 };
