@@ -71,6 +71,11 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.20, 0.0, 0.00);
 static TilePosition AUTON_START_LEFT(1, 0, 0);
 static TilePosition AUTON_START_RIGHT(4, 0, 0);
 static TilePosition AUTON_START_SKILLS(1, 0, 0);
+// Auton JSON Path Locations
+static std::string AUTON_PATH_FOLDER = "paths/";
+static std::string AUTON_PATH_RIGHT_JSON = "right.json";
+static std::string AUTON_PATH_LEFT_JSON = "left.json";
+static std::string AUTON_PATH_SKILLS_JSON = "skills.json";
 
 
 

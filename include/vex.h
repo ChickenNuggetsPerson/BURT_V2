@@ -10,6 +10,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "libs/ArduinoJson.h"
+
 
 #define waitUntil(condition)                                                   \
   do {                                                                         \

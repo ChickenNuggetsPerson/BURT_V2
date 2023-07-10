@@ -77,7 +77,9 @@ void ai::init() {
 void ai::generatePath() {
     queueSystemPtr->clear();
     // Build Path
-    runningSkills = getConfig("isSkills");
+    
+    // Old Path System
+    /*runningSkills = getConfig("isSkills");
     if (runningSkills) {
         queueSystemPtr->addToQueue(buildPath(AUTON_PATH_SKILLS, this)); 
     } else {
@@ -89,6 +91,25 @@ void ai::generatePath() {
         if (!Brain.SDcard.isInserted()) {
             queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST, this));
         }
+    }*/
+
+    // New Path System
+    bool result = false;
+    runningSkills = getConfig("isSkills");
+    if (runningSkills) {
+        result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_SKILLS_JSON);
+    } else {
+        if (!getConfig("startSide")) {
+            result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_LEFT_JSON);
+        } else {
+            result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_RIGHT_JSON);
+        }
+        if (!Brain.SDcard.isInserted()) {
+            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST, this));
+        }
+    }
+    if (!result) {
+        brainError("Error Reading JSON");
     }
 }
 
@@ -453,6 +474,46 @@ bool aiQueueSystem::addToQueue(autonPath path) {
 bool aiQueueSystem::addToQueue(autonMovement movement) {
     queue.push_back(movement);
     return true;
+}
+bool aiQueueSystem::addToQueue(std::string jsonPath) {
+    DynamicJsonDocument* pathPtr = readJsonFromFile(jsonPath.c_str());
+    JsonObject path = pathPtr->as<JsonObject>();
+    if (path.isNull()) {
+        return false;
+    }
+
+    JsonArray movementsArray = path["movements"].as<JsonArray>();
+    autonPath readPath = autonPath(&botAI);
+
+    // Loop through all objects in the "movements" array
+    for (const auto& movement : movementsArray) {
+        autonMovement tmpMove;
+
+        // Main stuff
+        tmpMove.movementType = movement["type"].as<int>();
+        tmpMove.val = movement["val"].as<float>();
+        tmpMove.tilePosBool = movement["tilePosBool"].as<bool>();
+
+        // Get Position Data
+        JsonObject pos = movement["pos"].as<JsonObject>();
+        tmpMove.pos = Position(pos["x"].as<float>(), pos["y"].as<float>(), pos["rot"].as<float>());
+
+        // Get Tile Position Data
+        JsonObject tilePos = movement["tilePosition"].as<JsonObject>();
+        tmpMove.tilePos = TilePosition(tilePos["x"].as<float>(), tilePos["y"].as<float>(), tilePos["rot"].as<float>());
+
+        // Loop Through Drive Path Array
+        JsonArray drivePathArray = movement["drivePath"].as<JsonArray>();
+
+
+        for (const auto& point : drivePathArray) {
+            tmpMove.drivePath.push_back(TilePosition(point["x"].as<float>(), point["y"].as<float>(), point["rot"].as<float>()));
+        }
+
+        readPath.addMovement(tmpMove);
+    }
+    delete pathPtr; // Free Memory
+    return addToQueue(readPath);
 }
 bool aiQueueSystem::runMovement(autonMovement movement) {
     switch (movement.movementType) {

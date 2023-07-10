@@ -183,6 +183,7 @@ class aiQueueSystem {
 
     bool addToQueue(autonPath path);
     bool addToQueue(autonMovement movement);
+    bool addToQueue(std::string jsonPath);
 
     void autonStarted();
 };

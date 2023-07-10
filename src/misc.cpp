@@ -7,6 +7,8 @@
 #include <sys/stat.h>
 
 
+
+
 int readFile(const char* fileName) {
   std::fstream readStream(fileName, std::ios_base::in);
   int readVal;
@@ -87,3 +89,55 @@ double radToDegree(double rad) {
 double limitAngle(double angle) {
   return fmod(angle, 360);
 };
+
+
+
+
+// Example Code I found Online... I Will have to do more research on this
+DynamicJsonDocument* readJsonFromFile(const std::string& filePath) {
+  std::ifstream file(filePath, std::ios::ate);  // Open the file and position the stream at the end
+  if (file.is_open()) {
+    std::streampos fileSize = file.tellg();  // Get the position of the current character in the input stream
+    file.seekg(0);  // Reset the position of the stream to the beginning
+
+    std::vector<char> buffer(fileSize);
+    file.read(buffer.data(), fileSize);  // Read the file content into the buffer
+
+    DynamicJsonDocument* jsonBuffer = new DynamicJsonDocument(1024 * 5);
+    DeserializationError error = deserializeJson(*jsonBuffer, buffer.data());
+    file.close();
+
+    // Fix this... For some reason, it always says No Memory
+    switch (error.code()) {
+      case DeserializationError::Ok:
+          return jsonBuffer;
+          break;
+      case DeserializationError::InvalidInput:
+          brainError(error.c_str());
+          return nullptr;
+          break;
+      case DeserializationError::NoMemory:
+          brainError(error.c_str());
+          return nullptr;
+          break;
+      default:
+          brainError(error.c_str());
+          return nullptr;
+          break;
+    }
+    
+  } else {
+  }
+  return nullptr;
+}
+
+bool writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData) {
+  std::ofstream file(filePath);
+  if (file.is_open()) {
+    serializeJson(jsonData, file);
+    file.close();
+    return true;
+  } else {
+    return false;
+  }
+}

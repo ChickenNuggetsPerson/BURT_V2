@@ -117,3 +117,7 @@ double degreeToRad(double degree);
 double radToDegree(double rad);
 
 double limitAngle(double angle);
+
+
+DynamicJsonDocument* readJsonFromFile(const std::string& filePath);
+bool writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData);
