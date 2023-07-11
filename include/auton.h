@@ -118,6 +118,7 @@ class ai {
     double distBetweenPoints(Position pos1, Position pos2);
 
     Position target;
+    TilePosition startPos;
 
   public:
 
@@ -145,6 +146,8 @@ class ai {
     bool isReady();
     bool isRunningSkills();
 
+    void setStartPos();
+    void setStartPos(TilePosition pos);
     Position getStartPos();
     Position getTargetPos();
 
@@ -184,6 +187,8 @@ class aiQueueSystem {
     bool addToQueue(autonPath path);
     bool addToQueue(autonMovement movement);
     bool addToQueue(std::string jsonPath);
+
+    autonPath getPathFromJSON(std::string jsonPath);
 
     void autonStarted();
 };

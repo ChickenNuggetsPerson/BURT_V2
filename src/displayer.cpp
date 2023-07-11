@@ -455,7 +455,7 @@ int mapShowPath(Page* self) {
     overlay.question = "Overlay?";
     overlay.option1 = "Queue";
     overlay.option1Color = color::cyan;
-    overlay.option2 = "Other";
+    overlay.option2 = "JSON";
     overlay.option2Color = color::green;
 
     if (!self->overlayQuestion(overlay)) {
@@ -472,29 +472,15 @@ int mapShowPath(Page* self) {
         self->pageChanged = true;
     } else {
         std::vector<const char *> pathList;
-        pathList.push_back("AUTON_PATH_LEFT");
-        pathList.push_back("AUTON_PATH_RIGHT");
-        pathList.push_back("AUTON_PATH_SKILLS");
-        pathList.push_back("AUTON_PATH_TEST");
+        pathList.push_back("right.json");
+        pathList.push_back("left.json");
+        pathList.push_back("skills.json");
+        pathList.push_back("path.json");
 
-        switch (mainControllerPickOption(pathList))
-        {
-        case 0:
-            plotPtr->showPath(buildPath(AUTON_PATH_LEFT, &botAI));
-            self->pageChanged = true;
-            break;
-        case 1:
-            plotPtr->showPath(buildPath(AUTON_PATH_RIGHT, &botAI));
-            self->pageChanged = true;
-            break;
-        case 2:
-            plotPtr->showPath(buildPath(AUTON_PATH_SKILLS, &botAI));
-            self->pageChanged = true;
-            break;
-        case 3:
-            plotPtr->showPath(buildPath(AUTON_PATH_TEST, &botAI));
-            self->pageChanged = true;
-        }
+        int result = mainControllerPickOption(pathList);
+        plotPtr->showPath(queuingSystem.getPathFromJSON(std::string(AUTON_PATH_FOLDER + pathList.at(result))));
+        self->pageChanged = true;
+
     }
     
 

@@ -76,6 +76,9 @@ class OdometrySystem {
         void restart(Position currentPos);
         void restart(TilePosition currentPos);
 
+        void setPos(Position newPos);
+        void setPos(TilePosition newPos);
+
         TilePosition posToTilePos(Position pos);
         Position tilePosToPos(TilePosition tilePos);
 

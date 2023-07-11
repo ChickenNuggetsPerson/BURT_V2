@@ -103,6 +103,15 @@ void OdometrySystem::restart(TilePosition currentPos) {
     restart(tilePosToPos(currentPos));
 };
 
+void OdometrySystem::setPos(Position newPos) {
+    globalX = newPos.x;
+    globalY = newPos.y;
+    globalRot = newPos.rot;
+};
+void OdometrySystem::setPos(TilePosition newPos) {
+    setPos(tilePosToPos(newPos));
+};
+
 
 // Return current position
 Position OdometrySystem::currentPos() {

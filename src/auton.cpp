@@ -37,6 +37,12 @@ ai::ai(OdometrySystem* systemPointer, aiQueueSystem* queuePtr) {
     
 }
 
+int genTask() { // For some reason if it is generated twice, it fixes all issues
+    botAI.generatePath();
+    botAI.generatePath();
+    return 1;
+}
+
 // Load Auton Configs
 void ai::init() {
 
@@ -56,7 +62,6 @@ void ai::init() {
         wait(0.1, seconds);
         loaded = true;
         brainFancyDebug("Auton Initialized", cyan, true);
-        odometrySystemPointer->restart(getStartPos());
     } else {
         brainError("No SD Card");
         odometrySystemPointer->restart();
@@ -64,6 +69,7 @@ void ai::init() {
         return;
     }
 
+    odometrySystemPointer->restart();
 
     // Initalize Auton Variables
     if (getConfig("teamColor")) {
@@ -72,7 +78,7 @@ void ai::init() {
         teamColor = TEAM_BLUE;
     }
 
-    generatePath();
+    vex::task generateTask(genTask);
 };
 void ai::generatePath() {
     queueSystemPtr->clear();
@@ -111,6 +117,7 @@ void ai::generatePath() {
     if (!result) {
         brainError("Error Reading JSON");
     }
+    odometrySystemPointer->setPos(getStartPos());
 }
 
 // Return the config value based on the name
@@ -147,17 +154,25 @@ Position ai::getStartPos() {
     // Idea: if the robot starts against the wall, use the distance sensor to measure distance
     //           from perpendicular wall, which will provide a more accurate starting position
 
-    if (!Brain.SDcard.isInserted()) { return Position(); }
+    return odometrySystemPointer->tilePosToPos(startPos);
+}
+
+void ai::setStartPos(TilePosition pos) {
+    startPos = pos;
+};
+void ai::setStartPos() {
+    if (!Brain.SDcard.isInserted()) { startPos = TilePosition(); return;}
 
     if (runningSkills) {
-        return odometrySystemPointer->tilePosToPos(AUTON_START_SKILLS);
+        startPos = AUTON_START_SKILLS;
     }
     if (!getConfig("startSide")) {
-        return odometrySystemPointer->tilePosToPos(AUTON_START_LEFT);
+        startPos = AUTON_START_LEFT;
     } else {
-        return odometrySystemPointer->tilePosToPos(AUTON_START_RIGHT);
+        startPos = AUTON_START_RIGHT;
     }
-}
+};
+
 
 // Returns true if the autonomous is ready
 bool ai::isReady() {return loaded;};
@@ -466,9 +481,11 @@ std::vector<autonMovement> aiQueueSystem::getQueue() {
     return queue;
 };
 bool aiQueueSystem::addToQueue(autonPath path) {
+    std::cout << path.getSize() << std::endl;
     for (int i = 0; i < path.getSize(); i++) {
         queue.push_back(path.getStep(i));
     }
+    aiPtr->setStartPos(odomPtr->posToTilePos(path.startPos));
     return true;
 }
 bool aiQueueSystem::addToQueue(autonMovement movement) {
@@ -476,14 +493,21 @@ bool aiQueueSystem::addToQueue(autonMovement movement) {
     return true;
 }
 bool aiQueueSystem::addToQueue(std::string jsonPath) {
+    return addToQueue(getPathFromJSON(jsonPath));
+}
+autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
     DynamicJsonDocument* pathPtr = readJsonFromFile(jsonPath.c_str());
     JsonObject path = pathPtr->as<JsonObject>();
     if (path.isNull()) {
-        return false;
+        return autonPath();
     }
 
     JsonArray movementsArray = path["movements"].as<JsonArray>();
+
     autonPath readPath = autonPath(&botAI);
+
+    JsonObject startPos = path["startPos"].as<JsonObject>();
+    readPath.startPos = odomPtr->tilePosToPos(TilePosition(startPos["x"].as<float>(), startPos["y"].as<float>(), startPos["rot"].as<float>()));
 
     // Loop through all objects in the "movements" array
     for (const auto& movement : movementsArray) {
@@ -513,8 +537,8 @@ bool aiQueueSystem::addToQueue(std::string jsonPath) {
         readPath.addMovement(tmpMove);
     }
     delete pathPtr; // Free Memory
-    return addToQueue(readPath);
-}
+    return readPath;
+};
 bool aiQueueSystem::runMovement(autonMovement movement) {
     switch (movement.movementType) {
         case AUTON_MOVE_DELAY:
@@ -540,7 +564,6 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
             return false;
     }
 }
-
 void aiQueueSystem::autonStarted() {
     brainFancyDebug("Auton Started", vex::color::cyan, true);
     brainChangePage("map");
