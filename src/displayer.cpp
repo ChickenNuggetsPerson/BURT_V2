@@ -135,7 +135,7 @@ int gotoAutonPageButton(Page* self) {
 }
 
 // Config Page Functions
-void configPageInit(Page* currentPage, ai* robotAI) {
+void configPageInit(Page* currentPage, auton::AutonSystem* robotAI) {
     int x = 0;
     int y = 0;
     for (auto config: botAI.configStorage) {
@@ -246,8 +246,8 @@ int updateLoadingPage(Page* self) {
 
 
 void systemConfigSave(Page* self) {
-    writeFile(std::string(systemConfigFolder + systemArchivePath).c_str(), self->getToggleStatus("archiveLogs"));
-    writeFile(std::string(systemConfigFolder + systemDriveModePath).c_str(), self->getToggleStatus("arcadeDrive"));
+    misc::writeFile(std::string(systemConfigFolder + systemArchivePath).c_str(), self->getToggleStatus("archiveLogs"));
+    misc::writeFile(std::string(systemConfigFolder + systemDriveModePath).c_str(), self->getToggleStatus("arcadeDrive"));
 
 }
 int loadedSystemConfigPage(Page* self) {
@@ -259,8 +259,8 @@ int loadedSystemConfigPage(Page* self) {
     self->setTextData("savedStatus", color::white, "Edit System Config Values");
 
     // Set Archive Toggle
-    self->setToggleStatus("archiveLogs", (readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1));
-    self->setToggleStatus("arcadeDrive", (readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1));
+    self->setToggleStatus("archiveLogs", (misc::readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1));
+    self->setToggleStatus("arcadeDrive", (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1));
 
     return 1;
 }
@@ -390,10 +390,10 @@ int dubugReloadButton(Page* self) {
 // Define the update function for the odometry page
 int updateQueuePage(Page* self) {
     Plot* plotPtr = self->getPlotPointer("map");
-    autonPath path = autonPath(&botAI);
+    auton::autonPath path = auton::autonPath();
     path.startPos = botAI.getStartPos();
     
-    std::vector<autonMovement> movements = queuingSystem.getQueue();
+    std::vector<auton::autonMovement> movements = queuingSystem.getQueue();
     for (auto movement: movements) {
         path.addMovement(movement);
     }
@@ -420,8 +420,8 @@ int updateMap(Page* self) {
     }
 
     Plot* plotPtr = self->getPlotPointer("map"); 
-    Position currentPos = Odometry.currentPos();
-    currentPos.rot = radToDegree(currentPos.rot);
+    odom::Position currentPos = Odometry.currentPos();
+    currentPos.rot = misc::radToDegree(currentPos.rot);
 
     plotPtr->point1 = currentPos;
     plotPtr->drawPoint1 = true;
@@ -460,10 +460,10 @@ int mapShowPath(Page* self) {
 
     if (!self->overlayQuestion(overlay)) {
 
-        autonPath path = autonPath(&botAI);
+        auton::autonPath path = auton::autonPath();
         path.startPos = botAI.getStartPos();
         
-        std::vector<autonMovement> movements = queuingSystem.getQueue();
+        std::vector<auton::autonMovement> movements = queuingSystem.getQueue();
         for (auto movement: movements) {
             path.addMovement(movement);
         }
@@ -533,7 +533,7 @@ int brainDisplayerInit() {
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, color::white, fontType::mono30, "title");
     mapPage.addText("Status", 22, 65, color::white, fontType::mono15, "status");
-    mapPage.addPlot("map", "Robot Pos", 175, 15, 200, 200, tileWidth*6, tileWidth*6, 6, true, TEAM_RED);
+    mapPage.addPlot("map", "Robot Pos", 175, 15, 200, 200, odom::tileWidth*6, odom::tileWidth*6, 6, true, TEAM_RED);
     mapPage.addText("X:   %f", 20, 100, color::white, fontType::mono20, "xpos");
     mapPage.addText("Y:   %f", 20, 130, color::white, fontType::mono20, "ypos");
     mapPage.addText("Rot: %f", 20, 160, color::white, fontType::mono20, "rot");
@@ -583,7 +583,7 @@ int brainDisplayerInit() {
     // Config the Odometry Page
     queuePage.addText("Auton Queue", 20, 40, color::white, fontType::mono30, "title");
     queuePage.addText("Queue Size: %d", 60, 100, color::white, fontType::mono20, "size");
-    queuePage.addPlot("map", " ", 275, 2, 200, 200, tileWidth*6, tileWidth*6, 6, true, TEAM_RED);
+    queuePage.addPlot("map", " ", 275, 2, 200, 200, odom::tileWidth*6, odom::tileWidth*6, 6, true, TEAM_RED);
     queuePage.addButton("Regenerate", 60, 120, 120, 30, regenerateQueueButton);
     queuePage.addButton("Clear", 60, 160, 120, 30, resetQueueButton);
     queuePage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");

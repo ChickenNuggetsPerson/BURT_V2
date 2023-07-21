@@ -15,3 +15,10 @@
   - [X] Page
   - [X] MenuSystem
   - [X] Notifcation Checker
+- [ ] Optimize Function Calls
+- [X] Fix Funky Pointers
+- [X] Move Global Helper Functions to a Namespace
+  - [X] Misc Namespace
+  - [X] Odom Namespace
+  - [X] Auton Namespace
+  - [X] Pid Namespace

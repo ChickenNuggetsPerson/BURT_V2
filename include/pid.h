@@ -2,49 +2,53 @@
 
 // Usefull resouce for PID tunning 
 // https://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=9013#:~:text=To%20tune%20your%20PID%20controller,to%20roughly%20half%20this%20value.
-struct PIDConfig {
-    double P;
-    double I;
-    double D;
 
-    PIDConfig();
-    PIDConfig(double p, double i, double d);
-};
+namespace pid {
+    
+    struct PIDConfig {
+        double P;
+        double I;
+        double D;
 
-// Define the PID class
-// By using this class, PIDs can be easily created and tuned for different scenarios
-class PID {
+        PIDConfig();
+        PIDConfig(double p, double i, double d);
+    };
 
-    private:
+    // Define the PID class
+    // By using this class, PIDs can be easily created and tuned for different scenarios
+    class PID {
 
-        double P = 0.0;
-        double I = 0.0;
-        double D = 0.0;
+        private:
 
-        int error;
-        int prevError = 0;
-        int derivative;
-        int totalError = 0;
+            double P = 0.0;
+            double I = 0.0;
+            double D = 0.0;
 
-        double desiredVal = 0.00;
+            int error;
+            int prevError = 0;
+            int derivative;
+            int totalError = 0;
 
-
-        bool hasMax = false;
-        bool hasMin = false;
-        double max;
-        double min;
+            double desiredVal = 0.00;
 
 
-    public:
+            bool hasMax = false;
+            bool hasMin = false;
+            double max;
+            double min;
 
-        PID(PIDConfig config);
-        PID(PIDConfig config, double desired);
 
-        void changeConfig(PIDConfig newConfig);
+        public:
 
-        void setMax(double maxVal);
-        void setMin(double minVal);
+            PID(PIDConfig config);
+            PID(PIDConfig config, double desired);
 
-        double iterate(double newVal);
-        double iterate(double newVal, double newDesired);
-};
+            void changeConfig(PIDConfig newConfig);
+
+            void setMax(double maxVal);
+            void setMin(double minVal);
+
+            double iterate(double newVal);
+            double iterate(double newVal, double newDesired);
+    };
+}

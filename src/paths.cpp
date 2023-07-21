@@ -3,12 +3,15 @@
 #include "displayer.h"
 #include "robotConstants.h"
 
-autonPath buildPath(int pathID, ai* autonPtr) {
-    autonPath path = autonPath(autonPtr);
+using namespace auton;
+using namespace odom;
+
+autonPath buildPath(int pathID) {
+    autonPath path = autonPath();
     
     switch (pathID) {
         case AUTON_PATH_LEFT: {
-            path.startPos = autonPtr->odometrySystemPointer->tilePosToPos(AUTON_START_LEFT);
+            path.startPos = odom::tilePosToPos(AUTON_START_LEFT);
             // Pick up matchload and then touch bar
             brainFancyDebug("Building AUTON_PATH_LEFT", vex::color::cyan);
             path.addMovement(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.5, 0.5, 225)));
@@ -21,7 +24,7 @@ autonPath buildPath(int pathID, ai* autonPtr) {
             break;
         }
         case AUTON_PATH_RIGHT: {
-            path.startPos = autonPtr->odometrySystemPointer->tilePosToPos(AUTON_START_RIGHT);
+            path.startPos = odom::tilePosToPos(AUTON_START_RIGHT);
             // Pick up triball, score it, maybe touch bar
             brainFancyDebug("Building AUTON_PATH_Right", vex::color::cyan);
             std::vector<TilePosition> tmpPath;
@@ -32,7 +35,7 @@ autonPath buildPath(int pathID, ai* autonPtr) {
             break;
         }          
         case AUTON_PATH_SKILLS: {
-            path.startPos = autonPtr->odometrySystemPointer->tilePosToPos(AUTON_START_SKILLS);
+            path.startPos = odom::tilePosToPos(AUTON_START_SKILLS);
             brainFancyDebug("Building AUTON_PATH_SKILLS", vex::color::cyan);
 
             std::vector<TilePosition> leftPath;
@@ -54,7 +57,7 @@ autonPath buildPath(int pathID, ai* autonPtr) {
             break;
         }         
         case AUTON_PATH_TEST: {
-            path.startPos = autonPtr->odometrySystemPointer->tilePosToPos(TilePosition(0,0));
+            path.startPos = odom::tilePosToPos(TilePosition(0,0));
             brainFancyDebug("Building AUTON_PATH_TEST", vex::color::cyan);
 
             std::vector<TilePosition> tmpPath;

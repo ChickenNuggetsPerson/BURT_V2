@@ -6,9 +6,9 @@ using namespace vex;
 
 competition Competition;
 brain Brain;
-aiQueueSystem queuingSystem;
-OdometrySystem Odometry;
-ai botAI = ai(&Odometry, &queuingSystem);
+auton::aiQueueSystem queuingSystem;
+odom::OdometrySystem Odometry;
+auton::AutonSystem botAI = auton::AutonSystem(&Odometry, &queuingSystem);
 
 // Drivetrain
 

@@ -1,3 +1,5 @@
+#pragma once
+
 void altControllerRender();
 
 void debugDisable();

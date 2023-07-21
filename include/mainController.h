@@ -1,4 +1,4 @@
-
+#pragma once
 
 int controllerTask();
 void mainControllerRender();

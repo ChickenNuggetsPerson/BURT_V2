@@ -1,6 +1,8 @@
 #include "pid.h"
 
 
+using namespace pid;
+
 PIDConfig::PIDConfig() {
     P = 0.00;
     I = 0.00;

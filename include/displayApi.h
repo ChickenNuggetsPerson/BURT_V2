@@ -1,9 +1,9 @@
+#pragma once
+
 #include "vex.h"
 #include "string"
 #include "robotConfig.h"
 #include "vector"
-
-#pragma once
 
 using namespace vex;
 
@@ -365,7 +365,7 @@ class Plot {
     private:
 
         MenuSystem* systemPtr;
-        Position posAtDist(Position currentPosition, int dist);
+        odom::Position posAtDist(odom::Position currentPosition, int dist);
 
     public:
         const char* id;
@@ -380,9 +380,9 @@ class Plot {
         bool labels;
 
 
-        Position point1;
+        odom::Position point1;
         bool drawPoint1 = false;
-        Position point2;
+        odom::Position point2;
         bool drawPoint2 = false;
 
         bool drawStoredLine = false;
@@ -391,7 +391,7 @@ class Plot {
         int mainColor = TEAM_NULL;
 
         bool drawingPath = false;
-        autonPath path;
+        auton::autonPath path;
 
         Plot(const char* plotId = "", const char* plotLabel = "", int plotX = 0, int plotY = 0, int plotWidth = 0, int plotHeight = 0, int plotMaxX = 0, int plotMaxY = 0, int plotSubdiv = 0, bool showLabels = false, int teamColor = NAN, MenuSystem* menuSystemPointer = nullptr) {
             this->id = plotId;
@@ -414,16 +414,16 @@ class Plot {
         void drawGameElements();
 
         void draw();
-        void drawLine(Position pos1, Position pos2);
-        void drawLine(Position pos1, Position pos2, int penWidth);
+        void drawLine(odom::Position pos1, odom::Position pos2);
+        void drawLine(odom::Position pos1, odom::Position pos2, int penWidth);
         void updatePoint(int pointNum, bool draw);
-        void updatePoint(int pointNum, bool draw, Position newPoint);
+        void updatePoint(int pointNum, bool draw, odom::Position newPoint);
 
         void updateLine (bool draw);
-        void drawPoint(Position drawPoint, vex::color displayColor);
+        void drawPoint(odom::Position drawPoint, vex::color displayColor);
         void drawPoints();
 
-        void showPath(autonPath displayPath);
+        void showPath(auton::autonPath displayPath);
 };
 
 class Page {

@@ -1,3 +1,4 @@
+#pragma once
 
 #include "vex.h"
 
@@ -19,9 +20,9 @@ void startTasks(void);
 
 extern competition Competition;
 extern brain Brain;
-extern aiQueueSystem queuingSystem;
-extern OdometrySystem Odometry;
-extern ai botAI;
+extern auton::aiQueueSystem queuingSystem;
+extern odom::OdometrySystem Odometry;
+extern auton::AutonSystem botAI;
 
 extern motor leftMotorA;
 extern motor leftMotorB;

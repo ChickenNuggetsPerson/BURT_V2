@@ -9,14 +9,14 @@
 
 
 
-int readFile(const char* fileName) {
+int misc::readFile(const char* fileName) {
   std::fstream readStream(fileName, std::ios_base::in);
   int readVal;
   readStream >> readVal;
   return readVal;
 }
 
-void writeFile(const char* fileName, int numToWrite) {
+void misc::writeFile(const char* fileName, int numToWrite) {
   std::ofstream writeStream(fileName);
 
   std::ostringstream writeString;
@@ -26,13 +26,13 @@ void writeFile(const char* fileName, int numToWrite) {
   writeStream.close();
 }
 
-void writeFile(const char* fileName, const char* content) {
+void misc::writeFile(const char* fileName, const char* content) {
   std::ofstream writeStream(fileName);
   writeStream << content;
   writeStream.close();
 };
 
-void appendFile(const char* fileName, int numToAppend) {
+void misc::appendFile(const char* fileName, int numToAppend) {
   std::ofstream writeStream(fileName, std::ios_base::app);
 
   std::ostringstream writeString;
@@ -42,14 +42,14 @@ void appendFile(const char* fileName, int numToAppend) {
   writeStream.close();
 }
 
-void appendFile(const char* fileName, const char* content) {
+void misc::appendFile(const char* fileName, const char* content) {
   std::ofstream writeStream;
   writeStream.open(fileName, std::ios_base::app);
   writeStream << "\n" << content;
   writeStream.close();
 };
 
-bool copyFile(const char* file, const char* dest) {
+bool misc::copyFile(const char* file, const char* dest) {
   std::string line;
   std::ifstream origonal{file};
   std::ofstream outFile{dest};
@@ -67,7 +67,7 @@ bool copyFile(const char* file, const char* dest) {
 }
 
 
-bool fileExists(const char* name) {
+bool misc::fileExists(const char* name) {
     if (FILE *file = fopen(name, "r")) {
         fclose(file);
         return true;
@@ -78,15 +78,15 @@ bool fileExists(const char* name) {
 
 
 
-double degreeToRad(double degree) {
+double misc::degreeToRad(double degree) {
   return degree * ( PI / 180 );
 };
-double radToDegree(double rad) {
+double misc::radToDegree(double rad) {
   return rad * ( 180 / PI );
 };
 
 
-double limitAngle(double angle) {
+double misc::limitAngle(double angle) {
   return fmod(angle, 360);
 };
 
@@ -94,7 +94,7 @@ double limitAngle(double angle) {
 
 
 // Example Code I found Online... I Will have to do more research on this
-DynamicJsonDocument* readJsonFromFile(const std::string& filePath) {
+DynamicJsonDocument* misc::readJsonFromFile(const std::string& filePath) {
   std::ifstream file(filePath, std::ios::ate);  // Open the file and position the stream at the end
   if (file.is_open()) {
     std::streampos fileSize = file.tellg();  // Get the position of the current character in the input stream
@@ -131,7 +131,7 @@ DynamicJsonDocument* readJsonFromFile(const std::string& filePath) {
   return nullptr;
 }
 
-bool writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData) {
+bool misc::writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData) {
   std::ofstream file(filePath);
   if (file.is_open()) {
     serializeJson(jsonData, file);

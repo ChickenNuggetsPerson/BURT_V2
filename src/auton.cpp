@@ -5,7 +5,7 @@
 #include <vector>
 
 using namespace vex;
-
+using namespace auton;
 
 autonPath::autonPath() {};
 void autonPath::addMovement(autonMovement movement) {
@@ -25,7 +25,7 @@ autonMovement autonPath::getStep(int stepCount) {
 
 
 
-ai::ai(OdometrySystem* systemPointer, aiQueueSystem* queuePtr) {
+AutonSystem::AutonSystem(odom::OdometrySystem* systemPointer, aiQueueSystem* queuePtr) {
     odometrySystemPointer = systemPointer;
     queueSystemPtr = queuePtr;
     queuePtr->addPtrs(this, systemPointer);
@@ -44,7 +44,7 @@ int genTask() { // For some reason if it is generated twice, it fixes all issues
 }
 
 // Load Auton Configs
-void ai::init() {
+void AutonSystem::init() {
 
     if (loaded) { 
         // Reset auton config
@@ -56,7 +56,7 @@ void ai::init() {
     if (Brain.SDcard.isInserted()) {
         // Load Configs from SD card
         for (auto &config: configStorage) {
-            unsigned int valueRead = readFile((configFoler + config.id + configFileType).c_str());
+            unsigned int valueRead = misc::readFile((configFoler + config.id + configFileType).c_str());
             config.status = ( valueRead == 1);
         }
         wait(0.1, seconds);
@@ -65,7 +65,7 @@ void ai::init() {
     } else {
         brainError("No SD Card");
         odometrySystemPointer->restart();
-        queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST, this));
+        queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST));
         return;
     }
 
@@ -80,7 +80,7 @@ void ai::init() {
 
     vex::task generateTask(genTask);
 };
-void ai::generatePath() {
+void AutonSystem::generatePath() {
     queueSystemPtr->clear();
     // Build Path
     
@@ -111,7 +111,7 @@ void ai::generatePath() {
             result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_RIGHT_JSON);
         }
         if (!Brain.SDcard.isInserted()) {
-            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST, this));
+            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST));
         }
     }
     if (!result) {
@@ -121,7 +121,7 @@ void ai::generatePath() {
 }
 
 // Return the config value based on the name
-bool ai::getConfig(const char* configId) {
+bool AutonSystem::getConfig(const char* configId) {
     for (auto config: configStorage) {
         if (config.id == std::string(configId)) {
             return config.status;
@@ -132,7 +132,7 @@ bool ai::getConfig(const char* configId) {
 
 // Saves the value to the sd card
 // Does not update internal storage so make sure to reintialize auton after writing configs
-void ai::saveConfig(const char* configId, bool value) {
+void AutonSystem::saveConfig(const char* configId, bool value) {
 
         std::cout << "Saving: " << configId << " " << value << std::endl;
 
@@ -140,7 +140,7 @@ void ai::saveConfig(const char* configId, bool value) {
         if (config.id == std::string(configId)) {
             int writeVal = 0;
             if (value) { writeVal = 1;}
-            writeFile((configFoler + config.id + configFileType).c_str(), writeVal);
+            misc::writeFile((configFoler + config.id + configFileType).c_str(), writeVal);
         }
     }
 
@@ -149,19 +149,19 @@ void ai::saveConfig(const char* configId, bool value) {
 
 
 // Returns the auton start position based on the config
-Position ai::getStartPos() {
+odom::Position AutonSystem::getStartPos() {
 
     // Idea: if the robot starts against the wall, use the distance sensor to measure distance
     //           from perpendicular wall, which will provide a more accurate starting position
 
-    return odometrySystemPointer->tilePosToPos(startPos);
+    return odom::tilePosToPos(startPos);
 }
 
-void ai::setStartPos(TilePosition pos) {
+void AutonSystem::setStartPos(odom::TilePosition pos) {
     startPos = pos;
 };
-void ai::setStartPos() {
-    if (!Brain.SDcard.isInserted()) { startPos = TilePosition(); return;}
+void AutonSystem::setStartPos() {
+    if (!Brain.SDcard.isInserted()) { startPos = odom::TilePosition(); return;}
 
     if (runningSkills) {
         startPos = AUTON_START_SKILLS;
@@ -175,14 +175,14 @@ void ai::setStartPos() {
 
 
 // Returns true if the autonomous is ready
-bool ai::isReady() {return loaded;};
+bool AutonSystem::isReady() {return loaded;};
 
 // Returns if the auton is configures for skills
-bool ai::isRunningSkills() {return runningSkills;}
+bool AutonSystem::isRunningSkills() {return runningSkills;}
 
 // Finds the nearest rotation based on the provided target absolute rotation
 // USES DEGREES AND NOT RADIANS
-double ai::findNearestRot(double currentRot, double targetRot) {
+double AutonSystem::findNearestRot(double currentRot, double targetRot) {
 
     int currentMult = trunc(currentRot / 360);
 
@@ -193,7 +193,7 @@ double ai::findNearestRot(double currentRot, double targetRot) {
     double smallerDiff = fabs(smallerVal - currentRot);
     double middleDiff = fabs(middleVal - currentRot);
     double biggerDiff = fabs(biggerVal - currentRot);
-
+    
     if (smallerDiff < middleDiff && smallerDiff < biggerDiff) {
         return smallerVal;
     }
@@ -208,17 +208,17 @@ double ai::findNearestRot(double currentRot, double targetRot) {
 
 // https://www.desmos.com/calculator/gdryojf8i3 << My tests for figuring out the math
 // Returns Angle between points in radians using positive Y axis as 0 and goes clockwise
-double ai::angleBetweenPoints(Position pos1, Position pos2) {
+double AutonSystem::angleBetweenPoints(odom::Position pos1, odom::Position pos2) {
     //std::cout << atan2(pos2.x - pos1.x, pos2.y - pos1.y) << std::endl;
     return atan2(pos2.x - pos1.x, pos2.y - pos1.y);
 }
 // Returns the distance between points
-double ai::distBetweenPoints(Position pos1, Position pos2) {
+double AutonSystem::distBetweenPoints(odom::Position pos1, odom::Position pos2) {
     return sqrt(pow((pos2.x - pos1.x), 2) + pow((pos2.y - pos1.y), 2));
 }
 
 // Returns the position the auton is driving to
-Position ai::getTargetPos() {
+odom::Position AutonSystem::getTargetPos() {
     return target;
 }
 
@@ -226,18 +226,18 @@ Position ai::getTargetPos() {
 
 // Drives the distance
 // Math Visualization: https://www.desmos.com/calculator/uywraxwtws
-bool ai::driveDist(double dist) {
-    Position currentPosition = odometrySystemPointer->currentPos();
+bool AutonSystem::driveDist(double dist) {
+    odom::Position currentPosition = odometrySystemPointer->currentPos();
     double desiredX = currentPosition.x + dist * cos(2.5*PI - currentPosition.rot);
     double desiredY = currentPosition.y + dist * sin(2.5*PI - currentPosition.rot);
-    return gotoLoc(Position(desiredX, desiredY, NAN));
+    return gotoLoc(odom::Position(desiredX, desiredY, NAN));
 }
 // Turns to the desired rotation in degrees
-bool ai::turnTo(double deg) {
+bool AutonSystem::turnTo(double deg) {
     return turnTo(deg, 2);
 }
 // Turns to the desired rotation in degrees
-bool ai::turnTo(double deg, double turnTimeout) {
+bool AutonSystem::turnTo(double deg, double turnTimeout) {
     
     if (!odometrySystemPointer->isTracking) { 
         brainError("Skipping Auton Path, Odom not initialized");
@@ -249,9 +249,9 @@ bool ai::turnTo(double deg, double turnTimeout) {
     bool wasRunning = running;
     running = true;
 
-    double heading = radToDegree(odometrySystemPointer->currentPos().rot);
+    double heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
     double target = findNearestRot(heading, deg);
-    PID turnPID(AUTON_TURNTO_PID_CONFIG, target);
+    pid::PID turnPID(AUTON_TURNTO_PID_CONFIG, target);
 
 
     double accuracy = 0.5;
@@ -262,7 +262,7 @@ bool ai::turnTo(double deg, double turnTimeout) {
     int totalChecks = 0;
     while (true) {
         
-        heading = radToDegree(odometrySystemPointer->currentPos().rot);
+        heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double power = turnPID.iterate(heading);
 
         LeftDriveSmart.spin(directionType::fwd, -power, volt);
@@ -294,24 +294,24 @@ bool ai::turnTo(double deg, double turnTimeout) {
 
 
 
-bool ai::gotoLoc(TilePosition pos) {
-    return gotoLoc(odometrySystemPointer->tilePosToPos(pos));
+bool AutonSystem::gotoLoc(odom::TilePosition pos) {
+    return gotoLoc(odom::tilePosToPos(pos));
 };
-bool ai::gotoLoc(Position pos) {
-    std::vector<Position> tmp;
+bool AutonSystem::gotoLoc(odom::Position pos) {
+    std::vector<odom::Position> tmp;
     tmp.push_back(pos);
     return longGoto(tmp);
 };
-bool ai::longGoto(std::vector<TilePosition> pos) {
-    std::vector<Position> tmpVec;
+bool AutonSystem::longGoto(std::vector<odom::TilePosition> pos) {
+    std::vector<odom::Position> tmpVec;
     for (int i = 0; i < pos.size(); i++) {
-        tmpVec.push_back(odometrySystemPointer->tilePosToPos(pos.at(i)));
+        tmpVec.push_back(odom::tilePosToPos(pos.at(i)));
     }
     return longGoto(tmpVec);
 };
 
 // Main goto logic
-bool ai::longGoto(std::vector<Position> pos) {
+bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     if (!odometrySystemPointer->isTracking) { 
         brainError("Skipping Auton Path, Odom not initialized");
@@ -325,21 +325,21 @@ bool ai::longGoto(std::vector<Position> pos) {
     target.y = pos.at(0).y;
     target.rot = pos.at(0).rot;
 
-    Position currentPos = odometrySystemPointer->currentPos();
+    odom::Position currentPos = odometrySystemPointer->currentPos();
 
     double travelDist = distBetweenPoints(currentPos, pos.at(0));
-    double desiredHeading = radToDegree(angleBetweenPoints(currentPos, pos.at(0)));
+    double desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos.at(0)));
 
     turnTo(desiredHeading, 1.5);
 
     // PID to control drive speed
-    PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
+    pid::PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
     drivePid.setMax(12);
     drivePid.setMin(-12);
     double drivePower = 0.00;
 
     // PID to keep the robot driving straight
-    PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
+    pid::PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
     double turnPower = 0.00;
 
     int stopped = 0;
@@ -352,7 +352,7 @@ bool ai::longGoto(std::vector<Position> pos) {
 
     while (traveling) {
         
-        Position tempPos = odometrySystemPointer->currentPos();
+        odom::Position tempPos = odometrySystemPointer->currentPos();
 
         travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
 
@@ -360,12 +360,12 @@ bool ai::longGoto(std::vector<Position> pos) {
             travelDist = travelDist + 10;
         }
 
-        desiredHeading = radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
+        desiredHeading = misc::radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
 
         drivePower = drivePid.iterate(travelDist / speedUp);
 
-        double turnCurrent = radToDegree(odometrySystemPointer->currentPos().rot);
-        double turnWant = findNearestRot(radToDegree(tempPos.rot), desiredHeading);
+        double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
+        double turnWant = findNearestRot(misc::radToDegree(tempPos.rot), desiredHeading);
         turnPower = turnPid.iterate(turnCurrent, turnWant);
 
         double leftPower = drivePower - turnPower;
@@ -415,7 +415,7 @@ bool ai::longGoto(std::vector<Position> pos) {
     return true;
 };
 
-bool ai::pickupAcorn() {
+bool AutonSystem::pickupAcorn() {
 
     if (!odometrySystemPointer->isTracking) {
         brainError("Skipping Auton Path, Odom not initialized");
@@ -433,7 +433,7 @@ bool ai::pickupAcorn() {
     return true;
 
 };
-bool ai::dropAcorn() {
+bool AutonSystem::dropAcorn() {
 
     if (!odometrySystemPointer->isTracking) {
         brainError("Skipping Auton Path, Odom not initialized");
@@ -456,7 +456,7 @@ bool ai::dropAcorn() {
 
 
 
-void aiQueueSystem::addPtrs(ai* botAIPtr, OdometrySystem* odometryPointer) {
+void aiQueueSystem::addPtrs(AutonSystem* botAIPtr, odom::OdometrySystem* odometryPointer) {
     aiPtr = botAIPtr;
     odomPtr = odometryPointer;
 };
@@ -481,11 +481,10 @@ std::vector<autonMovement> aiQueueSystem::getQueue() {
     return queue;
 };
 bool aiQueueSystem::addToQueue(autonPath path) {
-    std::cout << path.getSize() << std::endl;
     for (int i = 0; i < path.getSize(); i++) {
         queue.push_back(path.getStep(i));
     }
-    aiPtr->setStartPos(odomPtr->posToTilePos(path.startPos));
+    aiPtr->setStartPos(odom::posToTilePos(path.startPos));
     return true;
 }
 bool aiQueueSystem::addToQueue(autonMovement movement) {
@@ -496,7 +495,7 @@ bool aiQueueSystem::addToQueue(std::string jsonPath) {
     return addToQueue(getPathFromJSON(jsonPath));
 }
 autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
-    DynamicJsonDocument* pathPtr = readJsonFromFile(jsonPath.c_str());
+    DynamicJsonDocument* pathPtr = misc::readJsonFromFile(jsonPath.c_str());
     JsonObject path = pathPtr->as<JsonObject>();
     if (path.isNull()) {
         return autonPath();
@@ -504,10 +503,10 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
 
     JsonArray movementsArray = path["movements"].as<JsonArray>();
 
-    autonPath readPath = autonPath(&botAI);
+    autonPath readPath = autonPath();
 
     JsonObject startPos = path["startPos"].as<JsonObject>();
-    readPath.startPos = odomPtr->tilePosToPos(TilePosition(startPos["x"].as<float>(), startPos["y"].as<float>(), startPos["rot"].as<float>()));
+    readPath.startPos = odom::tilePosToPos(odom::TilePosition(startPos["x"].as<float>(), startPos["y"].as<float>(), startPos["rot"].as<float>()));
 
     // Loop through all objects in the "movements" array
     for (const auto& movement : movementsArray) {
@@ -520,18 +519,18 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
 
         // Get Position Data
         JsonObject pos = movement["pos"].as<JsonObject>();
-        tmpMove.pos = Position(pos["x"].as<float>(), pos["y"].as<float>(), pos["rot"].as<float>());
+        tmpMove.pos = odom::Position(pos["x"].as<float>(), pos["y"].as<float>(), pos["rot"].as<float>());
 
         // Get Tile Position Data
         JsonObject tilePos = movement["tilePosition"].as<JsonObject>();
-        tmpMove.tilePos = TilePosition(tilePos["x"].as<float>(), tilePos["y"].as<float>(), tilePos["rot"].as<float>());
+        tmpMove.tilePos = odom::TilePosition(tilePos["x"].as<float>(), tilePos["y"].as<float>(), tilePos["rot"].as<float>());
 
         // Loop Through Drive Path Array
         JsonArray drivePathArray = movement["drivePath"].as<JsonArray>();
 
 
         for (const auto& point : drivePathArray) {
-            tmpMove.drivePath.push_back(TilePosition(point["x"].as<float>(), point["y"].as<float>(), point["rot"].as<float>()));
+            tmpMove.drivePath.push_back(odom::TilePosition(point["x"].as<float>(), point["y"].as<float>(), point["rot"].as<float>()));
         }
 
         readPath.addMovement(tmpMove);

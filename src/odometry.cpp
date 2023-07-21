@@ -3,9 +3,25 @@
 #include "math.h"
 
 using namespace vex;
+using namespace odom;
 
 using std::cout;
 using std::endl;
+
+
+TilePosition odom::posToTilePos(Position pos) {
+    return TilePosition(
+        (pos.x - (tileWidth / 2)) / tileWidth,
+        (pos.y - (tileWidth / 2)) / tileWidth,
+        pos.rot);
+};
+Position odom::tilePosToPos(TilePosition tilePos) {
+    return Position(
+        (tilePos.x * tileWidth) + (tileWidth / 2), 
+        (tilePos.y * tileWidth) + (tileWidth / 2), 
+        tilePos.rot);
+};
+
 
 // Position Constructor
 Position::Position(double xPos, double yPos, double rotation) {
@@ -122,19 +138,7 @@ TilePosition OdometrySystem::currentTilePos() {
 };
 
 
-// Position conversions
-TilePosition OdometrySystem::posToTilePos(Position pos) {
-    return TilePosition(
-        (pos.x - (tileWidth / 2)) / tileWidth,
-        (pos.y - (tileWidth / 2)) / tileWidth,
-        pos.rot);
-};
-Position OdometrySystem::tilePosToPos(TilePosition tilePos) {
-    return Position(
-        (tilePos.x * tileWidth) + (tileWidth / 2), 
-        (tilePos.y * tileWidth) + (tileWidth / 2), 
-        tilePos.rot);
-};
+
 void OdometrySystem::updateTilePos() {
     currentTilePosition = posToTilePos(Position(globalX, globalY, globalRot));
 };
@@ -145,7 +149,7 @@ void OdometrySystem::calcInertialAvg() {
     for (int i=0; i < inertialAvgSize - 1; i++) {
         inertialLastVals[i] = inertialLastVals[i + 1];
     }
-    inertialLastVals[inertialAvgSize - 1] = degreeToRad(inertialSensor.rotation(rotationUnits::deg));
+    inertialLastVals[inertialAvgSize - 1] = misc::degreeToRad(inertialSensor.rotation(rotationUnits::deg));
     double tempAvg = 0.00;
     for (int i=0; i < inertialAvgSize; i++) {
         tempAvg += inertialLastVals[i];

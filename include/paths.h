@@ -1,7 +1,9 @@
-#include "auton.h"
 #pragma once
 
+#include "auton.h"
 
 
 
-autonPath buildPath(int pathID, ai* autonPtr);
+
+
+auton::autonPath buildPath(int pathID);

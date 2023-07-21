@@ -62,7 +62,7 @@ Logger::Logger(int renderX, int renderY) {
 
     logFile = "logs.txt";
     isSaving = Brain.SDcard.isInserted();
-    writeFile(logFile, "Start of Logs");
+    misc::writeFile(logFile, "Start of Logs");
 };
 Logger::Logger(int renderX, int renderY, const char* outFile = "logs.txt", int maxLogs = 11) {
     xPos = renderX;
@@ -71,7 +71,7 @@ Logger::Logger(int renderX, int renderY, const char* outFile = "logs.txt", int m
 
     logFile = outFile;
     isSaving = Brain.SDcard.isInserted();
-    writeFile(logFile, "Start of Logs");
+    misc::writeFile(logFile, "Start of Logs");
 
     //reloadLogger(logFile);
     
@@ -85,9 +85,9 @@ void Logger::appendLogFile(const char* message) {
     std::ostringstream formattedMessage;
     formattedMessage << "[ " << Brain.timer(seconds) << " ] " << message;
 
-    appendFile(logFile, formattedMessage.str().c_str());
+    misc::appendFile(logFile, formattedMessage.str().c_str());
     if (compLogs) {
-        appendFile(compLogPath, formattedMessage.str().c_str()); // Todo: Fix this 
+        misc::appendFile(compLogPath, formattedMessage.str().c_str()); // Todo: Fix this 
     }
 };
 void Logger::reloadLogger(const char* outFile) {
@@ -108,9 +108,9 @@ void Logger::reloadLogger(const char* outFile) {
     std::string path;
     path += systemConfigFolder;
     path += systemArchivePath;
-    if (readFile(path.c_str()) == 1) {
+    if (misc::readFile(path.c_str()) == 1) {
         std::cout << std::endl << std::endl << std::endl;
-        if (fileExists(logFile)) {
+        if (misc::fileExists(logFile)) {
             // Save the last logs to the archive folder
             int logNum = 0;
             bool looking = true;
@@ -127,7 +127,7 @@ void Logger::reloadLogger(const char* outFile) {
 
                 tmpName += ".txt";
                 //std::cout << "Checking " << tmpName.c_str() << std::endl;
-                looking = fileExists(tmpName.c_str());
+                looking = misc::fileExists(tmpName.c_str());
             }
             std::string cpyDest;
             cpyDest += systemLogFolder;
@@ -141,7 +141,7 @@ void Logger::reloadLogger(const char* outFile) {
 
             std::cout << "Archiving to:  " << cpyDest << std::endl;
 
-            copyFile(logFile, cpyDest.c_str());
+            misc::copyFile(logFile, cpyDest.c_str());
         }
     } else {
         std::cout << std::endl << std::endl << "Not Archiving" << std::endl;
@@ -160,7 +160,7 @@ void Logger::reloadLogger(const char* outFile) {
             tmpName += str.str();
             tmpName += ".txt";
             //std::cout << "Checking " << tmpName.c_str() << std::endl;
-            looking = fileExists(tmpName.c_str());
+            looking = misc::fileExists(tmpName.c_str());
         }
         std::string cpyDest;
         cpyDest += systemLogFolder;
@@ -174,11 +174,11 @@ void Logger::reloadLogger(const char* outFile) {
 
         std::cout << "Archiving To: " << compLogPath << std::endl;
 
-        writeFile(compLogPath, "Start of Comp Logs");
+        misc::writeFile(compLogPath, "Start of Comp Logs");
 
     }
 
-    writeFile(logFile, "Start of Logs");
+    misc::writeFile(logFile, "Start of Logs");
     initialized = true;  
 }
 void Logger::newLog(const char* message, vex::color messageColor) {
@@ -446,10 +446,10 @@ std::string AdjustableNum::getDisplayVal() {
 
 
 // Plot Functions
-Position Plot::posAtDist(Position currentPosition, int dist) {
+odom::Position Plot::posAtDist(odom::Position currentPosition, int dist) {
     double desiredX = currentPosition.x + dist * cos(2.5*PI - currentPosition.rot);
     double desiredY = currentPosition.y + dist * sin(2.5*PI - currentPosition.rot);
-    return Position(desiredX, desiredY);
+    return odom::Position(desiredX, desiredY);
 }
 void Plot::drawGameElements() {
 
@@ -545,12 +545,12 @@ void Plot::draw() {
     if (drawingPath) {
         int lineWidth = 4;
 
-        Position currentPos = path.startPos;
+        odom::Position currentPos = path.startPos;
         int i = 0;
         while (true) {
-            autonMovement move = path.getStep(i);
+            auton::autonMovement move = path.getStep(i);
             if (move.movementType == AUTON_MOVE_END) { break; }
-            Position newPos;
+            odom::Position newPos;
             switch (move.movementType) {
                 case AUTON_MOVE_DELAY:
                     
@@ -562,7 +562,7 @@ void Plot::draw() {
                     break;
                 case AUTON_MOVE_GOTO:
                     if (move.tilePosBool) {
-                        newPos = path.pointer->odometrySystemPointer->tilePosToPos(move.tilePos);
+                        newPos = odom::tilePosToPos(move.tilePos);
                         drawLine(currentPos, newPos, lineWidth);
                         currentPos = newPos;
                     } else {
@@ -572,7 +572,7 @@ void Plot::draw() {
                     break;
                 case AUTON_MOVE_LONGGOTO:
                     for (int i = 0; i < move.drivePath.size(); i++) {
-                        newPos = path.pointer->odometrySystemPointer->tilePosToPos(move.drivePath.at(i));
+                        newPos = odom::tilePosToPos(move.drivePath.at(i));
                         drawLine(currentPos, newPos, lineWidth);
                         currentPos = newPos;
                     }
@@ -597,10 +597,10 @@ void Plot::draw() {
     }
     
 };
-void Plot::drawLine(Position pos1, Position pos2) {
+void Plot::drawLine(odom::Position pos1, odom::Position pos2) {
     drawLine(pos1, pos1, 1);
 }
-void Plot::drawLine(Position pos1, Position pos2, int penWidth) {
+void Plot::drawLine(odom::Position pos1, odom::Position pos2, int penWidth) {
     int drawX1 = (( pos1.x / maxX ) * width) + x;
     int drawY1 = y + 5 + height - (( pos1.y / maxY) * height);
 
@@ -615,9 +615,9 @@ void Plot::drawLine(Position pos1, Position pos2, int penWidth) {
     Brain.Screen.setPenWidth(1);
 }
 void Plot::updatePoint(int pointNum, bool draw) {
-    updatePoint(pointNum, draw, Position());
+    updatePoint(pointNum, draw, odom::Position());
 } 
-void Plot::updatePoint(int pointNum, bool draw, Position newPoint) {
+void Plot::updatePoint(int pointNum, bool draw, odom::Position newPoint) {
     if (pointNum == 1) {
         point1 = newPoint;
         drawPoint1 = draw;
@@ -630,7 +630,7 @@ void Plot::updatePoint(int pointNum, bool draw, Position newPoint) {
 void Plot::updateLine (bool draw) {
     drawStoredLine = draw;
 }
-void Plot::drawPoint(Position drawPoint, vex::color displayColor) {
+void Plot::drawPoint(odom::Position drawPoint, vex::color displayColor) {
     double radius = 5;
 
     int drawX = (( drawPoint.x / maxX ) * width) + x;
@@ -649,7 +649,7 @@ void Plot::drawPoints() {
         drawPoint(point1, color::green);
     }
 };
-void Plot::showPath(autonPath displayPath) {
+void Plot::showPath(auton::autonPath displayPath) {
     path = displayPath;
     drawingPath = true;
 }

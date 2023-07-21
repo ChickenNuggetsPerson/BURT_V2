@@ -1,18 +1,35 @@
-#include <map>
 #pragma once
 
-int readFile(const char* fileName);
+#include <map>
 
-void writeFile(const char* fileName, int numToWrite);
-void writeFile(const char* fileName, const char* content);
+namespace misc {
 
-void appendFile(const char* fileName, int numToAppend);
-void appendFile(const char* fileName, const char* content);
+    int readFile(const char* fileName);
 
-bool copyFile(const char* file, const char* dest);
-bool fileExists(const char* name);
+    void writeFile(const char* fileName, int numToWrite);
+    void writeFile(const char* fileName, const char* content);
+
+    void appendFile(const char* fileName, int numToAppend);
+    void appendFile(const char* fileName, const char* content);
+
+    bool copyFile(const char* file, const char* dest);
+    bool fileExists(const char* name);
+
+    DynamicJsonDocument* readJsonFromFile(const std::string& filePath);
+    bool writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData);
+
+    double degreeToRad(double degree);
+    double radToDegree(double rad);
+
+    double limitAngle(double angle);
+}
 
 
+
+
+
+
+// Find a use for this maybe
 class Dfile {
     private:
         std::string name;
@@ -110,14 +127,3 @@ class Directory {
         }
         
 };
-
-
-
-double degreeToRad(double degree);
-double radToDegree(double rad);
-
-double limitAngle(double angle);
-
-
-DynamicJsonDocument* readJsonFromFile(const std::string& filePath);
-bool writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData);

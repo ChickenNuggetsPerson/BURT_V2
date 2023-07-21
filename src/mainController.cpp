@@ -36,7 +36,7 @@ int controllerTask() {
 
   bool tankDrive = true;
   if (Brain.SDcard.isInserted()) {
-    tankDrive = (readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1);
+    tankDrive = (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1);
   }
 
   // Main driving loop
@@ -103,7 +103,7 @@ void mainControllerRender() {
   mainController.Screen.clearScreen();
   mainController.Screen.setCursor(1, 1);
 
-  Position currentPos = Odometry.currentPos();
+  odom::Position currentPos = Odometry.currentPos();
 
   if (displayMessage.endTime > Brain.timer(timeUnits::msec)) {
     mainController.Screen.print(displayMessage.text);
@@ -114,7 +114,7 @@ void mainControllerRender() {
   mainController.Screen.newLine();
   mainController.Screen.print(currentPos.y);
   mainController.Screen.newLine();
-  mainController.Screen.print(limitAngle(radToDegree(currentPos.rot)));            
+  mainController.Screen.print(misc::limitAngle(misc::radToDegree(currentPos.rot)));            
 
 
   rendering = false;
