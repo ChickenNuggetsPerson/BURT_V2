@@ -22,3 +22,4 @@
   - [X] Odom Namespace
   - [X] Auton Namespace
   - [X] Pid Namespace
+  - [X] Display API Namespace

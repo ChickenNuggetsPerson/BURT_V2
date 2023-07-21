@@ -1,7 +1,9 @@
 #include "displayApi.h"
 
-// Misc Functions
-bool inRectangle(int posX, int posY, int x, int y, int width, int height) {
+using namespace display;
+
+
+bool display::inRectangle(int posX, int posY, int x, int y, int width, int height) {
     return (posX > x && posX < x + width) && (posY > y && posY < y + height);
 };
 
@@ -665,53 +667,180 @@ vex::color Page::determinColorFromRange(int value, std::vector<colorRange> range
     return vex::color::black;
 }
 void Page::drawHorzProgressbar(ProgressBar bar) {
+
+    if (bar.fillGradient) {
+
+        // Normal Bar Fill
+        // Fills whole bar with the current color
+        if (bar.ranges.size() != 0) {
+            Brain.Screen.setFillColor(determinColorFromRange(bar.value, bar.ranges));
+        } else {
+            // Default Battery Color Range
+            std::vector<colorRange> defaultRanges;
+            defaultRanges.push_back(colorRange(0, 20, color::red));
+            defaultRanges.push_back(colorRange(21, 35, color::yellow));
+            defaultRanges.push_back(colorRange(36, 100, color::green));
+
+            Brain.Screen.setFillColor(determinColorFromRange(fabs(bar.value), defaultRanges));
+        }
+        
+
+        if (bar.middle) {
+            Brain.Screen.drawRectangle(bar.x + (bar.width / 2), bar.y + 5, (bar.value / 100 ) * (bar.width / 2), bar.height); // Middle Draw
+        } else {
+            Brain.Screen.drawRectangle(bar.x, bar.y + 5, (bar.value / 100) * bar.width, bar.height); // Normal Draw
+        }
+        Brain.Screen.setFillColor(vex::color::black);
+    } else {
+
+        // Actually applies the gradient to the bar
+        int roundedVal = trunc(bar.value);
+        double segmentWidth = bar.width / 100.00;
+
+        if (bar.middle) {
+            // Draw Middle
+            segmentWidth = segmentWidth / 2.00;
+            double actualWidth = segmentWidth;
+            if (segmentWidth < 2) {
+                segmentWidth = 2;
+            }
+            if (roundedVal >= 0) {
+                    // Going up
+                for (int i = 0; i <= roundedVal; i++) {
+                    color displayColor = determinColorFromRange(i, bar.ranges);
+                    Brain.Screen.setFillColor(displayColor);
+                    Brain.Screen.setPenColor(displayColor);
+                    Brain.Screen.drawRectangle(bar.x + (i * actualWidth) + (bar.width / 2.00), bar.y + 5, segmentWidth, bar.height);
+                }
+            } else {
+                    // Going Down
+                for (int i = roundedVal; i <= 0; i++) {
+                    color displayColor = determinColorFromRange(i, bar.ranges);
+                    Brain.Screen.setFillColor(displayColor);
+                    Brain.Screen.setPenColor(displayColor);
+                    Brain.Screen.drawRectangle(bar.x + (i * actualWidth) + (bar.width / 2.00), bar.y + 5, segmentWidth, bar.height);
+                    
+                }
+            }
+        } else {
+            // Draw Normal
+            if (roundedVal >= 0) {
+                 // Going up
+                for (int i = 0; i <= roundedVal; i++) {
+                    Brain.Screen.setFillColor(determinColorFromRange(i, bar.ranges));
+                    Brain.Screen.setPenColor(color::transparent);
+                    Brain.Screen.setPenWidth(0);
+                    if (i == roundedVal) {
+                        Brain.Screen.drawRectangle(bar.x + (i * segmentWidth), bar.y + 5, segmentWidth, bar.height);
+                    } else {
+                        Brain.Screen.drawRectangle(bar.x + (i * segmentWidth), bar.y + 5, segmentWidth * 2, bar.height);
+                    }
+                }
+            } else {
+                 // Going Down
+                for (int i = roundedVal; i <= 0; i++) {
+                    Brain.Screen.setFillColor(determinColorFromRange(i, bar.ranges));
+                    Brain.Screen.setPenColor(color::transparent);
+                    Brain.Screen.setPenWidth(0);
+                    if (i == 0) {
+                        Brain.Screen.drawRectangle(bar.x + (i * segmentWidth), bar.y + 5, segmentWidth, bar.height);
+                    } else {
+                        Brain.Screen.drawRectangle(bar.x + (i * segmentWidth), bar.y + 5, segmentWidth * 2, bar.height);
+                    }
+                }
+            }
+        }
+        Brain.Screen.setFillColor(vex::color::black);
+    }
+
+    Brain.Screen.setPenColor(color::white);
+    Brain.Screen.setFillColor(color::transparent);
+    Brain.Screen.setPenWidth(1);
     Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
-    Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
-
-    if (bar.ranges.size() != 0) {
-        Brain.Screen.setFillColor(determinColorFromRange(bar.value, bar.ranges));
-    } else {
-        // Default Battery Color Range
-        std::vector<colorRange> defaultRanges;
-        defaultRanges.push_back(colorRange(0, 20, color::red));
-        defaultRanges.push_back(colorRange(21, 35, color::yellow));
-        defaultRanges.push_back(colorRange(36, 100, color::green));
-
-        Brain.Screen.setFillColor(determinColorFromRange(fabs(bar.value), defaultRanges));
-    }
-    
-
-    if (bar.middle) {
-        Brain.Screen.drawRectangle(bar.x + (bar.width / 2), bar.y + 5, (bar.value / 100 ) * (bar.width / 2), bar.height); // Middle Draw
-    } else {
-        Brain.Screen.drawRectangle(bar.x, bar.y + 5, (bar.value / 100) * bar.width, bar.height); // Normal Draw
-    }
-    Brain.Screen.setFillColor(vex::color::black);
+    Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);  
 };
 void Page::drawVertProgressBar(ProgressBar bar) {
+    
+    if (bar.fillGradient) {
+        if (bar.ranges.size() != 0) {
+            Brain.Screen.setFillColor(determinColorFromRange(bar.value, bar.ranges));
+        } else {
+            // Default Heat Color Range
+            std::vector<colorRange> defaultRanges;
+            defaultRanges.push_back(colorRange(0, 60, color::green));
+            defaultRanges.push_back(colorRange(61, 80, color::yellow));
+            defaultRanges.push_back(colorRange(81, 100, color::red));
+
+            Brain.Screen.setFillColor(determinColorFromRange(fabs(bar.value), defaultRanges));
+        }
+
+
+        if (bar.middle) {
+            Brain.Screen.drawRectangle(bar.x, bar.y + 5 + (bar.height / 2), bar.width, - (bar.value / 100) * bar.height / 2);
+        } else {
+            Brain.Screen.drawRectangle(bar.x, bar.y + 5 + bar.height, bar.width, - (bar.value / 100) * bar.height);
+        }
+
+        Brain.Screen.setFillColor(vex::color::black);
+    } else {
+        // Actually applies the gradient to the bar
+        int roundedVal = trunc(bar.value);
+        double segmentHeight = bar.height / 100.00;
+
+        if (bar.middle) {
+            // Draw Middle
+            segmentHeight = segmentHeight / 2.00;
+            double actualHeight = segmentHeight;
+            if (segmentHeight < 2) {
+                segmentHeight = 2;
+            }
+            if (roundedVal >= 0) {
+                    // Going up
+                for (int i = 0; i <= roundedVal; i++) {
+                    color displayColor = determinColorFromRange(i, bar.ranges);
+                    Brain.Screen.setFillColor(displayColor);
+                    Brain.Screen.setPenColor(displayColor);
+                    Brain.Screen.drawRectangle(bar.x, bar.y + 5 + (bar.height / 2) - (i * actualHeight), bar.width, segmentHeight);
+                }
+            } else {
+                    // Going Down
+                for (int i = roundedVal; i <= 0; i++) {
+                    color displayColor = determinColorFromRange(i, bar.ranges);
+                    Brain.Screen.setFillColor(displayColor);
+                    Brain.Screen.setPenColor(displayColor);
+                    Brain.Screen.drawRectangle(bar.x, bar.y + 5 + (bar.height / 2) - (i * actualHeight), bar.width, segmentHeight);
+                    
+                }
+            }
+        } else {
+            // Draw Normal
+            if (roundedVal >= 0) {
+                 // Going up
+                for (int i = 0; i <= roundedVal; i++) {
+                    color displayColor = determinColorFromRange(i, bar.ranges);
+                    Brain.Screen.setFillColor(displayColor);
+                    Brain.Screen.setPenColor(displayColor);
+                    Brain.Screen.drawRectangle(bar.x, bar.y + 5 + bar.height - (i * segmentHeight), bar.width, segmentHeight);
+                    
+                }
+            } else {
+                 // Going Down
+                for (int i = roundedVal; i <= 0; i++) {
+                    color displayColor = determinColorFromRange(i, bar.ranges);
+                    Brain.Screen.setFillColor(displayColor);
+                    Brain.Screen.setPenColor(displayColor);
+                    Brain.Screen.drawRectangle(bar.x, bar.y + 5 + bar.height - (i * segmentHeight), bar.width, segmentHeight);
+                    
+                }
+            }
+        }
+        Brain.Screen.setFillColor(vex::color::black);
+    }
+    Brain.Screen.setPenColor(color::white);
+    Brain.Screen.setFillColor(color::transparent);
+    Brain.Screen.setPenWidth(1);
     Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
     Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
-    
-    if (bar.ranges.size() != 0) {
-        Brain.Screen.setFillColor(determinColorFromRange(bar.value, bar.ranges));
-    } else {
-        // Default Heat Color Range
-        std::vector<colorRange> defaultRanges;
-        defaultRanges.push_back(colorRange(0, 60, color::green));
-        defaultRanges.push_back(colorRange(61, 80, color::yellow));
-        defaultRanges.push_back(colorRange(81, 100, color::red));
-
-        Brain.Screen.setFillColor(determinColorFromRange(fabs(bar.value), defaultRanges));
-    }
-
-
-    if (bar.middle) {
-        Brain.Screen.drawRectangle(bar.x, bar.y + 5 + (bar.height / 2), bar.width, - (bar.value / 100) * bar.height / 2);
-    } else {
-        Brain.Screen.drawRectangle(bar.x, bar.y + 5 + bar.height, bar.width, - (bar.value / 100) * bar.height);
-    }
-
-    Brain.Screen.setFillColor(vex::color::black);
 };
 void Page::drawButton(Button button) {
     Brain.Screen.setFillColor(button.fillColor);

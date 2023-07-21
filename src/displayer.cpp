@@ -16,7 +16,7 @@ using std::cout;
 using std::endl;
 
 using namespace vex;
-
+using namespace display;
 
 
 // Define head elements
@@ -499,7 +499,7 @@ int brainDisplayerInit() {
     // Init Gradients
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
-    Gradient rainbowGradient = Gradient(0, 360, 00, 100);
+    Gradient rainbowGradient = Gradient(0, 360, 0, 100);
     //std::vector<colorRange> whiteRange = {colorRange(-200, 200, color::white)};
 
     // Add pages to the main renderer
@@ -514,7 +514,7 @@ int brainDisplayerInit() {
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
     loadingPage.addText("Developed by Hayden Steele", 140, 130, color::white, fontType::mono15);
-    loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, rainbowGradient.finalGradient);
+    loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, false, rainbowGradient.finalGradient);
     loadingPage.addDataUpdaterCB(updateLoadingPage, 0.01);
 
     // Configure the home page
@@ -524,7 +524,7 @@ int brainDisplayerInit() {
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
-    homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, batteryGradient.finalGradient);
+    homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, false, batteryGradient.finalGradient);
     homePage.addText("Status: ", 325, 70, color::white, fontType::prop20);
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
     homePage.addLineGraph("batWatt", "Watts: %dW", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
@@ -563,10 +563,10 @@ int brainDisplayerInit() {
     
     // Configure the debug page
     debugPage.addLogger(&BrainLogs);
-    debugPage.addVertProgressBar("fl", 300, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("fr", 350, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("bl", 400, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("br", 450, 15, 30, 100, "%d%%", false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("fl", 300, 15, 30, 100, "%d%%", false, false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("fr", 350, 15, 30, 100, "%d%%", false, false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("bl", 400, 15, 30, 100, "%d%%", false, false, heatGradient.finalGradient);
+    debugPage.addVertProgressBar("br", 450, 15, 30, 100, "%d%%", false, false, heatGradient.finalGradient);
 
     debugPage.addText("SD Card",  300, 140, color::white, fontType::mono20, "sdStatus");
     debugPage.addText("Odometry Status", 300, 160, color::white, fontType::mono20, "trackingStatus");
