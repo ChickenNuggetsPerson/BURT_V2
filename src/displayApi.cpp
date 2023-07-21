@@ -753,10 +753,11 @@ void Page::drawHorzProgressbar(ProgressBar bar) {
         Brain.Screen.setFillColor(vex::color::black);
     }
 
+    Brain.Screen.setFillColor(backgroundVexColor);
     Brain.Screen.setPenColor(color::white);
-    Brain.Screen.setFillColor(color::transparent);
     Brain.Screen.setPenWidth(1);
     Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
+    Brain.Screen.setFillColor(color::transparent);
     Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);  
 };
 void Page::drawVertProgressBar(ProgressBar bar) {
@@ -836,16 +837,18 @@ void Page::drawVertProgressBar(ProgressBar bar) {
         }
         Brain.Screen.setFillColor(vex::color::black);
     }
+    
+    Brain.Screen.setFillColor(backgroundVexColor);
     Brain.Screen.setPenColor(color::white);
-    Brain.Screen.setFillColor(color::transparent);
     Brain.Screen.setPenWidth(1);
     Brain.Screen.printAt(bar.x, bar.y, bar.name, int(bar.value));
+    Brain.Screen.setFillColor(color::transparent);
     Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
 };
 void Page::drawButton(Button button) {
     Brain.Screen.setFillColor(button.fillColor);
     Brain.Screen.drawRectangle(button.x, button.y, button.width, button.height);
-    Brain.Screen.setFillColor(black);
+    Brain.Screen.setFillColor(backgroundVexColor);
     Brain.Screen.printAt(button.x + (button.width / 2) - (Brain.Screen.getStringWidth(button.text.c_str()) / 2), button.y + (button.height / 2) + (Brain.Screen.getStringHeight(button.text.c_str()) / 3), button.text.c_str(), button.data);
 };
 void Page::drawDisplayBox(DisplayBox box) {
@@ -853,7 +856,7 @@ void Page::drawDisplayBox(DisplayBox box) {
     Brain.Screen.setFillColor(box.fillColor);
     Brain.Screen.drawRectangle(box.x, box.y, box.width, box.height);
     Brain.Screen.setPenColor(color::white);
-    Brain.Screen.setFillColor(black);            
+    Brain.Screen.setFillColor(backgroundVexColor);       
 }
 void Page::drawToggle(Toggle toggleButton) {
 
@@ -869,7 +872,7 @@ void Page::drawToggle(Toggle toggleButton) {
     } else {
         Brain.Screen.printAt(toggleButton.x + (toggleButton.width / 2) - (Brain.Screen.getStringWidth(toggleButton.displayText) / 2), toggleButton.y + (toggleButton.height / 2) + (Brain.Screen.getStringHeight(toggleButton.displayText) / 4), toggleButton.displayText);
     }
-    Brain.Screen.setFillColor(black);
+    Brain.Screen.setFillColor(backgroundVexColor);
 }
 void Page::drawOverlay(OverlayQuestion overlay) {
 
@@ -895,13 +898,18 @@ void Page::drawOverlay(OverlayQuestion overlay) {
 };
 void Page::render() {
 
+    // Render Background
+    if (!backgroundColor.isDefault()) {
+        Brain.Screen.setFillColor(backgroundVexColor);
+        Brain.Screen.drawRectangle(-5, -5, screenXSize + 10, screenYSize + 10);
+    }
+
     // Render Logger
     if (hasLogger) {
         loggerStorage->render();
     }
 
     // Render Texts
-
     for (auto text: textStorage) {
         Brain.Screen.setPenColor(text.displayColor);
         Brain.Screen.setFont(text.displayFont);
@@ -930,6 +938,7 @@ void Page::render() {
 
     // Render Line Graphs
     for (auto graph: graphStorage) {
+        Brain.Screen.setFillColor(backgroundVexColor);
         graph.draw();
     }
 

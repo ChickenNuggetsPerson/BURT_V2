@@ -84,16 +84,16 @@ namespace display {
     class rgbColor {
         private:
         public:
-            int r = 0;
-            int g = 0;
-            int b = 0;
+            int r = NAN;
+            int g = NAN;
+            int b = NAN;
 
+            rgbColor() {};
             rgbColor(int red, int green, int blue) {
                 r = red;
                 g = green;
                 b = blue;
             }
-
             rgbColor(const char* colorName) {
                 if (strcmp(colorName, "red") == 0)    {
                     r = 255; g = 0; b = 0;
@@ -120,6 +120,10 @@ namespace display {
                     r = 0; g = 0; b = 0;
                 }
         }
+    
+            bool isDefault() {
+                return isnan(r) || isnan(g) || isnan(b);
+            }
     };
 
     // Handles generating smooth color gradients
@@ -440,6 +444,9 @@ namespace display {
 
             OverlayQuestion storedOverlay;
             bool showOverlay = false;
+            
+            rgbColor backgroundColor;
+            color backgroundVexColor = color::black;
 
             std::vector<DisplayText> textStorage;
             std::vector<ProgressBar> barStorage;
@@ -452,8 +459,6 @@ namespace display {
             int activeAdjustNum = NAN;
             std::vector<AdjustableNum> adjustNumStorage;
             
-
-
 
             int (*dataUpdaterCB)(Page*);
             double updateSpeed = 0.00;
@@ -534,7 +539,10 @@ namespace display {
             void addAdjustableNum(const char* id, double initialVal, double stepAmount, double maxAmount, double minAmount, int displayX, int displayY, int displayWidth, int displayHeight, vex::fontType displayFont, bool showRanges) {
                 adjustNumStorage.push_back(AdjustableNum(id, initialVal, stepAmount, maxAmount, minAmount, displayX, displayY, displayWidth, displayHeight, displayFont, this, showRanges));
             };
-
+            void addBackgroundColor(rgbColor backgroundColor) {
+                this->backgroundColor = backgroundColor;
+                this->backgroundVexColor.rgb(backgroundColor.r, backgroundColor.g, backgroundColor.b);
+            }
 
 
             void setProgressBarValue(const char* barId, int value);
