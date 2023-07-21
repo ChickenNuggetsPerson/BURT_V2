@@ -1228,8 +1228,8 @@ void Page::screenPressed(int x, int y) {
 // MenuSystem Functions
 void MenuSystem::startUpdaterTask(int pageNum) {
     if (isUpdating) { stopUpdaterTask(); }
-    if (!pageStorage[displayPage]->hasCB) { return; }
-    updaterTask = task(mainDataUpdater, (void*)pageStorage[displayPage], task::taskPrioritylow);
+    if (!pageStorage.at(displayPage).pagePtr->hasCB) { return; }
+    updaterTask = task(mainDataUpdater, (void*)pageStorage.at(displayPage).pagePtr, task::taskPrioritylow);
     isUpdating = true;
 }; 
 void MenuSystem::stopUpdaterTask() {
@@ -1251,15 +1251,17 @@ void MenuSystem::drawNotification(int rowNum, Notification notif) {
 }
 void MenuSystem::render() {
     // Render Page
-    if (displayPage == -1) {
-        Brain.Screen.printAt(20, 100, "No Pages In Storage");
+    if (!minimalMode) {
+        if (displayPage == -1) {
+            Brain.Screen.printAt(20, 100, "No Pages In Storage");
+        } else {
+            pageStorage.at(displayPage).pagePtr->render();
+            if (firstTimeRender) { startUpdaterTask(displayPage); firstTimeRender = false;}
+        }
     } else {
-        pageStorage[displayPage]->render();
-        if (firstTimeRender) { startUpdaterTask(displayPage); firstTimeRender = false;}
+        minimalPage.render();
     }
-
     
-
     // Render Notifications
     if (showingNotifications) {
         for (int i = notifications.size() - 1; i > -1; i--) {
@@ -1274,43 +1276,44 @@ void MenuSystem::render() {
     }
 };
 void MenuSystem::addPage(const char* pageId, Page* page) {
-    pageStorage[pagesStored] = page;
-    pageStorage[pagesStored]->menuSystemPointer = this;
-    pageIdStorage[pagesStored] = pageId;
-    pagesStored++;
-    if (displayPage == -1 && pagesStored == 1) {
+    page->menuSystemPointer = this;
+    int newIndex = pageStorage.size();
+    pageStorage.push_back(PageLink(page, std::string(pageId), newIndex));
+    if (displayPage == -1 && pageStorage.size() == 1) {
         displayPage = 0;
     }
 };
 void MenuSystem::gotoPage(const char* pageId) {
-    for (int i = 0; i < pagesStored; i++) {
-        if (strcmp(pageId, pageIdStorage[i]) == 0) {
-            if (displayPage != i) {
+    std::string id = pageId;
+    for (auto page: pageStorage) {
+        if (page.pageID == id) {
+            if (displayPage != page.index) {
                 prevPage = displayPage;
-                displayPage = i;
+                displayPage = page.index;
                 startUpdaterTask(displayPage);
-                pageStorage[i]->pageLoaded();
+                page.pagePtr->pageLoaded();
                 return;
             } else { return; }
         }
     }
 };
 void MenuSystem::gotoPrevPage() {
-    gotoPage(pageIdStorage[prevPage]);
+    gotoPage(pageStorage.at(prevPage).pageID.c_str());
 }
 Page* MenuSystem::searchPages(const char* pageId) {
-    for (int i = 0; i < pagesStored; i++) {
-        if (strcmp(pageId, pageIdStorage[i]) == 0) {
-            return pageStorage[i];
+    std::string id = pageId;
+    for (auto page: pageStorage) {
+        if (page.pageID == id) {
+            return page.pagePtr;
         }
     }
     return nullptr;
 }
 void MenuSystem::screenPressed() {
     if (displayPage != 0) {
-        pageStorage[displayPage]->screenPressed(Brain.Screen.xPosition(), Brain.Screen.yPosition());
+        pageStorage.at(displayPage).pagePtr->screenPressed(Brain.Screen.xPosition(), Brain.Screen.yPosition());
     } else {
-        gotoPage("main");
+        gotoPage("main"); // Skip the loading screen
     }
 };
 void MenuSystem::newNotification(const char* text, int displayTime) {
@@ -1320,7 +1323,10 @@ void MenuSystem::newNotification(const char* text, int displayTime, vex::color d
     if (!showingNotifications) {return;}
     notifications.push_back(Notification(text, Brain.timer(msec) + (1000.00 * displayTime), displayColor));
 };
-
+void MenuSystem::setMinimalMode(Page minimalPage) {
+    minimalMode = true;
+    this->minimalPage = minimalPage;
+};
 
 // Notification Checker Functions
 bool NotificationChecker::checkMotor(MotCheck check) {

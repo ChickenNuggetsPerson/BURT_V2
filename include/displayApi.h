@@ -592,12 +592,24 @@ namespace display {
         Notification();
     };
 
+    struct PageLink {
+        Page* pagePtr;
+        std::string pageID;
+        int index;
+        PageLink(Page* ptr, std::string id, int index) {
+            this->pagePtr = ptr;
+            this->pageID = id;
+            this->index = index;
+        }
+    };
+
     class MenuSystem {
         private:
 
-            Page* pageStorage[10];
-            const char* pageIdStorage[10];
-            int pagesStored = 0;
+            bool minimalMode = false;
+            Page minimalPage;
+
+            std::vector<PageLink> pageStorage;
 
             int displayPage = -1;
             int prevPage = 0;
@@ -634,6 +646,8 @@ namespace display {
 
             void newNotification(const char* text, int displayTime);
             void newNotification(const char* text, int displayTime, vex::color displayColor);
+
+            void setMinimalMode(Page minimalPage);
 
     };
 
