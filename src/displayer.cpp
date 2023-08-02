@@ -23,16 +23,6 @@ using namespace display;
 Logger BrainLogs(1, 1, "logs.txt", 10);
 MenuSystem mainRenderer(true);
 
-// Define Pages
-Page loadingPage;
-Page homePage;
-Page mapPage;
-Page debugPage;
-Page queuePage;
-Page autonConfigPage;
-Page systemConfigPage;
-
-
 
 // Called when the screen is pressed
 void screenPressed() {mainRenderer.screenPressed();}
@@ -150,17 +140,19 @@ void configPageInit(Page* currentPage, auton::AutonSystem* robotAI) {
     }
 };
 void setConfigs() {
+    Page* autonConfigPage = mainRenderer.searchPages("config");
     for (auto config: botAI.configStorage) {
-        autonConfigPage.setToggleStatus(config.id.c_str(), botAI.getConfig(config.id.c_str()));
+        autonConfigPage->setToggleStatus(config.id.c_str(), botAI.getConfig(config.id.c_str()));
         wait(0.01, seconds);
     }
 };
 void saveConfigs() {
 
     brainFancyDebug("Saving New Config", color::purple, true);
+    Page* autonConfigPage = mainRenderer.searchPages("config");
 
     for (auto config: botAI.configStorage) {
-        botAI.saveConfig(config.id.c_str(), autonConfigPage.getToggleStatus(config.id.c_str()));
+        botAI.saveConfig(config.id.c_str(), autonConfigPage->getToggleStatus(config.id.c_str()));
     }
 };
 
@@ -502,14 +494,14 @@ int brainDisplayerInit() {
     Gradient rainbowGradient = Gradient(0, 360, 0, 100);
     //std::vector<colorRange> whiteRange = {colorRange(-200, 200, color::white)};
 
-    // Add pages to the main renderer
-    mainRenderer.addPage("loading", &loadingPage);
-    mainRenderer.addPage("main", &homePage);
-    mainRenderer.addPage("debug", &debugPage);
-    mainRenderer.addPage("config", &autonConfigPage);
-    mainRenderer.addPage("systemConfig", &systemConfigPage);
-    mainRenderer.addPage("queue", &queuePage);
-    mainRenderer.addPage("map", &mapPage);
+    // Define Pages
+    Page loadingPage;
+    Page homePage;
+    Page mapPage;
+    Page debugPage;
+    Page queuePage;
+    Page autonConfigPage;
+    Page systemConfigPage;
 
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
@@ -589,6 +581,16 @@ int brainDisplayerInit() {
     queuePage.addButton("Back", 380, 210, 100, 30, gotoDebugPageButton, "mainPageButton");
     queuePage.addDataUpdaterCB(updateQueuePage, 1);
 
+
+    // Add pages to the main renderer
+    mainRenderer.addPage("loading", loadingPage);
+    mainRenderer.addPage("main", homePage);
+    mainRenderer.addPage("debug", debugPage);
+    mainRenderer.addPage("config", autonConfigPage);
+    mainRenderer.addPage("systemConfig", systemConfigPage);
+    mainRenderer.addPage("queue", queuePage);
+    mainRenderer.addPage("map", mapPage);
+
     return 1;
 };
 
@@ -600,14 +602,14 @@ int brainDisplayerInit() {
 int brainDisplayer() {
 
     brainDisplayerInit();
-    
+    mainRenderer.ready();
     
     double deltaTime = 0.00;
     while(true) {
         double startTime = Brain.timer(msec);
         Brain.Screen.clearScreen();
-        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime)); // Show the screen FPS
         mainRenderer.render(); // Render the screen
+        Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime)); // Show the screen FPS
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime)); // Calculate the fps
         Brain.Screen.render(); // Use the Screen.Render() to stop visual bugs
     }

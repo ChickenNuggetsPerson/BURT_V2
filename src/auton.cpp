@@ -519,18 +519,31 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
 
         // Get Position Data
         JsonObject pos = movement["pos"].as<JsonObject>();
-        tmpMove.pos = odom::Position(pos["x"].as<float>(), pos["y"].as<float>(), pos["rot"].as<float>());
+        if (pos["rot"].as<float>() == -1) {
+            tmpMove.pos = odom::Position(pos["x"].as<float>(), pos["y"].as<float>());
+        } else {
+            tmpMove.pos = odom::Position(pos["x"].as<float>(), pos["y"].as<float>(), pos["rot"].as<float>());
+        }
+        
 
         // Get Tile Position Data
         JsonObject tilePos = movement["tilePosition"].as<JsonObject>();
-        tmpMove.tilePos = odom::TilePosition(tilePos["x"].as<float>(), tilePos["y"].as<float>(), tilePos["rot"].as<float>());
+        if (tilePos["rot"].as<float>() == -1) {
+            tmpMove.tilePos = odom::TilePosition(tilePos["x"].as<float>(), tilePos["y"].as<float>());
+        } else {
+            tmpMove.tilePos = odom::TilePosition(tilePos["x"].as<float>(), tilePos["y"].as<float>(), tilePos["rot"].as<float>());
+        }
+    
 
         // Loop Through Drive Path Array
         JsonArray drivePathArray = movement["drivePath"].as<JsonArray>();
 
-
         for (const auto& point : drivePathArray) {
-            tmpMove.drivePath.push_back(odom::TilePosition(point["x"].as<float>(), point["y"].as<float>(), point["rot"].as<float>()));
+            if (point["rot"].as<float>() == -1) {
+                tmpMove.drivePath.push_back(odom::TilePosition(point["x"].as<float>(), point["y"].as<float>()));
+            } else {
+                tmpMove.drivePath.push_back(odom::TilePosition(point["x"].as<float>(), point["y"].as<float>(), point["rot"].as<float>()));    
+            }
         }
 
         readPath.addMovement(tmpMove);

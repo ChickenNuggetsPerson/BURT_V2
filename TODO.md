@@ -24,3 +24,4 @@
   - [X] Pid Namespace
   - [X] Display API Namespace
 - [ ] Refactor Display API to use Maps?
+- [ ] Make sure map path jsons somehow work with nan values

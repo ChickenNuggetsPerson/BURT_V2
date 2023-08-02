@@ -658,7 +658,7 @@ void Plot::showPath(auton::autonPath displayPath) {
 
 
 // Page Function
-vex::color Page::determinColorFromRange(int value, std::vector<colorRange> ranges) {
+vex::color Page::determinColorFromRange(int value, std::vector<colorRange>& ranges) {
     for (auto range: ranges) {
         if (range.inRange(value)) {
             return range.displayColor;
@@ -666,7 +666,7 @@ vex::color Page::determinColorFromRange(int value, std::vector<colorRange> range
     }
     return vex::color::black;
 }
-void Page::drawHorzProgressbar(ProgressBar bar) {
+void Page::drawHorzProgressbar(ProgressBar& bar) {
 
     if (bar.fillGradient) {
 
@@ -760,7 +760,7 @@ void Page::drawHorzProgressbar(ProgressBar bar) {
     Brain.Screen.setFillColor(color::transparent);
     Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);  
 };
-void Page::drawVertProgressBar(ProgressBar bar) {
+void Page::drawVertProgressBar(ProgressBar& bar) {
     
     if (bar.fillGradient) {
         if (bar.ranges.size() != 0) {
@@ -845,20 +845,20 @@ void Page::drawVertProgressBar(ProgressBar bar) {
     Brain.Screen.setFillColor(color::transparent);
     Brain.Screen.drawRectangle(bar.x, bar.y + 5, bar.width, bar.height);
 };
-void Page::drawButton(Button button) {
+void Page::drawButton(Button& button) {
     Brain.Screen.setFillColor(button.fillColor);
     Brain.Screen.drawRectangle(button.x, button.y, button.width, button.height);
     Brain.Screen.setFillColor(backgroundVexColor);
     Brain.Screen.printAt(button.x + (button.width / 2) - (Brain.Screen.getStringWidth(button.text.c_str()) / 2), button.y + (button.height / 2) + (Brain.Screen.getStringHeight(button.text.c_str()) / 3), button.text.c_str(), button.data);
 };
-void Page::drawDisplayBox(DisplayBox box) {
+void Page::drawDisplayBox(DisplayBox& box) {
     Brain.Screen.setPenColor(box.penColor);
     Brain.Screen.setFillColor(box.fillColor);
     Brain.Screen.drawRectangle(box.x, box.y, box.width, box.height);
     Brain.Screen.setPenColor(color::white);
     Brain.Screen.setFillColor(backgroundVexColor);       
 }
-void Page::drawToggle(Toggle toggleButton) {
+void Page::drawToggle(Toggle& toggleButton) {
 
     if (toggleButton.status) {
         Brain.Screen.setFillColor(toggleButton.onColor);
@@ -874,7 +874,7 @@ void Page::drawToggle(Toggle toggleButton) {
     }
     Brain.Screen.setFillColor(backgroundVexColor);
 }
-void Page::drawOverlay(OverlayQuestion overlay) {
+void Page::drawOverlay(OverlayQuestion& overlay) {
 
     int option1XCenter = (screenXSize / 2) - (overlayWidth / 4);
     int option2XCenter = (screenXSize / 2) + (overlayWidth / 4);
@@ -1226,10 +1226,10 @@ void Page::screenPressed(int x, int y) {
 
 
 // MenuSystem Functions
-void MenuSystem::startUpdaterTask(int pageNum) {
+void MenuSystem::startUpdaterTask(Page* pagePtr) {
     if (isUpdating) { stopUpdaterTask(); }
-    if (!pageStorage.at(displayPage).pagePtr->hasCB) { return; }
-    updaterTask = task(mainDataUpdater, (void*)pageStorage.at(displayPage).pagePtr, task::taskPrioritylow);
+    if (!pagePtr->hasCB) { return; }
+    updaterTask = task(mainDataUpdater, (void*)pagePtr, task::taskPrioritylow);
     isUpdating = true;
 }; 
 void MenuSystem::stopUpdaterTask() {
@@ -1251,16 +1251,14 @@ void MenuSystem::drawNotification(int rowNum, Notification notif) {
 }
 void MenuSystem::render() {
     // Render Page
-    if (!minimalMode) {
-        if (displayPage == -1) {
-            Brain.Screen.printAt(20, 100, "No Pages In Storage");
-        } else {
-            pageStorage.at(displayPage).pagePtr->render();
-            if (firstTimeRender) { startUpdaterTask(displayPage); firstTimeRender = false;}
-        }
+
+    if (renderPagePtr == nullptr) {
+        Brain.Screen.printAt(20, 100, "No Pages In Storage");
     } else {
-        minimalPage.render();
+        renderPagePtr->render();
+        if (firstTimeRender) { startUpdaterTask(renderPagePtr); firstTimeRender = false;}
     }
+
     
     // Render Notifications
     if (showingNotifications) {
@@ -1268,50 +1266,60 @@ void MenuSystem::render() {
             if (notifications[i].disapearTime < Brain.timer(msec)) {
                 notifications.erase(notifications.begin() + i);
             } else {
-                if (displayPage == 0) { return; } // Don't render notifications on the loading page
+                if (currentPage == 0) { return; } // Don't render notifications on the loading page
                 drawNotification(i, notifications.at(i));
             }
             
         }
     }
 };
-void MenuSystem::addPage(const char* pageId, Page* page) {
-    page->menuSystemPointer = this;
-    int newIndex = pageStorage.size();
-    pageStorage.push_back(PageLink(page, std::string(pageId), newIndex));
-    if (displayPage == -1 && pageStorage.size() == 1) {
-        displayPage = 0;
-    }
+void MenuSystem::ready() {
+    gotoPage(0);
+};
+void MenuSystem::addPage(const char* pageId, Page& page) {
+    page.menuSystemPointer = this;
+    page.identifier = std::string(pageId);
+    pageStorage.push_back(page);
 };
 void MenuSystem::gotoPage(const char* pageId) {
     std::string id = pageId;
-    for (auto page: pageStorage) {
-        if (page.pageID == id) {
-            if (displayPage != page.index) {
-                prevPage = displayPage;
-                displayPage = page.index;
-                startUpdaterTask(displayPage);
-                page.pagePtr->pageLoaded();
-                return;
-            } else { return; }
-        }
+    for (int i = 0; i < pageStorage.size(); i++) {
+        if (pageStorage.at(i).identifier != pageId) { continue; }
+        if (i == currentPage) { return; }
+        prevPage = currentPage;
+        currentPage = i;
+        renderPagePtr = &pageStorage.at(i);
+        startUpdaterTask(renderPagePtr);
+        renderPagePtr->pageLoaded();
+        return;
     }
 };
+void MenuSystem::gotoPage(int index) {
+    if (index >= pageStorage.size()) { return; }
+    if (currentPage == index) { return; }
+    
+    prevPage = currentPage;
+    currentPage = index;
+    renderPagePtr = &(pageStorage.at(index));
+    startUpdaterTask(renderPagePtr);
+    renderPagePtr->pageLoaded();
+    return;
+
+};
 void MenuSystem::gotoPrevPage() {
-    gotoPage(pageStorage.at(prevPage).pageID.c_str());
+    gotoPage(prevPage);
 }
 Page* MenuSystem::searchPages(const char* pageId) {
     std::string id = pageId;
-    for (auto page: pageStorage) {
-        if (page.pageID == id) {
-            return page.pagePtr;
-        }
+    for (int i = 0; i < pageStorage.size(); i++) {
+        if (pageStorage.at(i).identifier != pageId) { continue; }
+        return &pageStorage.at(i);
     }
     return nullptr;
 }
 void MenuSystem::screenPressed() {
-    if (displayPage != 0) {
-        pageStorage.at(displayPage).pagePtr->screenPressed(Brain.Screen.xPosition(), Brain.Screen.yPosition());
+    if (currentPage != 0) {
+        pageStorage.at(currentPage).screenPressed(Brain.Screen.xPosition(), Brain.Screen.yPosition());
     } else {
         gotoPage("main"); // Skip the loading screen
     }
@@ -1323,10 +1331,7 @@ void MenuSystem::newNotification(const char* text, int displayTime, vex::color d
     if (!showingNotifications) {return;}
     notifications.push_back(Notification(text, Brain.timer(msec) + (1000.00 * displayTime), displayColor));
 };
-void MenuSystem::setMinimalMode(Page minimalPage) {
-    minimalMode = true;
-    this->minimalPage = minimalPage;
-};
+
 
 // Notification Checker Functions
 bool NotificationChecker::checkMotor(MotCheck check) {

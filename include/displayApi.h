@@ -467,14 +467,14 @@ namespace display {
             bool hasLoadedCB = false;
 
 
-            vex::color determinColorFromRange(int value, std::vector<colorRange> ranges);
+            vex::color determinColorFromRange(int value, std::vector<colorRange>& ranges);
             
 
-            void drawHorzProgressbar(ProgressBar bar);
-            void drawVertProgressBar(ProgressBar bar);
-            void drawButton(Button button);
-            void drawDisplayBox(DisplayBox box);
-            void drawToggle(Toggle toggleButton);
+            void drawHorzProgressbar(ProgressBar& bar);
+            void drawVertProgressBar(ProgressBar& bar);
+            void drawButton(Button& button);
+            void drawDisplayBox(DisplayBox& box);
+            void drawToggle(Toggle& toggleButton);
 
             int screenXSize = 480;
             int screenYSize = 240;
@@ -482,10 +482,12 @@ namespace display {
             int overlayWidth = 300;
             int overlayHeight = 150;
 
-            void drawOverlay(OverlayQuestion overlay);
+            void drawOverlay(OverlayQuestion& overlay);
 
 
         public:
+
+            std::string identifier;
 
             bool hasCB = false;
             MenuSystem* menuSystemPointer = nullptr; // So then the page can access the MenuSystem controlling it
@@ -592,26 +594,13 @@ namespace display {
         Notification();
     };
 
-    struct PageLink {
-        Page* pagePtr;
-        std::string pageID;
-        int index;
-        PageLink(Page* ptr, std::string id, int index) {
-            this->pagePtr = ptr;
-            this->pageID = id;
-            this->index = index;
-        }
-    };
-
     class MenuSystem {
         private:
 
-            bool minimalMode = false;
-            Page minimalPage;
+            std::vector<Page> pageStorage;
+            Page* renderPagePtr = nullptr;
 
-            std::vector<PageLink> pageStorage;
-
-            int displayPage = -1;
+            int currentPage = -1;
             int prevPage = 0;
 
             bool firstTimeRender = true;
@@ -619,7 +608,7 @@ namespace display {
             task updaterTask;
             bool isUpdating = false;
 
-            void startUpdaterTask(int pageNum);
+            void startUpdaterTask(Page* pagePtr);
             void stopUpdaterTask();
 
 
@@ -637,17 +626,18 @@ namespace display {
                 showingNotifications = displayNotifications;
             };
         
+            void ready();
+
             void render();
-            void addPage(const char* pageId, Page* page);
+            void addPage(const char* pageId, Page& page);
             void gotoPage(const char* pageId);
+            void gotoPage(int index);
             void gotoPrevPage();
             Page* searchPages(const char* pageId);
             void screenPressed();
 
             void newNotification(const char* text, int displayTime);
             void newNotification(const char* text, int displayTime, vex::color displayColor);
-
-            void setMinimalMode(Page minimalPage);
 
     };
 
