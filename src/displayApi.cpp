@@ -66,10 +66,11 @@ Logger::Logger(int renderX, int renderY) {
     isSaving = Brain.SDcard.isInserted();
     misc::writeFile(logFile, "Start of Logs");
 };
-Logger::Logger(int renderX, int renderY, const char* outFile = "logs.txt", int maxLogs = 11) {
+Logger::Logger(int renderX, int renderY, const char* outFile = "logs.txt", int maxLogs = 11, vex::fontType font = fontType::mono20) {
     xPos = renderX;
     yPos = renderY;
     maxRows = maxLogs;
+    displayFont = font;
 
     logFile = outFile;
     isSaving = Brain.SDcard.isInserted();
@@ -200,8 +201,15 @@ void Logger::newLog(const char* message, vex::color messageColor, int data) {
 };
 void Logger::render() {
     // Display Log Messages
+    Brain.Screen.setFont(displayFont);
     for (int i = 0; i < brainLog.size(); i++) {
         Brain.Screen.setCursor(i + yPos, xPos);
+        std::ostringstream formattedMessage;
+        formattedMessage << "[ " << brainLog.at(i).time << " ] ";
+        Brain.Screen.setPenColor(white);
+        Brain.Screen.print(formattedMessage.str().c_str());     
+
+        Brain.Screen.setCursor(i + yPos, xPos + 11);
         Brain.Screen.setPenColor(brainLog.at(i).displayColor);
         Brain.Screen.print(brainLog.at(i).text.c_str(), brainLog.at(i).displayNumber);     
         Brain.Screen.setPenColor(vex::color::white);

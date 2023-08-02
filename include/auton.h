@@ -177,6 +177,8 @@ namespace auton {
 
     public:
 
+      bool loaded = false;
+
       void addPtrs(AutonSystem* botAIPtr, odom::OdometrySystem* odometryPointer);
 
       void runQueue();

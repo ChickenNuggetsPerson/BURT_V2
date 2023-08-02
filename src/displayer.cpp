@@ -20,7 +20,7 @@ using namespace display;
 
 
 // Define head elements
-Logger BrainLogs(1, 1, "logs.txt", 10);
+Logger BrainLogs(1, 1, "logs.txt", 13, fontType::mono15);
 MenuSystem mainRenderer(true);
 
 
@@ -121,6 +121,10 @@ int gotoSystemConfigButton(Page* self) {
 }
 int gotoAutonPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("auton");
+    return 1;
+}
+int gotoDevicesDebugPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("deviceDebug");
     return 1;
 }
 
@@ -480,6 +484,68 @@ int mapShowPath(Page* self) {
 }
 
 
+void buildDeviceDebugPage(Page* self) {
+    self->addText("Left  Motor A", 20, 60, color::white, fontType::mono20, "LeftMotorA");
+    self->addText("Left  Motor B", 20, 80, color::white, fontType::mono20, "LeftMotorB");
+    self->addText("Right Motor A", 20, 100, color::white, fontType::mono20, "RightMotorA");
+    self->addText("Right Motor B", 20, 120, color::white, fontType::mono20, "RightMotorB");
+    self->addText("Inertial Sensor", 20, 140, color::white, fontType::mono20, "InertialSensor");
+    self->addText("Left  Encoder", 20, 160, color::white, fontType::mono20, "LeftEncoder");
+    self->addText("Right Encoder", 20, 180, color::white, fontType::mono20, "RightEncoder");
+    self->addText("Controller", 20, 200, color::white, fontType::mono20, "Controller");
+    
+    self->addText("Port %d", 180, 60, color::white, fontType::mono20, "lma");
+    self->setTextData("lma", (int)leftMotorAPort);
+    self->addText("Port %d", 180, 80, color::white, fontType::mono20, "lmb");
+    self->setTextData("lmb", (int)leftMotorBPort);
+    self->addText("Port %d", 180, 100, color::white, fontType::mono20, "rma");
+    self->setTextData("rma", (int)rightMotorAPort);
+    self->addText("Port %d", 180, 120, color::white, fontType::mono20, "rmb");
+    self->setTextData("rmb", (int)rightMotorBPort);
+
+    self->addText("Port %d", 180, 140, color::white, fontType::mono20, "inertial");
+    self->setTextData("inertial", (int)inertialPort);
+    self->addText("Port %d", 180, 160, color::white, fontType::mono20, "lep");
+    self->setTextData("lep", (int)leftEncoderPort);
+    self->addText("Port %d", 180, 180, color::white, fontType::mono20, "rep");
+    self->setTextData("rep", (int)rightEncoderPort);
+
+    self->addText("-", 180, 200, color::white, fontType::mono20, "Controller");
+
+
+    self->addText("Feild Status", 340, 60, white, fontType::mono20, "filed");
+    self->addText("Odom System", 340, 80, white, fontType::mono20, "odom");
+    self->addText("Queue System", 340, 100, white, fontType::mono20, "queue");
+    self->addText("Auton System", 340, 120, white, fontType::mono20, "auton");
+    self->addText("SD Card", 340, 140, white, fontType::mono20, "sd");
+}
+int updateDeviceDebug(Page* self) {
+       
+    self->setTextData("LeftMotorA", leftMotorA.installed() ? green : red);
+    self->setTextData("LeftMotorB", leftMotorB.installed() ? green : red);
+    self->setTextData("RightMotorA", rightMotorA.installed() ? green : red);
+    self->setTextData("RightMotorB", rightMotorB.installed() ? green : red);
+
+    self->setTextData("InertialSensor", inertialSensor.installed() ? green : red);
+    self->setTextData("LeftEncoder", leftEncoder.installed() ? green : red);
+    self->setTextData("RightEncoder", rightEncoder.installed() ? green : red);
+    self->setTextData("Controller", mainController.installed() ? green : red);
+
+    self->setTextData("filed", Competition.isFieldControl() ? green : red);
+    if (Odometry.isTracking) {
+        if (Odometry.usingDrive) {
+            self->setTextData("odom", yellow);
+        } else {
+            self->setTextData("odom", green);
+        }
+    } else {
+        self->setTextData("odom", red);
+    }
+    self->setTextData("queue", queuingSystem.loaded ? green : red);
+    self->setTextData("auton", botAI.isReady() ? green : red);
+    self->setTextData("sd", Brain.SDcard.isInserted() ? green : red);
+    return 1;
+}
 
 
 // Initialize All The Pages
@@ -502,6 +568,7 @@ int brainDisplayerInit() {
     Page queuePage;
     Page autonConfigPage;
     Page systemConfigPage;
+    Page devicesDebug;
 
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
@@ -516,6 +583,7 @@ int brainDisplayerInit() {
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
+    homePage.addButton("Devies", 80, 210, 100, 30, gotoDevicesDebugPageButton, "systemButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, false, batteryGradient.finalGradient);
     homePage.addText("Status: ", 325, 70, color::white, fontType::prop20);
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
@@ -582,6 +650,19 @@ int brainDisplayerInit() {
     queuePage.addDataUpdaterCB(updateQueuePage, 1);
 
 
+    // Device Debug
+    devicesDebug.addText("Installed Devices: ", 20, 35, color::white, fontType::mono30, "title");
+    devicesDebug.addText("Systems: ", 340, 35, color::white, fontType::mono30, "altTitle");
+
+    buildDeviceDebugPage(&devicesDebug);
+
+
+
+
+
+    devicesDebug.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
+    devicesDebug.addDataUpdaterCB(updateDeviceDebug, 1);
+
     // Add pages to the main renderer
     mainRenderer.addPage("loading", loadingPage);
     mainRenderer.addPage("main", homePage);
@@ -590,6 +671,7 @@ int brainDisplayerInit() {
     mainRenderer.addPage("systemConfig", systemConfigPage);
     mainRenderer.addPage("queue", queuePage);
     mainRenderer.addPage("map", mapPage);
+    mainRenderer.addPage("deviceDebug", devicesDebug);
 
     return 1;
 };
@@ -609,6 +691,7 @@ int brainDisplayer() {
         double startTime = Brain.timer(msec);
         Brain.Screen.clearScreen();
         mainRenderer.render(); // Render the screen
+        Brain.Screen.setFont(fontType::mono15);
         Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime)); // Show the screen FPS
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime)); // Calculate the fps
         Brain.Screen.render(); // Use the Screen.Render() to stop visual bugs

@@ -18,11 +18,24 @@ namespace display {
         std::string text;
         vex::color displayColor;
         int displayNumber;
+        double time;
         
         LogMessage(std::string message = "", vex::color messageColor = vex::color::white, int displayData = 0 ) {
             text = message;
             displayColor = messageColor;
             displayNumber = displayData;
+            time = Brain.timer(timeUnits::sec);
+
+            if (time < 10) {
+                time = floor(time * 100) / 100;
+            }
+            if (time >= 10 && time < 100) {
+                time = floor(time * 10) / 10;
+            } 
+            if (time >= 100) {
+                time = floor(time);
+            } 
+
         };
     };
 
@@ -35,6 +48,7 @@ namespace display {
 
             int xPos;
             int yPos;
+            vex::fontType displayFont = fontType::mono20;
 
             int maxRows;
             int currentLine;
@@ -51,7 +65,7 @@ namespace display {
 
         public:
             Logger(int renderX, int renderY);
-            Logger(int renderX, int renderY, const char* outFile, int maxLogs);
+            Logger(int renderX, int renderY, const char* outFile, int maxLogs, vex::fontType font);
 
             void reloadLogger(const char* outFile);
             void newLog(const char* message, vex::color messageColor);

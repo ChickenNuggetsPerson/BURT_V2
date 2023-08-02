@@ -481,14 +481,18 @@ std::vector<autonMovement> aiQueueSystem::getQueue() {
     return queue;
 };
 bool aiQueueSystem::addToQueue(autonPath path) {
+    loaded = false;
     for (int i = 0; i < path.getSize(); i++) {
         queue.push_back(path.getStep(i));
     }
     aiPtr->setStartPos(odom::posToTilePos(path.startPos));
+    loaded = true;
     return true;
 }
 bool aiQueueSystem::addToQueue(autonMovement movement) {
+    loaded = false;
     queue.push_back(movement);
+    loaded = true;
     return true;
 }
 bool aiQueueSystem::addToQueue(std::string jsonPath) {
