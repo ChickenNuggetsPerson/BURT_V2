@@ -244,6 +244,7 @@ int updateLoadingPage(Page* self) {
 void systemConfigSave(Page* self) {
     misc::writeFile(std::string(systemConfigFolder + systemArchivePath).c_str(), self->getToggleStatus("archiveLogs"));
     misc::writeFile(std::string(systemConfigFolder + systemDriveModePath).c_str(), self->getToggleStatus("arcadeDrive"));
+    misc::writeFile(std::string(systemConfigFolder + systemEnableWSDebug).c_str(), self->getToggleStatus("enableWSDebug"));
 
 }
 int loadedSystemConfigPage(Page* self) {
@@ -257,6 +258,7 @@ int loadedSystemConfigPage(Page* self) {
     // Set Archive Toggle
     self->setToggleStatus("archiveLogs", (misc::readFile(std::string(systemConfigFolder + systemArchivePath).c_str()) == 1));
     self->setToggleStatus("arcadeDrive", (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1));
+    self->setToggleStatus("enableWSDebug", (misc::readFile(std::string(systemConfigFolder + systemEnableWSDebug).c_str()) == 1));
 
     return 1;
 }
@@ -495,20 +497,20 @@ void buildDeviceDebugPage(Page* self) {
     self->addText("Controller", 20, 200, color::white, fontType::mono20, "Controller");
     
     self->addText("Port %d", 180, 60, color::white, fontType::mono20, "lma");
-    self->setTextData("lma", (int)leftMotorAPort);
+    self->setTextData("lma", (int)leftMotorAPort + 1);
     self->addText("Port %d", 180, 80, color::white, fontType::mono20, "lmb");
-    self->setTextData("lmb", (int)leftMotorBPort);
+    self->setTextData("lmb", (int)leftMotorBPort + 1);
     self->addText("Port %d", 180, 100, color::white, fontType::mono20, "rma");
-    self->setTextData("rma", (int)rightMotorAPort);
+    self->setTextData("rma", (int)rightMotorAPort + 1);
     self->addText("Port %d", 180, 120, color::white, fontType::mono20, "rmb");
-    self->setTextData("rmb", (int)rightMotorBPort);
+    self->setTextData("rmb", (int)rightMotorBPort + 1);
 
     self->addText("Port %d", 180, 140, color::white, fontType::mono20, "inertial");
-    self->setTextData("inertial", (int)inertialPort);
+    self->setTextData("inertial", (int)inertialPort + 1);
     self->addText("Port %d", 180, 160, color::white, fontType::mono20, "lep");
-    self->setTextData("lep", (int)leftEncoderPort);
+    self->setTextData("lep", (int)leftEncoderPort + 1);
     self->addText("Port %d", 180, 180, color::white, fontType::mono20, "rep");
-    self->setTextData("rep", (int)rightEncoderPort);
+    self->setTextData("rep", (int)rightEncoderPort + 1);
 
     self->addText("-", 180, 200, color::white, fontType::mono20, "Controller");
 
@@ -616,6 +618,7 @@ int brainDisplayerInit() {
     systemConfigPage.addButton("Back", 380, 210, 100, 30, systemConfigExitButton, "mainPageButton");
     systemConfigPage.addToggle("archiveLogs", "Archive Logs", false, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 170, 150, 40);
     systemConfigPage.addToggle("arcadeDrive", "Arcade Drive", true, vex::color(168, 0, 0), vex::color(0, 168, 0), 20, 120, 150, 40, "Tank Drive");
+    systemConfigPage.addToggle("enableWSDebug", "WS Debug", true, vex::color(168, 0, 0), vex::color(0, 168, 0), 200, 120, 150, 40);
 
     systemConfigPage.addPageLoadedCB(loadedSystemConfigPage);
     systemConfigPage.addDataUpdaterCB(updateSystemConfig);
@@ -655,10 +658,6 @@ int brainDisplayerInit() {
     devicesDebug.addText("Systems: ", 340, 35, color::white, fontType::mono30, "altTitle");
 
     buildDeviceDebugPage(&devicesDebug);
-
-
-
-
 
     devicesDebug.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
     devicesDebug.addDataUpdaterCB(updateDeviceDebug, 1);

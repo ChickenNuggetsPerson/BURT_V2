@@ -6,6 +6,7 @@ using namespace vex;
 
 competition Competition;
 brain Brain;
+debugSystem::Debugger WSDebugger;
 auton::aiQueueSystem queuingSystem;
 odom::OdometrySystem Odometry;
 auton::AutonSystem botAI = auton::AutonSystem(&Odometry, &queuingSystem);

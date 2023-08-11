@@ -24,4 +24,5 @@
   - [X] Pid Namespace
   - [X] Display API Namespace
 - [ ] Refactor Display API to use Maps?
-- [ ] Make sure map path jsons somehow work with nan values
+- [X] Make sure map path jsons somehow work with nan values
+- [ ] Fix Auton Gen Task

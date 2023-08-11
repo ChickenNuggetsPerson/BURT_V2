@@ -84,6 +84,7 @@ static std::string AUTON_PATH_SKILLS_JSON = "skills.json";
 static std::string systemConfigFolder = "systemConfig/";
 static std::string systemArchivePath = "archiveLogs.txt";
 static std::string systemDriveModePath = "driveMode.txt";
+static std::string systemEnableWSDebug = "enableWSDebug.txt";
 
 
 // Config Log Paths

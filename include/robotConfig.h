@@ -14,6 +14,7 @@
 #include "altController.h"
 #include "misc.h"
 
+
 using namespace vex;
 
 void startTasks(void);
@@ -41,3 +42,7 @@ extern inertial inertialSensor;
 extern rotation leftEncoder;
 extern rotation rightEncoder;
 
+
+
+#include "debuger.h"
+extern debugSystem::Debugger WSDebugger;
