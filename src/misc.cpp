@@ -15,6 +15,12 @@ int misc::readFile(const char* fileName) {
   readStream >> readVal;
   return readVal;
 }
+double misc::readFileDouble(const char* fileName) {
+  std::fstream readStream(fileName, std::ios_base::in);
+  int readVal;
+  readStream >> readVal;
+  return readVal;
+}
 
 void misc::writeFile(const char* fileName, int numToWrite) {
   std::ofstream writeStream(fileName);
@@ -25,6 +31,15 @@ void misc::writeFile(const char* fileName, int numToWrite) {
   writeStream << writeString.str();
   writeStream.close();
 }
+void misc::writeFile(const char* fileName, double numToWrite) {
+  std::ofstream writeStream(fileName);
+
+  std::ostringstream writeString;
+  writeString << numToWrite;
+
+  writeStream << writeString.str();
+  writeStream.close();
+};
 
 void misc::writeFile(const char* fileName, const char* content) {
   std::ofstream writeStream(fileName);

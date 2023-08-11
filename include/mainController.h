@@ -1,5 +1,7 @@
 #pragma once
 
+void setNewDriveMax(double max);
+
 int controllerTask();
 void mainControllerRender();
 void mainControllerMessage(const char* text, int timeout);

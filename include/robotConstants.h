@@ -25,7 +25,7 @@ static double wheelDiameter = 2.5;
 static double motorRatio = 1;
 static double wheelRatio = 1;
 
-static double encoderDist = 5.25;
+static double encoderDist = 6;
 static double backEncoderDist = 4.5; // use if we decide to use back encoders
 
 
@@ -38,15 +38,15 @@ static double motorWarnTemp = 80.00; // The temp percent to start warning the us
 
 
 // Define Ports
-static const int32_t leftMotorAPort = vex::PORT5;
-static const int32_t leftMotorBPort = vex::PORT10;
-static const int32_t rightMotorAPort = vex::PORT2;
-static const int32_t rightMotorBPort = vex::PORT8;
+static const int32_t leftMotorAPort = vex::PORT4;
+static const int32_t leftMotorBPort = vex::PORT1;
+static const int32_t rightMotorAPort = vex::PORT3;
+static const int32_t rightMotorBPort = vex::PORT2;
 
-static const int32_t inertialPort = vex::PORT3;
+static const int32_t inertialPort = vex::PORT7;
 
-static const int32_t leftEncoderPort = vex::PORT11;
-static const int32_t rightEncoderPort = vex::PORT12;
+static const int32_t leftEncoderPort = vex::PORT5;
+static const int32_t rightEncoderPort = vex::PORT6;
 
 
 // Odom Constants

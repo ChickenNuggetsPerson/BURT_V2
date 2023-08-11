@@ -5,9 +5,11 @@
 namespace misc {
 
     int readFile(const char* fileName);
+    double readFileDouble(const char* fileName);
 
     void writeFile(const char* fileName, int numToWrite);
     void writeFile(const char* fileName, const char* content);
+    void writeFile(const char* fileName, double numToWrite);
 
     void appendFile(const char* fileName, int numToAppend);
     void appendFile(const char* fileName, const char* content);

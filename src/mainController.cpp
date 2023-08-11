@@ -6,6 +6,12 @@ using namespace vex;
 
 // Controller Stuff
 
+double motorMaxSpeed = 1;
+void setNewDriveMax(double max) {
+  motorMaxSpeed = max;
+};
+
+
 int motorFL = 0;
 int motorFR = 0;
 int motorBL = 0;
@@ -47,6 +53,9 @@ int controllerTask() {
       if (!inertialSensor.isCalibrating()) {
         leftFB = mainController.Axis3.position();
         rightFB = mainController.Axis2.position();
+
+        leftFB = leftFB * motorMaxSpeed;
+        rightFB = rightFB * motorMaxSpeed;
 
         turn = mainController.Axis1.position();
       }

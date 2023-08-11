@@ -70,6 +70,8 @@ int updateHome(Page* self) {
     self->setProgressBarValue("battery", Brain.Battery.capacity());
     self->setLineGraphValue("batWatt", Brain.Battery.current(currentUnits::amp) * Brain.Battery.voltage(voltageUnits::volt));
     
+    setNewDriveMax(self->getAdjustNum("speedChange"));
+
     if ( botAI.isRunningSkills()) {
         self->setTextData("skillsStatus", color::green, "( Running Skills )");
     } else {
@@ -560,7 +562,7 @@ int brainDisplayerInit() {
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
     Gradient rainbowGradient = Gradient(0, 360, 0, 100);
-    //std::vector<colorRange> whiteRange = {colorRange(-200, 200, color::white)};
+    std::vector<colorRange> whiteRange = {colorRange(-200, 200, color::white)};
 
     // Define Pages
     Page loadingPage;
@@ -575,7 +577,12 @@ int brainDisplayerInit() {
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
     loadingPage.addText("Developed by Hayden Steele", 140, 130, color::white, fontType::mono15);
-    loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, false, rainbowGradient.finalGradient);
+    if (Competition.isFieldControl()) {
+        loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, false, rainbowGradient.finalGradient);
+    } else {
+        loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, false, whiteRange);
+    }
+
     loadingPage.addDataUpdaterCB(updateLoadingPage, 0.01);
 
     // Configure the home page
@@ -591,6 +598,7 @@ int brainDisplayerInit() {
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
     homePage.addLineGraph("batWatt", "Watts: %dW", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
     homePage.addDataUpdaterCB(updateHome, 0.5);
+    homePage.addAdjustableNum("speedChange", 1, 0.05, 1, 0, 100, 100, 100, 30, fontType::mono20, true);
 
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, color::white, fontType::mono30, "title");
