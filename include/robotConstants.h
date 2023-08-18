@@ -25,7 +25,7 @@ static double wheelDiameter = 2.5;
 static double motorRatio = 1;
 static double wheelRatio = 1;
 
-static double encoderDist = 6;
+static double encoderDist = 4;
 static double backEncoderDist = 4.5; // use if we decide to use back encoders
 
 
@@ -38,15 +38,15 @@ static double motorWarnTemp = 80.00; // The temp percent to start warning the us
 
 
 // Define Ports
-static const int32_t leftMotorAPort = vex::PORT4;
-static const int32_t leftMotorBPort = vex::PORT1;
-static const int32_t rightMotorAPort = vex::PORT3;
-static const int32_t rightMotorBPort = vex::PORT2;
+static const int32_t leftMotorAPort = vex::PORT20;
+static const int32_t leftMotorBPort = vex::PORT16;
+static const int32_t rightMotorAPort = vex::PORT8;
+static const int32_t rightMotorBPort = vex::PORT8;
 
-static const int32_t inertialPort = vex::PORT7;
+static const int32_t inertialPort = vex::PORT9;
 
-static const int32_t leftEncoderPort = vex::PORT5;
-static const int32_t rightEncoderPort = vex::PORT6;
+static const int32_t leftEncoderPort = vex::PORT6;
+static const int32_t rightEncoderPort = vex::PORT7;
 
 
 // Odom Constants
@@ -65,7 +65,7 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.3, 0, 0.25); 
 
 static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.45, 0.00, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.20, 0.0, 0.00);
+static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.15, 0.0, 0.00);
 
 
 // Auton Start Positions

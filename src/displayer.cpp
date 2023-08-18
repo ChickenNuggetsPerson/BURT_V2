@@ -598,7 +598,7 @@ int brainDisplayerInit() {
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
     homePage.addLineGraph("batWatt", "Watts: %dW", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
     homePage.addDataUpdaterCB(updateHome, 0.5);
-    homePage.addAdjustableNum("speedChange", 1, 0.05, 1, 0, 100, 100, 100, 30, fontType::mono20, true);
+    homePage.addAdjustableNum("speedChange", 1, 0.05, 1, 0, 30, 100, 100, 30, fontType::mono20, true);
 
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, color::white, fontType::mono30, "title");

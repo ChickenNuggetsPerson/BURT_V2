@@ -62,6 +62,4 @@ void whenStarted(void) {
 
       wait(5, vex::timeUnits::sec);
   }
-
-
 }

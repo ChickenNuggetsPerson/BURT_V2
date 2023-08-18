@@ -15,8 +15,8 @@ auton::AutonSystem botAI = auton::AutonSystem(&Odometry, &queuingSystem);
 
 inertial inertialSensor = inertial(inertialPort);
 
-rotation leftEncoder = rotation(leftEncoderPort, true);
-rotation rightEncoder = rotation(rightEncoderPort);
+rotation leftEncoder = rotation(leftEncoderPort, false);
+rotation rightEncoder = rotation(rightEncoderPort, true);
 
 motor leftMotorA = motor(leftMotorAPort, ratio18_1, !devRobot);
 motor leftMotorB = motor(leftMotorBPort, ratio18_1, !devRobot);

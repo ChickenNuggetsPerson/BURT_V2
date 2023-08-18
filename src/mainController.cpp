@@ -22,6 +22,8 @@ int rightFB = 0;
 
 int turn = 0;
 
+controlSystem::MotorController motorController(&mainController);
+
 int controllerTask() {
 
   std::cout << "Starting controller" << std::endl;
@@ -38,6 +40,10 @@ int controllerTask() {
   leftMotorB.setVelocity(0, percent);
   rightMotorA.setVelocity(0, percent);
   rightMotorB.setVelocity(0, percent);
+
+
+  //controlSystem::ControlObject acornPickerUper;
+  //motorController.addObject(acornPickerUper);
 
 
   bool tankDrive = true;
@@ -78,6 +84,8 @@ int controllerTask() {
 
 
     if ( !botAI.running ) {
+
+      //motorController.step();
 
       leftMotorA.spin(fwd);
       leftMotorB.spin(fwd);
