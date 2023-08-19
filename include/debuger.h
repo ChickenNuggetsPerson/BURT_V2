@@ -12,7 +12,8 @@ namespace debugSystem {
 
         public:
 
-            Debugger() {
+            Debugger() {};
+            void init() {
                 sendingMessages = (misc::readFile(std::string(systemConfigFolder + systemEnableWSDebug).c_str()) == 1);
             };
             inline bool isSending() { return sendingMessages; }

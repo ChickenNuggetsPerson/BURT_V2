@@ -9,12 +9,15 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  //queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_GOTO, botAI.getStartPos()));
   queuingSystem.clear();
+  //auton::autonMovement tmpMovement(AUTON_MOVE_LONGGOTO, tmpPath);
+  //queuingSystem.addToQueue(tmpMovement);
+  //botAI.turnTo(90);
 };
 void leftPressed() {
-  queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_GOTO, botAI.getStartPos()));
+  //queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_GOTO, botAI.getStartPos()));
   queuingSystem.runQueue();
+  //botAI.turnTo(0);
 };
 void upPressed() {
 
@@ -51,6 +54,7 @@ void usercontrol(void) {
 }
 
 void whenStarted(void) {
+  WSDebugger.init();
   if (!WSDebugger.isSending()) {return;}
   while (true) {
       WSDebugger.sendData("RMA", rightMotorA.temperature(vex::percent));

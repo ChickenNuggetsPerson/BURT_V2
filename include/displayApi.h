@@ -67,6 +67,8 @@ namespace display {
             Logger(int renderX, int renderY);
             Logger(int renderX, int renderY, const char* outFile, int maxLogs, vex::fontType font);
 
+            void init() { isSaving = Brain.SDcard.isInserted(); misc::writeFile(logFile, "Start of Logs"); }
+
             void reloadLogger(const char* outFile);
             void newLog(const char* message, vex::color messageColor);
             void newLog(const char* message, vex::color messageColor, int data);

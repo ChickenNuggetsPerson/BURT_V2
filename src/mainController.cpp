@@ -22,6 +22,8 @@ int rightFB = 0;
 
 int turn = 0;
 
+vex::motor testMotor(vex::PORT5, gearSetting::ratio36_1, false);
+
 controlSystem::MotorController motorController(&mainController);
 
 int controllerTask() {
@@ -42,8 +44,15 @@ int controllerTask() {
   rightMotorB.setVelocity(0, percent);
 
 
-  //controlSystem::ControlObject acornPickerUper;
-  //motorController.addObject(acornPickerUper);
+  controlSystem::ControlObject acornPickerUper;
+  acornPickerUper.mainMotorPtr = &testMotor;
+  acornPickerUper.type = controlSystem::MovementType::HoldSpin;
+  acornPickerUper.primaryVal = 100;
+  acornPickerUper.brakes = brakeType::coast;
+  acornPickerUper.units = rotationUnits::deg;
+  acornPickerUper.velUnits = velocityUnits::rpm;
+  acornPickerUper.ref = controlSystem::ControllerRef::btn_R2;
+  motorController.addObject(acornPickerUper);
 
 
   bool tankDrive = true;

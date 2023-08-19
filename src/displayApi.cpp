@@ -63,8 +63,7 @@ Logger::Logger(int renderX, int renderY) {
     maxRows = 11;
 
     logFile = "logs.txt";
-    isSaving = Brain.SDcard.isInserted();
-    misc::writeFile(logFile, "Start of Logs");
+
 };
 Logger::Logger(int renderX, int renderY, const char* outFile = "logs.txt", int maxLogs = 11, vex::fontType font = fontType::mono20) {
     xPos = renderX;
@@ -73,8 +72,7 @@ Logger::Logger(int renderX, int renderY, const char* outFile = "logs.txt", int m
     displayFont = font;
 
     logFile = outFile;
-    isSaving = Brain.SDcard.isInserted();
-    misc::writeFile(logFile, "Start of Logs");
+    
 
     //reloadLogger(logFile);
     

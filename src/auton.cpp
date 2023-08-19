@@ -39,7 +39,6 @@ AutonSystem::AutonSystem(odom::OdometrySystem* systemPointer, aiQueueSystem* que
 
 int genTask() { // For some reason if it is generated twice, it fixes all issues
     botAI.generatePath();
-    botAI.generatePath();
     return 1;
 }
 
@@ -79,6 +78,7 @@ void AutonSystem::init() {
     }
 
     vex::task generateTask(genTask);
+    //generatePath();
 };
 void AutonSystem::generatePath() {
     queueSystemPtr->clear();
@@ -330,6 +330,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     double travelDist = distBetweenPoints(currentPos, pos.at(0));
     double desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos.at(0)));
 
+    // Turn to point to the location
     turnTo(desiredHeading, 1.5);
 
     // PID to control drive speed
@@ -340,6 +341,8 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     // PID to keep the robot driving straight
     pid::PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
+    turnPid.setMax(12);
+    turnPid.setMin(-12);
     double turnPower = 0.00;
 
     int stopped = 0;
@@ -350,14 +353,15 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     int speedUp = 10;
 
+    // Main Driving Loop
     while (traveling) {
         
         odom::Position tempPos = odometrySystemPointer->currentPos();
 
         travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
 
-        if (targetNum != numOfTargets - 1) {
-            travelDist = travelDist + 10;
+        if (targetNum != numOfTargets - 1) { // Figure this out
+            //travelDist = travelDist + 10;
         }
 
         desiredHeading = misc::radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
@@ -373,6 +377,8 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
         LeftDriveSmart.spin(directionType::fwd, leftPower, voltageUnits::volt);
         RightDriveSmart.spin(directionType::fwd, rightPower, voltageUnits::volt);
+
+        //std::cout << travelDist << " " << drivePower << " " << turnPower << std::endl;
 
         if (drivePower < 2 && speedUp < 2) {
             stopped++;
@@ -499,17 +505,18 @@ bool aiQueueSystem::addToQueue(std::string jsonPath) {
     return addToQueue(getPathFromJSON(jsonPath));
 }
 autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
-    DynamicJsonDocument* pathPtr = misc::readJsonFromFile(jsonPath.c_str());
-    JsonObject path = pathPtr->as<JsonObject>();
-    if (path.isNull()) {
+
+    DynamicJsonDocument* path = misc::readJsonFromFile(jsonPath.c_str());
+
+    if (path->isNull()) {
         return autonPath();
     }
 
-    JsonArray movementsArray = path["movements"].as<JsonArray>();
+    JsonArray movementsArray = (*path)["movements"].as<JsonArray>();
 
     autonPath readPath = autonPath();
 
-    JsonObject startPos = path["startPos"].as<JsonObject>();
+    JsonObject startPos = (*path)["startPos"].as<JsonObject>();
     readPath.startPos = odom::tilePosToPos(odom::TilePosition(startPos["x"].as<float>(), startPos["y"].as<float>(), startPos["rot"].as<float>()));
 
     // Loop through all objects in the "movements" array
@@ -552,7 +559,7 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
 
         readPath.addMovement(tmpMove);
     }
-    delete pathPtr; // Free Memory
+    delete path; // Free Memory
     return readPath;
 };
 bool aiQueueSystem::runMovement(autonMovement movement) {

@@ -692,6 +692,7 @@ int brainDisplayer() {
 
     brainDisplayerInit();
     mainRenderer.ready();
+    BrainLogs.init();
     
     double deltaTime = 0.00;
     while(true) {

@@ -21,7 +21,7 @@ static bool devRobot = false;
 // Set the ratio to 1/1 if using shaft encoders
 
 
-static double wheelDiameter = 2.5;
+static double wheelDiameter = 2.75;
 static double motorRatio = 1;
 static double wheelRatio = 1;
 
@@ -41,7 +41,7 @@ static double motorWarnTemp = 80.00; // The temp percent to start warning the us
 static const int32_t leftMotorAPort = vex::PORT20;
 static const int32_t leftMotorBPort = vex::PORT16;
 static const int32_t rightMotorAPort = vex::PORT8;
-static const int32_t rightMotorBPort = vex::PORT8;
+static const int32_t rightMotorBPort = vex::PORT12;
 
 static const int32_t inertialPort = vex::PORT9;
 
@@ -62,10 +62,10 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 
 // Auton Constants For Main Bot
 
-static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.3, 0, 0.25); 
+static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.14, 0, 0.1); 
 
-static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.45, 0.00, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.15, 0.0, 0.00);
+static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.45, 0.00, 0.1);
+static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.2, 0.0, 0.01);
 
 
 // Auton Start Positions
