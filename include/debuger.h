@@ -19,10 +19,6 @@ namespace debugSystem {
             inline bool isSending() { return sendingMessages; }
             
             template<typename T>
-            inline void sendData(const char* id, T data) {
-                std::cout << dataPrefix << id << " " << data << std::endl;
-            }
-    };
-
-    
+            inline void sendData(const char* id, T data) { std::cout << dataPrefix << id << " " << data << std::endl;}
+    };    
 };

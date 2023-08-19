@@ -265,6 +265,10 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
         heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double power = turnPID.iterate(heading);
 
+        if (WSDebugger.isSending()) {
+            WSDebugger.sendData("T", power);
+        }
+
         LeftDriveSmart.spin(directionType::fwd, -power, volt);
         RightDriveSmart.spin(directionType::fwd, power, volt);
 
@@ -378,6 +382,10 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
         LeftDriveSmart.spin(directionType::fwd, leftPower, voltageUnits::volt);
         RightDriveSmart.spin(directionType::fwd, rightPower, voltageUnits::volt);
 
+        if (WSDebugger.isSending()) {
+            WSDebugger.sendData("DP", drivePower);
+            WSDebugger.sendData("TP", turnPower);
+        }
         //std::cout << travelDist << " " << drivePower << " " << turnPower << std::endl;
 
         if (drivePower < 2 && speedUp < 2) {
@@ -507,8 +515,12 @@ bool aiQueueSystem::addToQueue(std::string jsonPath) {
 autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
 
     DynamicJsonDocument* path = misc::readJsonFromFile(jsonPath.c_str());
-
+    
+    if (path ==  nullptr) {
+        return autonPath();
+    }
     if (path->isNull()) {
+        delete path; // Free Memory
         return autonPath();
     }
 
