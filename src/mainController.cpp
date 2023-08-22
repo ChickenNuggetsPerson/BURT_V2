@@ -6,7 +6,8 @@ using namespace vex;
 
 // Controller Stuff
 
-double motorMaxSpeed = 1;
+double motorMaxSpeed = 0.8;
+double boostMotorSpeed = 1;
 void setNewDriveMax(double max) {
   motorMaxSpeed = max;
 };
@@ -73,18 +74,18 @@ int controllerTask() {
         leftFB = mainController.Axis3.position();
         rightFB = mainController.Axis2.position();
 
-        leftFB = leftFB * motorMaxSpeed;
-        rightFB = rightFB * motorMaxSpeed;
+        leftFB = leftFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
+        rightFB = rightFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
 
         turn = mainController.Axis1.position();
       }
 
       int testMotorVal = 0;
       if (mainController.ButtonR2.pressing()) {
-        testMotorVal = 4;
+        testMotorVal = 8;
       }
       if (mainController.ButtonL2.pressing()) {
-        testMotorVal = -4;
+        testMotorVal = -8;
       }
       testMotor.spin(fwd, testMotorVal, voltageUnits::volt);
     }

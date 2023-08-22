@@ -13,6 +13,7 @@ void rightPressed() {
   //auton::autonMovement tmpMovement(AUTON_MOVE_LONGGOTO, tmpPath);
   //queuingSystem.addToQueue(tmpMovement);
   //botAI.turnTo(90);
+  botAI.gotoLoc(botAI.getStartPos());
 };
 void leftPressed() {
   //queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_GOTO, botAI.getStartPos()));
