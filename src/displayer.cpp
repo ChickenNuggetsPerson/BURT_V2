@@ -343,12 +343,6 @@ int updateDebug(Page* self) {
         self->setTextData("autonStatus", red);
     }
 
-    if (Competition.isFieldControl()) { // Update feild stats
-        self->setTextData("feildStatus", green);
-    } else {
-        self->setTextData("feildStatus", red);
-    }
-
     return 1;
 }
 // Declare Debug Menu Stuff
@@ -598,7 +592,7 @@ int brainDisplayerInit() {
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
     homePage.addLineGraph("batWatt", "Watts: %dW", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
     homePage.addDataUpdaterCB(updateHome, 0.5);
-    homePage.addAdjustableNum("speedChange", 1, 0.05, 1, 0, 30, 100, 100, 30, fontType::mono20, true);
+    homePage.addAdjustableNum("speedChange", 0.8, 0.05, 1, 0, 20, 140, 100, 30, fontType::mono20, true);
 
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, color::white, fontType::mono30, "title");
@@ -634,15 +628,14 @@ int brainDisplayerInit() {
     
     // Configure the debug page
     debugPage.addLogger(&BrainLogs);
-    debugPage.addVertProgressBar("fl", 300, 15, 30, 100, "%d%%", false, false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("fr", 350, 15, 30, 100, "%d%%", false, false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("bl", 400, 15, 30, 100, "%d%%", false, false, heatGradient.finalGradient);
-    debugPage.addVertProgressBar("br", 450, 15, 30, 100, "%d%%", false, false, heatGradient.finalGradient);
+    debugPage.addHorzProgressBar("fl", 300, 15, 175, 15, "FL %d%%", false, false, heatGradient.finalGradient);
+    debugPage.addHorzProgressBar("fr", 300, 53, 175, 15, "FR %d%%", false, false, heatGradient.finalGradient);
+    debugPage.addHorzProgressBar("bl", 300, 91, 175, 15, "BL %d%%", false, false, heatGradient.finalGradient);
+    debugPage.addHorzProgressBar("br", 300, 129, 175, 15, "BR %d%%", false, false, heatGradient.finalGradient);
 
-    debugPage.addText("SD Card",  300, 140, color::white, fontType::mono20, "sdStatus");
-    debugPage.addText("Odometry Status", 300, 160, color::white, fontType::mono20, "trackingStatus");
-    debugPage.addText("Auton Status",    300, 180, color::white, fontType::mono20, "autonStatus");
-    debugPage.addText("Connected to Feild",    300, 200, color::white, fontType::mono20, "feildStatus");
+    debugPage.addText("SD Card",  300, 165, color::white, fontType::mono20, "sdStatus");
+    debugPage.addText("Odometry Status", 300, 185, color::white, fontType::mono20, "trackingStatus");
+    debugPage.addText("Auton Status",    300, 205, color::white, fontType::mono20, "autonStatus");
 
     debugPage.addButton("Reload", 80, 210, 100, 30, dubugReloadButton, "reloadButton");
     debugPage.addButton("System", 180, 210, 100, 30, gotoSystemConfigButton, "systemButton");

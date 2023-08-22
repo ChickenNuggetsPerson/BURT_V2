@@ -514,27 +514,30 @@ bool aiQueueSystem::addToQueue(std::string jsonPath) {
 }
 autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
 
-    DynamicJsonDocument* path = misc::readJsonFromFile(jsonPath.c_str());
-    
-    if (path ==  nullptr) {
-        return autonPath();
-    }
-    if (path->isNull()) {
-        delete path; // Free Memory
+    DynamicJsonDocument* pathPtr = misc::readJsonFromFile(jsonPath.c_str());
+    //std::cout << *pathPtr << std::endl;
+
+    JsonObject path = pathPtr->as<JsonObject>();
+
+    if (path.isNull()) {
+        //delete path; // Free Memory
         return autonPath();
     }
 
-    JsonArray movementsArray = (*path)["movements"].as<JsonArray>();
+    JsonArray movementsArray = path["movements"].as<JsonArray>();
 
     autonPath readPath = autonPath();
 
-    JsonObject startPos = (*path)["startPos"].as<JsonObject>();
+    JsonObject startPos = path["startPos"].as<JsonObject>();
     readPath.startPos = odom::tilePosToPos(odom::TilePosition(startPos["x"].as<float>(), startPos["y"].as<float>(), startPos["rot"].as<float>()));
+
+    int length = path["length"].as<int>();
+    //std::cout << length << std::endl;
 
     // Loop through all objects in the "movements" array
     for (const auto& movement : movementsArray) {
         autonMovement tmpMove;
-
+        //std::cout << std::endl << std::endl;
         // Main stuff
         tmpMove.movementType = movement["type"].as<int>();
         tmpMove.val = movement["val"].as<float>();
@@ -547,7 +550,6 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
         } else {
             tmpMove.pos = odom::Position(pos["x"].as<float>(), pos["y"].as<float>(), pos["rot"].as<float>());
         }
-        
 
         // Get Tile Position Data
         JsonObject tilePos = movement["tilePosition"].as<JsonObject>();
@@ -556,7 +558,7 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
         } else {
             tmpMove.tilePos = odom::TilePosition(tilePos["x"].as<float>(), tilePos["y"].as<float>(), tilePos["rot"].as<float>());
         }
-    
+        //std::cout << "X: " << tmpMove.tilePos.x << " Y: " << tmpMove.tilePos.y << std::endl;
 
         // Loop Through Drive Path Array
         JsonArray drivePathArray = movement["drivePath"].as<JsonArray>();
@@ -567,11 +569,19 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
             } else {
                 tmpMove.drivePath.push_back(odom::TilePosition(point["x"].as<float>(), point["y"].as<float>(), point["rot"].as<float>()));    
             }
+            //std::cout << "X: " << tmpMove.drivePath.at(tmpMove.drivePath.size() - 1).x << " Y: " << tmpMove.drivePath.at(tmpMove.drivePath.size() - 1).y << std::endl;
         }
 
         readPath.addMovement(tmpMove);
     }
-    delete path; // Free Memory
+    //std::cout << path << std::endl;
+    //std::cout << readPath.getSize() << std::endl;
+
+    if (length != readPath.getSize()) {
+        brainError("Error Reading Json", true);
+    }
+
+    delete pathPtr; // Free Memory
     return readPath;
 };
 bool aiQueueSystem::runMovement(autonMovement movement) {

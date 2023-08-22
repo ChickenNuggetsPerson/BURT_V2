@@ -126,46 +126,47 @@ double misc::limitAngle(double angle) {
 
 
 
-
 // Example Code I found Online... I Will have to do more research on this
 DynamicJsonDocument* misc::readJsonFromFile(const std::string& filePath) {
   sdReaderMutex.lock();
-  std::ifstream file(filePath, std::ios::ate);  // Open the file and position the stream at the end
-  if (file.is_open()) {
-    std::streampos fileSize = file.tellg();  // Get the position of the current character in the input stream
-    file.seekg(0);  // Reset the position of the stream to the beginning
-
-    std::vector<char> buffer(fileSize);
-    file.read(buffer.data(), fileSize);  // Read the file content into the buffer
-
-    DynamicJsonDocument* jsonBuffer = new DynamicJsonDocument(1024 * 10);
-    DeserializationError error = deserializeJson(*jsonBuffer, buffer.data());
-    file.close();
+  std::ifstream file(filePath);  // Open the file and position the stream at the end
+  if (!file.is_open()) { 
     sdReaderMutex.unlock();
-
-    // Fix this... For some reason, it always says No Memory
-    switch (error.code()) {
-      case DeserializationError::Ok:
-          return jsonBuffer;
-          break;
-      case DeserializationError::InvalidInput:
-          brainError(error.c_str());
-          return nullptr;
-          break;
-      case DeserializationError::NoMemory:
-          brainError(error.c_str());
-          return nullptr;
-          break;
-      default:
-          brainError(error.c_str());
-          return nullptr;
-          break;
-    }
-    
-  } else {
+    return new DynamicJsonDocument(1); 
   }
+
+  const int fileSize = 1024 * 4;
+  std::vector<char> buffer(fileSize);
+  file.read(buffer.data(), fileSize);  // Read the file content into the buffer
+
+  DynamicJsonDocument* jsonBuffer = new DynamicJsonDocument(1024 * 5);
+  jsonBuffer->clear();
+
+  DeserializationError error = deserializeJson(*jsonBuffer, buffer.data());
+
+  file.close();
   sdReaderMutex.unlock();
-  return nullptr;
+
+  // Fix this... For some reason, it always says No Memory
+  switch (error.code()) {
+    case DeserializationError::Ok:
+        sdReaderMutex.unlock();
+        return jsonBuffer;
+        break;
+    case DeserializationError::InvalidInput:
+        brainError(error.c_str());
+        break;
+    case DeserializationError::NoMemory:
+        brainError(error.c_str());
+        break;
+    default:
+        brainError(error.c_str());
+        break;
+  }
+
+    
+  sdReaderMutex.unlock();
+  return new DynamicJsonDocument(1);
 }
 
 bool misc::writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData) {

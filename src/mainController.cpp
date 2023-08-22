@@ -22,7 +22,7 @@ int rightFB = 0;
 
 int turn = 0;
 
-vex::motor testMotor(vex::PORT5, gearSetting::ratio36_1, false);
+vex::motor testMotor(vex::PORT3, gearSetting::ratio36_1, false);
 
 controlSystem::MotorController motorController(&mainController);
 
@@ -43,17 +43,21 @@ int controllerTask() {
   rightMotorA.setVelocity(0, percent);
   rightMotorB.setVelocity(0, percent);
 
+  testMotor.spin(fwd);
+  testMotor.setBrake(brakeType::brake);
+  testMotor.setVelocity(0, percent);
 
+/*
   controlSystem::ControlObject acornPickerUper;
   acornPickerUper.mainMotorPtr = &testMotor;
   acornPickerUper.type = controlSystem::MovementType::HoldSpin;
-  acornPickerUper.primaryVal = 100;
+  acornPickerUper.primaryVal = 10;
   acornPickerUper.brakes = brakeType::coast;
   acornPickerUper.units = rotationUnits::deg;
   acornPickerUper.velUnits = velocityUnits::rpm;
   acornPickerUper.ref = controlSystem::ControllerRef::btn_R2;
   motorController.addObject(acornPickerUper);
-
+*/
 
   bool tankDrive = true;
   if (Brain.SDcard.isInserted()) {
@@ -75,6 +79,14 @@ int controllerTask() {
         turn = mainController.Axis1.position();
       }
 
+      int testMotorVal = 0;
+      if (mainController.ButtonR2.pressing()) {
+        testMotorVal = 4;
+      }
+      if (mainController.ButtonL2.pressing()) {
+        testMotorVal = -4;
+      }
+      testMotor.spin(fwd, testMotorVal, voltageUnits::volt);
     }
     
     if (tankDrive) {
