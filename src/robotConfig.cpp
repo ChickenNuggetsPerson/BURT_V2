@@ -28,6 +28,9 @@ motor_group RightDriveSmart = motor_group(rightMotorA, rightMotorB);
 
 smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSensor, 319.19, 254, 254, mm, 1);
 
+motor frontArmMotor(frontArmMotorPort, ratio36_1, false);
+controlSystem::MotorHolder frontArmHolder(&frontArmMotor, pid::PIDConfig(0.4, 0.00, 0.0), rotationUnits::deg);
+
 controller mainController = controller(primary);
 controller altController = controller(partner);
 

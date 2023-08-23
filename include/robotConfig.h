@@ -36,6 +36,9 @@ extern motor_group RightDriveSmart;
 
 extern smartdrive Drivetrain;
 
+extern motor frontArmMotor;
+extern controlSystem::MotorHolder frontArmHolder;
+
 extern controller mainController;
 extern controller altController;
 

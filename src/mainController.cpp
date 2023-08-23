@@ -23,7 +23,6 @@ int rightFB = 0;
 
 int turn = 0;
 
-vex::motor testMotor(vex::PORT3, gearSetting::ratio36_1, false);
 
 controlSystem::MotorController motorController(&mainController);
 
@@ -44,9 +43,11 @@ int controllerTask() {
   rightMotorA.setVelocity(0, percent);
   rightMotorB.setVelocity(0, percent);
 
-  testMotor.spin(fwd);
-  testMotor.setBrake(brakeType::brake);
-  testMotor.setVelocity(0, percent);
+  frontArmMotor.spin(fwd);
+  frontArmMotor.setBrake(brakeType::brake);
+  frontArmMotor.setVelocity(0, percent);
+  frontArmMotor.setPosition(0, degrees);
+  frontArmHolder.setRunning(false);
 
 /*
   controlSystem::ControlObject acornPickerUper;
@@ -65,6 +66,8 @@ int controllerTask() {
     tankDrive = (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1);
   }
 
+  int frontArmVal = 0;
+
   // Main driving loop
   while(true) {
 
@@ -79,15 +82,14 @@ int controllerTask() {
 
         turn = mainController.Axis1.position();
       }
-
-      int testMotorVal = 0;
+      frontArmVal = 0;
       if (mainController.ButtonR2.pressing()) {
-        testMotorVal = 8;
+        frontArmVal = 8;
       }
       if (mainController.ButtonL2.pressing()) {
-        testMotorVal = -8;
+        frontArmVal = -8;
       }
-      testMotor.spin(fwd, testMotorVal, voltageUnits::volt);
+      
     }
     
     if (tankDrive) {
@@ -118,9 +120,16 @@ int controllerTask() {
       leftMotorB.setVelocity(motorBL, percent);
       rightMotorA.setVelocity(motorFR, percent);
       rightMotorB.setVelocity(motorBR, percent);
-      
+
+      if (!frontArmHolder.getRunning()) {
+        frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
+      }
+      //frontArmHolder.setNewVal((double)frontArmVal * 5);
     }
     
+    // iterate over holders
+    frontArmHolder.iterate();
+
     // wait before repeating the process
     vex::wait(20, msec);
   }

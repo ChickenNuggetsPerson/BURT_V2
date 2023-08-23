@@ -21,7 +21,7 @@ static bool devRobot = false;
 // Set the ratio to 1/1 if using shaft encoders
 
 
-static double wheelDiameter = 2.75;
+static double wheelDiameter = 2.8;
 static double motorRatio = 1;
 static double wheelRatio = 1;
 
@@ -47,6 +47,8 @@ static const int32_t inertialPort = vex::PORT9;
 
 static const int32_t leftEncoderPort = vex::PORT6;
 static const int32_t rightEncoderPort = vex::PORT7;
+
+static const int32_t frontArmMotorPort = vex::PORT3;
 
 
 // Odom Constants

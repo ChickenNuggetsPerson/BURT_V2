@@ -439,9 +439,8 @@ bool AutonSystem::pickupAcorn() {
     running = true;
 
     // Pickup Acorn Logic
-    
-    // Implement this once the robot is built
-
+    frontArmHolder.setRunning(true);
+    frontArmHolder.setNewVal(110);
 
     running = wasrunning;
     return true;
@@ -457,9 +456,8 @@ bool AutonSystem::dropAcorn() {
     running = true;
 
     // Drop Acorn Logic
-    
-    // Implement this once the robot is built
-
+    frontArmHolder.setRunning(true);
+    frontArmHolder.setNewVal(0);
 
     running = wasrunning;
     return true;

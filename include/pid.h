@@ -40,6 +40,7 @@ namespace pid {
 
         public:
 
+            PID() {};
             PID(PIDConfig config);
             PID(PIDConfig config, double desired);
 

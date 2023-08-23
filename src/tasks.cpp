@@ -9,16 +9,13 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  queuingSystem.clear();
-  //auton::autonMovement tmpMovement(AUTON_MOVE_LONGGOTO, tmpPath);
-  //queuingSystem.addToQueue(tmpMovement);
-  //botAI.turnTo(90);
-  botAI.gotoLoc(botAI.getStartPos());
+  //queuingSystem.clear();
+  //botAI.gotoLoc(botAI.getStartPos());
+  botAI.pickupAcorn();
 };
 void leftPressed() {
-  //queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_GOTO, botAI.getStartPos()));
-  queuingSystem.runQueue();
-  //botAI.turnTo(0);
+  //queuingSystem.runQueue();
+  botAI.dropAcorn();
 };
 void upPressed() {
 

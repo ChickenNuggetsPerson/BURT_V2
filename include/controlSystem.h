@@ -75,4 +75,56 @@ namespace controlSystem {
             void step();
 
     };
+
+    class MotorHolder {
+        private:
+
+            vex::motor* motorPtr;
+            pid::PID pidSystem;
+
+            vex::rotationUnits units;
+
+            bool hasNewVal = false;
+            double newVal = 0.00;
+
+            bool running = true;
+
+        public:
+
+            MotorHolder(vex::motor* ptr, pid::PIDConfig config, vex::rotationUnits measureUnits) {
+                motorPtr = ptr;
+                pidSystem.changeConfig(config);
+                units = measureUnits;
+            }
+
+            void iterate() {
+                if (!running) {return;}
+                double power = 0.00;
+                if (hasNewVal) {
+                    power = pidSystem.iterate(motorPtr->position(units), newVal);
+                    hasNewVal = false;
+                } else {
+                    power = pidSystem.iterate(motorPtr->position(units));
+                }
+                std::cout << power << std::endl;
+            
+                motorPtr->spin(vex::directionType::rev, power, vex::voltageUnits::volt);
+
+            }
+
+            double getRot() {
+                motorPtr->position(units);
+            }
+
+            void setNewVal(double newVal) {
+                this->newVal = newVal;
+                hasNewVal = true;
+            }
+            void setRunning(bool newStatus) {
+                running = newStatus;
+            }
+            bool getRunning() {
+                return running;
+            }
+    };
 };
