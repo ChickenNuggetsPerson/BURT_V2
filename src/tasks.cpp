@@ -11,11 +11,19 @@ using namespace vex;
 void rightPressed() {
   //queuingSystem.clear();
   //botAI.gotoLoc(botAI.getStartPos());
-  botAI.pickupAcorn();
+  frontArmHolder.setRunning(true);
+  queuingSystem.clear();
+  queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_PICKUP_ACORN));
+  queuingSystem.runQueue();
+  frontArmHolder.setRunning(false);
+
 };
 void leftPressed() {
   //queuingSystem.runQueue();
-  botAI.dropAcorn();
+  frontArmHolder.setNewVal(0);
+  frontArmHolder.setRunning(true);
+  wait(1, seconds);
+  frontArmHolder.setRunning(false);
 };
 void upPressed() {
 

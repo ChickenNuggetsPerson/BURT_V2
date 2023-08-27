@@ -7,9 +7,7 @@ namespace controlSystem {
     enum MovementType {
         noType,
         ToggleSpin,
-        ToggleAngle,
         HoldSpin,
-        HoldAngle,
     };
     enum ControllerRef {
         noRef,
@@ -106,7 +104,6 @@ namespace controlSystem {
                 } else {
                     power = pidSystem.iterate(motorPtr->position(units));
                 }
-                std::cout << power << std::endl;
             
                 motorPtr->spin(vex::directionType::rev, power, vex::voltageUnits::volt);
 
@@ -121,6 +118,11 @@ namespace controlSystem {
                 hasNewVal = true;
             }
             void setRunning(bool newStatus) {
+                if (newStatus) {
+                    motorPtr->setBrake(vex::brakeType::coast);
+                } else {
+                    motorPtr->setBrake(vex::brakeType::brake);
+                }
                 running = newStatus;
             }
             bool getRunning() {

@@ -159,42 +159,12 @@ void MotorController::applyMotor(ControlObject& obj) {
             }
             break;
         };
-        case ToggleAngle: {
-            if (newState) {
-                obj.toggleState = !obj.toggleState;
-            }
-
-            if (obj.toggleState) {
-                obj.mainMotorPtr->spinTo(obj.primaryVal, obj.units, false);
-            } else {
-                obj.mainMotorPtr->spinTo(obj.secondaryVal, obj.units, false);
-            }
-            if (obj.twoMotors) {
-                if (obj.toggleState) {
-                    obj.altMotorPtr->spinTo(obj.primaryVal, obj.units, false);
-                } else {
-                    obj.altMotorPtr->spinTo(obj.secondaryVal, obj.units, false);
-                }
-            }
-
-            break;
-        };
         case HoldSpin: {
             
             obj.mainMotorPtr->spin(obj.direction, newState ? obj.primaryVal : obj.secondaryVal, obj.velUnits);
             if (obj.twoMotors) {
                 obj.mainMotorPtr->spin(obj.altDirection, newState ? obj.primaryVal : obj.secondaryVal, obj.velUnits);    
             }
-
-            break;
-        };
-        case HoldAngle: {
-
-            obj.mainMotorPtr->spinTo(obj.primaryVal, obj.units, false);
-            if (obj.twoMotors) {
-                obj.altMotorPtr->spinTo(obj.primaryVal, obj.units, false);
-            }
-            
             break;
         };
     };

@@ -44,7 +44,7 @@ int controllerTask() {
   rightMotorB.setVelocity(0, percent);
 
   frontArmMotor.spin(fwd);
-  frontArmMotor.setBrake(brakeType::brake);
+  //frontArmMotor.setBrake(brakeType::brake);
   frontArmMotor.setVelocity(0, percent);
   frontArmMotor.setPosition(0, degrees);
   frontArmHolder.setRunning(false);

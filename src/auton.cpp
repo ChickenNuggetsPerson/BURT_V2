@@ -4,6 +4,8 @@
 #include "paths.h"
 #include <vector>
 
+#include "visionSensorConfig.h"
+
 using namespace vex;
 using namespace auton;
 
@@ -429,18 +431,49 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     return true;
 };
 
+// Pickup the acorn using the vision sensor to center it
 bool AutonSystem::pickupAcorn() {
 
     if (!odometrySystemPointer->isTracking) {
         brainError("Skipping Auton Path, Odom not initialized");
         return false;
     }
+    if (visionSensor.installed()) {
+        brainError("Vision Sensor not initialized");
+        return false;
+    }
     bool wasrunning = running;
     running = true;
 
+    pid::PID turnPid(pid::PIDConfig(0.15, 0.00, 0.00), 50);
+    turnPid.setMax(12);
+    turnPid.setMin(-12);
+
+    while (true) {
+        visionSensor.takeSnapshot(SIG_1);
+        double centerPercent = (double)visionSensor.largestObject.centerX / 350.00;
+        double turnPower = turnPid.iterate(centerPercent * 100);
+
+        LeftDriveSmart.spin(directionType::fwd, -turnPower + 4, volt);
+        RightDriveSmart.spin(directionType::fwd, turnPower + 4, volt);
+
+        if (visionSensor.largestObject.width > 300) {
+            break;
+        }
+
+        wait(0.05, seconds);
+    }
+
+    LeftDriveSmart.spin(directionType::fwd, 0, volt);
+    RightDriveSmart.spin(directionType::fwd, 0, volt);
+
     // Pickup Acorn Logic
     frontArmHolder.setRunning(true);
-    frontArmHolder.setNewVal(110);
+    frontArmHolder.setNewVal(100);
+
+    wait(0.5, seconds);
+
+    frontArmHolder.setRunning(false);
 
     running = wasrunning;
     return true;
