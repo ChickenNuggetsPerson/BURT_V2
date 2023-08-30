@@ -28,7 +28,7 @@ controlSystem::MotorController motorController(&mainController);
 
 int controllerTask() {
 
-  std::cout << "Starting controller" << std::endl;
+  DEBUGLOG("Starting controller");
 
   // process the controller input every 20 milliseconds
   // update the motors based on the input values

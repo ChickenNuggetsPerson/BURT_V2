@@ -5,9 +5,6 @@
 using namespace vex;
 using namespace odom;
 
-using std::cout;
-using std::endl;
-
 
 TilePosition odom::posToTilePos(Position pos) {
     return TilePosition(

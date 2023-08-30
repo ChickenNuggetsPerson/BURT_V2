@@ -37,7 +37,7 @@ void MotorController::step() {
     }
 };
 void MotorController::applyMotor(ControlObject& obj) {
-    
+
     bool stateChanged = false;
     bool newState = false;
     

@@ -12,9 +12,6 @@
 
 #include <stdio.h>
 
-using std::cout;
-using std::endl;
-
 using namespace vex;
 using namespace display;
 
@@ -773,14 +770,14 @@ void brainError(const char* message) {
     BrainLogs.newLog(message, vex::color::red);
     mainRenderer.newNotification(message, 5, red);
 
-    cout << "ERROR: " << message << endl;
+    DEBUGLOG("ERROR: ", message);
 }
 void brainError(const char* message, bool showOnController) {
     BrainLogs.newLog(message, vex::color::red);
     mainRenderer.newNotification(message, 5, red);
     mainController.rumble("--");
     mainControllerMessage(message, 5);
-    cout << "ERROR: " << message << endl;
+    DEBUGLOG("ERROR: ", message);
 }
 
 // Displays debug message on brain screen
@@ -788,14 +785,14 @@ void brainDebug(const char* message) {
   
     BrainLogs.newLog(message, vex::color::purple);
 
-    cout << "DEBUG: " << message << endl;
+    DEBUGLOG("ERROR: ", message);
 }
 void brainDebug(const char* message, bool notification) {
   
     BrainLogs.newLog(message, vex::color::purple);
     mainRenderer.newNotification(message, 4, purple);
 
-    cout << "DEBUG: " << message << endl;
+    DEBUGLOG("ERROR: ", message);
 }
 
 // Displays debug message on brain screen
@@ -803,7 +800,7 @@ void brainFancyDebug(const char* message, vex::color messageColor) {
   
     BrainLogs.newLog(message, messageColor);
 
-    cout << "DEBUG: " << message << endl;
+    DEBUGLOG("DEBUG: ", message);
 }
 
 // Displays debug message on brain screen
@@ -812,12 +809,12 @@ void brainFancyDebug(const char* message, vex::color messageColor, int data) {
   
     BrainLogs.newLog(message, messageColor, data);
 
-    cout << "DEBUG: " << message << endl;
+    DEBUGLOG("DEBUG: ", message);
 }
 void brainFancyDebug(const char* message, vex::color messageColor, bool showNotification) {
   
     BrainLogs.newLog(message, messageColor);
     mainRenderer.newNotification(message, 4, messageColor);
 
-    cout << "DEBUG: " << message << endl;
+    DEBUGLOG("DEBUG: ", message);
 }

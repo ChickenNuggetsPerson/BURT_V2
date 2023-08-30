@@ -19,11 +19,8 @@ void rightPressed() {
 
 };
 void leftPressed() {
-  //queuingSystem.runQueue();
-  frontArmHolder.setNewVal(0);
-  frontArmHolder.setRunning(true);
-  wait(1, seconds);
-  frontArmHolder.setRunning(false);
+  queuingSystem.runQueue();
+  //botAI.gotoLoc(botAI.getStartPos());
 };
 void upPressed() {
 

@@ -6,6 +6,28 @@
 
 static bool devRobot = false;
 
+// Define C++ Macros
+
+// A debug macro that takes in any inputs and uses std::cout with them
+#define DEBUGLOG(...) \
+    do { \
+        printArgs(__VA_ARGS__); \
+        std::cout << std::endl; \
+    } while(0);
+
+template<typename T>
+void printArgs(const T& arg) {
+    std::cout << arg;
+}
+
+template<typename T, typename... Args>
+void printArgs(const T& arg, const Args&... args) {
+    std::cout << arg;
+    printArgs(args...);
+}
+
+
+
 // Define Robot Measurements 
 
 // Main Robot Consts

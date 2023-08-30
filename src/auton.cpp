@@ -136,7 +136,8 @@ bool AutonSystem::getConfig(const char* configId) {
 // Does not update internal storage so make sure to reintialize auton after writing configs
 void AutonSystem::saveConfig(const char* configId, bool value) {
 
-        std::cout << "Saving: " << configId << " " << value << std::endl;
+        //std::cout << "Saving: " << configId << " " << value << std::endl;
+        DEBUGLOG("SAVING: ", configId, " ", value);
 
         for (auto config: configStorage) {
         if (config.id == std::string(configId)) {
@@ -274,6 +275,8 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
         LeftDriveSmart.spin(directionType::fwd, -power, volt);
         RightDriveSmart.spin(directionType::fwd, power, volt);
 
+        DEBUGLOG("TURNTO PID: ", power);
+
         double deltaHeading = lastRot - heading;
         if (deltaHeading <= accuracy && deltaHeading >= -accuracy) {
             totalChecks++;
@@ -389,6 +392,9 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
             WSDebugger.sendData("TP", turnPower);
         }
         //std::cout << travelDist << " " << drivePower << " " << turnPower << std::endl;
+        DEBUGLOG("GOTO DIST: ", travelDist);
+        DEBUGLOG("GOTO DRIVE PID: ", drivePower);
+        DEBUGLOG("GOTO TURN PID: ", turnPower);
 
         if (drivePower < 2 && speedUp < 2) {
             stopped++;
@@ -438,12 +444,14 @@ bool AutonSystem::pickupAcorn() {
         brainError("Skipping Auton Path, Odom not initialized");
         return false;
     }
-    if (visionSensor.installed()) {
+    if (!visionSensor.installed()) {
         brainError("Vision Sensor not initialized");
         return false;
     }
     bool wasrunning = running;
     running = true;
+
+    frontArmHolder.setNewVal(0);
 
     pid::PID turnPid(pid::PIDConfig(0.15, 0.00, 0.00), 50);
     turnPid.setMax(12);
@@ -456,6 +464,9 @@ bool AutonSystem::pickupAcorn() {
 
         LeftDriveSmart.spin(directionType::fwd, -turnPower + 4, volt);
         RightDriveSmart.spin(directionType::fwd, turnPower + 4, volt);
+
+        DEBUGLOG("Acorn Pid Power: ", turnPower);
+        DEBUGLOG("DIST: ", visionSensor.largestObject.width);
 
         if (visionSensor.largestObject.width > 300) {
             break;
@@ -473,7 +484,15 @@ bool AutonSystem::pickupAcorn() {
 
     wait(0.5, seconds);
 
+    LeftDriveSmart.spin(directionType::fwd, -4, volt);
+    RightDriveSmart.spin(directionType::fwd, -4, volt);
+
+    wait(0.5, seconds);
+
     frontArmHolder.setRunning(false);
+
+    LeftDriveSmart.spin(directionType::fwd, 0, volt);
+    RightDriveSmart.spin(directionType::fwd, 0, volt);
 
     running = wasrunning;
     return true;

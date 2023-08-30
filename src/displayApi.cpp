@@ -110,12 +110,15 @@ void Logger::reloadLogger(const char* outFile) {
     path += systemConfigFolder;
     path += systemArchivePath;
     if (misc::readFile(path.c_str()) == 1) {
-        std::cout << std::endl << std::endl << std::endl;
+        DEBUGLOG(" ", " ");
+        DEBUGLOG(" ", " ");
+        DEBUGLOG(" ", " ");
+
         if (misc::fileExists(logFile)) {
             // Save the last logs to the archive folder
             int logNum = 0;
             bool looking = true;
-            std::cout << "Starting Log Looking" << std::endl;
+            DEBUGLOG("Starting Log Looking")
             while (looking) {
                 logNum ++;
                 std::string tmpName;
@@ -140,17 +143,19 @@ void Logger::reloadLogger(const char* outFile) {
 
             cpyDest += ".txt";
 
-            std::cout << "Archiving to:  " << cpyDest << std::endl;
+            DEBUGLOG("Archiving to: ", cpyDest);
 
             misc::copyFile(logFile, cpyDest.c_str());
         }
     } else {
-        std::cout << std::endl << std::endl << "Not Archiving" << std::endl;
+        DEBUGLOG(" ");
+        DEBUGLOG(" ");
+        DEBUGLOG("Not Archiving");
     }
     if (compLogs) {
         int logNum = 0;
         bool looking = true;
-        std::cout << "Starting Comp Log Looking" << std::endl;
+        DEBUGLOG("Starting Comp Log Looking");
         while (looking) {
             logNum ++;
             std::string tmpName;
@@ -173,7 +178,7 @@ void Logger::reloadLogger(const char* outFile) {
 
         compLogPath = cpyDest.c_str();
 
-        std::cout << "Archiving To: " << compLogPath << std::endl;
+        DEBUGLOG("Archiving To: ", compLogPath);
 
         misc::writeFile(compLogPath, "Start of Comp Logs");
 
