@@ -23,6 +23,7 @@ static const int AUTON_MOVE_LONGGOTO = 3;
 static const int AUTON_MOVE_TURNTO = 4;
 static const int AUTON_MOVE_PICKUP_ACORN = 5;
 static const int AUTON_MOVE_DROPOFF_ACORN = 6;
+static const int AUTON_MOVE_DRIVE_REVERSE = 7;
 
 
 namespace auton {
@@ -114,8 +115,8 @@ namespace auton {
       bool runningSkills = false;
 
       double findNearestRot(double currentRot, double targetRot);
-      double angleBetweenPoints(odom::Position pos1, odom::Position pos2);
-      double distBetweenPoints(odom::Position pos1, odom::Position pos2);
+      inline double angleBetweenPoints(odom::Position pos1, odom::Position pos2);
+      inline double distBetweenPoints(odom::Position pos1, odom::Position pos2);
 
       odom::Position target;
       odom::TilePosition startPos;
@@ -133,7 +134,6 @@ namespace auton {
 
       std::vector<autonConfig> configStorage;
       bool configMenuStatus = false;
-
 
       AutonSystem(odom::OdometrySystem* odometrySystemPointer, aiQueueSystem* queuePtr);
 
@@ -161,6 +161,8 @@ namespace auton {
       
       bool longGoto(std::vector<odom::TilePosition> pos);
       bool longGoto(std::vector<odom::Position> pos);
+
+      bool reverseDrive(double distance);
 
       bool pickupAcorn();
       bool dropAcorn();

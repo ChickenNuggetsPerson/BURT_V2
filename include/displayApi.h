@@ -613,6 +613,9 @@ namespace display {
     class MenuSystem {
         private:
 
+            int sleepSeconds = 60;
+            double sleepAt = 0;
+
             std::vector<Page> pageStorage;
             Page* renderPagePtr = nullptr;
 
@@ -627,7 +630,6 @@ namespace display {
             void startUpdaterTask(Page* pagePtr);
             void stopUpdaterTask();
 
-
             task notificationTask;
             std::vector<Notification> notifications;
             bool showingNotifications = false;
@@ -638,8 +640,10 @@ namespace display {
 
             int teamColor = 0;
 
-            MenuSystem(bool displayNotifications) {
+            MenuSystem(bool displayNotifications, int sleepAfter) {
                 showingNotifications = displayNotifications;
+                sleepSeconds = sleepAfter;
+                sleepAt = Brain.timer(timeUnits::sec) + sleepAfter;
             };
         
             void ready();
@@ -654,6 +658,10 @@ namespace display {
 
             void newNotification(const char* text, int displayTime);
             void newNotification(const char* text, int displayTime, vex::color displayColor);
+
+            inline void refreshSleep() {
+                sleepAt = Brain.timer(timeUnits::sec) + sleepSeconds;
+            }
 
     };
 

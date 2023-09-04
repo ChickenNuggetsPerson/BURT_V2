@@ -20,7 +20,7 @@ namespace odom {
     struct TilePosition {
         double x = 0;   // In Tiles
         double y = 0;   // In Tiles
-        double rot = 0; // In Degrees
+        double rot = 0.00; // In Degrees
         TilePosition(double xPos, double yPos, double rotation);
         TilePosition(double xPos, double yPos);
         TilePosition();

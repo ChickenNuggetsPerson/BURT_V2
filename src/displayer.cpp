@@ -2,6 +2,7 @@
 #include "displayer.h"
 #include "robotConfig.h"
 #include "displayApi.h"
+#include "visionSensorConfig.h"
 
 
 #include "string"
@@ -18,7 +19,7 @@ using namespace display;
 
 // Define head elements
 Logger BrainLogs(1, 1, "logs.txt", 13, fontType::mono15);
-MenuSystem mainRenderer(true);
+MenuSystem mainRenderer(true, 60);
 
 
 // Called when the screen is pressed
@@ -49,7 +50,7 @@ int notificationCheck() {
     NotChecker.addMotor("LeftMotorB", &leftMotorB);
 
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
-    NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, true, green, red, true);
+    NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
     NotChecker.addCheck("Connected To Feild", "Feild Disconnect", checkFeild, false, purple, red, true);
     NotChecker.addCheck("", "Battery Low", checkBattery, true, color::white, color::red, true);
 
@@ -487,7 +488,8 @@ void buildDeviceDebugPage(Page* self) {
     self->addText("Inertial Sensor", 20, 140, color::white, fontType::mono20, "InertialSensor");
     self->addText("Left  Encoder", 20, 160, color::white, fontType::mono20, "LeftEncoder");
     self->addText("Right Encoder", 20, 180, color::white, fontType::mono20, "RightEncoder");
-    self->addText("Controller", 20, 200, color::white, fontType::mono20, "Controller");
+    self->addText("Vision Sensor", 20, 200, color::white, fontType::mono20, "VisionSensor");
+    self->addText("Controller", 20, 220, color::white, fontType::mono20, "Controller");
     
     self->addText("Port %d", 180, 60, color::white, fontType::mono20, "lma");
     self->setTextData("lma", (int)leftMotorAPort + 1);
@@ -505,7 +507,8 @@ void buildDeviceDebugPage(Page* self) {
     self->addText("Port %d", 180, 180, color::white, fontType::mono20, "rep");
     self->setTextData("rep", (int)rightEncoderPort + 1);
 
-    self->addText("-", 180, 200, color::white, fontType::mono20, "Controller");
+    self->addText("-", 180, 200, color::white, fontType::mono20, "VisionSensor");
+    self->addText("-", 180, 220, color::white, fontType::mono20, "Controller");
 
 
     self->addText("Feild Status", 340, 60, white, fontType::mono20, "filed");
@@ -525,6 +528,8 @@ int updateDeviceDebug(Page* self) {
     self->setTextData("LeftEncoder", leftEncoder.installed() ? green : red);
     self->setTextData("RightEncoder", rightEncoder.installed() ? green : red);
     self->setTextData("Controller", mainController.installed() ? green : red);
+
+    self->setTextData("VisionSensor", visionSensor.installed() ? green : red);
 
     self->setTextData("filed", Competition.isFieldControl() ? green : red);
     if (Odometry.isTracking) {

@@ -6,24 +6,24 @@
 
 static bool devRobot = false;
 
+
 // Define C++ Macros
 
 // A debug macro that takes in any inputs and uses std::cout with them
-#define DEBUGLOG(...) \
-    do { \
-        printArgs(__VA_ARGS__); \
-        std::cout << std::endl; \
-    } while(0);
+#define DEBUGLOG(...) do { \
+    variablePrint(__VA_ARGS__); \
+    std::cout << std::endl; \
+} while(0);
 
 template<typename T>
-void printArgs(const T& arg) {
+void variablePrint(const T& arg) {
     std::cout << arg;
 }
 
 template<typename T, typename... Args>
-void printArgs(const T& arg, const Args&... args) {
+void variablePrint(const T& arg, const Args&... args) {
     std::cout << arg;
-    printArgs(args...);
+    variablePrint(args...);
 }
 
 
@@ -43,7 +43,7 @@ void printArgs(const T& arg, const Args&... args) {
 // Set the ratio to 1/1 if using shaft encoders
 
 
-static double wheelDiameter = 2.8;
+static double wheelDiameter = 2.75;
 static double motorRatio = 1;
 static double wheelRatio = 1;
 
@@ -86,10 +86,10 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 
 // Auton Constants For Main Bot
 
-static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.14, 0, 0.1); 
+static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.12, 0, 0.0); 
 
-static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.45, 0.00, 0.1);
-static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.2, 0.0, 0.01);
+static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.4, 0.0, 0.0);
+static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.18, 0.0, 0.1);
 
 
 // Auton Start Positions

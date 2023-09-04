@@ -9,18 +9,31 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  //queuingSystem.clear();
-  //botAI.gotoLoc(botAI.getStartPos());
-  frontArmHolder.setRunning(true);
-  queuingSystem.clear();
-  queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_PICKUP_ACORN));
-  queuingSystem.runQueue();
-  frontArmHolder.setRunning(false);
-
+  
 };
 void leftPressed() {
-  queuingSystem.runQueue();
-  //botAI.gotoLoc(botAI.getStartPos());
+  //queuingSystem.runQueue();
+
+
+  // Club Week Burt Presentation
+  frontArmHolder.setRunning(true);
+  while (true) {
+    if (mainController.ButtonRight.pressing()) { break; }
+
+    // Generate random number between 0 and 100 and check if it is even
+    if (((rand() % 100) + 1) % 2 == 0) {
+      // Even
+      botAI.turnTo((rand() % 360) + 1);
+    } else {
+      // Odd
+      frontArmHolder.setNewVal((rand() % 100) + 1);
+      wait(0.5, timeUnits::sec);
+    }
+
+    // Random Delay
+    wait((rand() % 5) + 1, timeUnits::sec);
+  }
+
 };
 void upPressed() {
 
@@ -31,6 +44,12 @@ void downPressed() {
 
 // Setup callbacks and initialize auton
 void pre_auton(void) {
+
+  // Imedietely stop the motors so then they don't spin when the robot boots up
+  leftMotorA.spin(fwd);  leftMotorA.setVelocity(0, percent);
+  leftMotorB.spin(fwd);  leftMotorB.setVelocity(0, percent);
+  rightMotorA.spin(fwd); rightMotorA.setVelocity(0, percent);
+  rightMotorB.spin(fwd); rightMotorB.setVelocity(0, percent);
 
   brainDebug("Initializing Burt", true);
 

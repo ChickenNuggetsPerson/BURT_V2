@@ -214,7 +214,6 @@ void OdometrySystem::track() {
     odomRawData currentData = getChanges(lastData);
     
     // Calc Change in Rotation
-    //double rotChange = ((currentData.deltaLeft - currentData.deltaRight) / (encoderDist))/2;
     globalRot = currentData.heading;
 
     // Change in distance

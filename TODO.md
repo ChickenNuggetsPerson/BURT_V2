@@ -26,3 +26,4 @@
 - [ ] Refactor Display API to use Maps?
 - [X] Make sure map path jsons somehow work with nan values
 - [ ] Fix Auton Gen Task
+- [ ] Finish README.md

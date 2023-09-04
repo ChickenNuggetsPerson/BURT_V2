@@ -149,8 +149,6 @@ void AutonSystem::saveConfig(const char* configId, bool value) {
 
 };
 
-
-
 // Returns the auton start position based on the config
 odom::Position AutonSystem::getStartPos() {
 
@@ -211,12 +209,12 @@ double AutonSystem::findNearestRot(double currentRot, double targetRot) {
 
 // https://www.desmos.com/calculator/gdryojf8i3 << My tests for figuring out the math
 // Returns Angle between points in radians using positive Y axis as 0 and goes clockwise
-double AutonSystem::angleBetweenPoints(odom::Position pos1, odom::Position pos2) {
+inline double AutonSystem::angleBetweenPoints(odom::Position pos1, odom::Position pos2) {
     //std::cout << atan2(pos2.x - pos1.x, pos2.y - pos1.y) << std::endl;
     return atan2(pos2.x - pos1.x, pos2.y - pos1.y);
 }
 // Returns the distance between points
-double AutonSystem::distBetweenPoints(odom::Position pos1, odom::Position pos2) {
+inline double AutonSystem::distBetweenPoints(odom::Position pos1, odom::Position pos2) {
     return sqrt(pow((pos2.x - pos1.x), 2) + pow((pos2.y - pos1.y), 2));
 }
 
@@ -370,7 +368,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
         travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
 
         if (targetNum != numOfTargets - 1) { // Figure this out
-            //travelDist = travelDist + 10;
+            //travelDist = travelDist + 3;
         }
 
         desiredHeading = misc::radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
@@ -437,6 +435,32 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     return true;
 };
 
+// Reverse Drive Movement
+// Drives backward by a certain distance
+bool AutonSystem::reverseDrive(double distance) {
+    if (!odometrySystemPointer->isTracking) {
+        brainError("Skipping Auton Path, Odom not initialized");
+        return false;
+    }
+    bool wasrunning = running;
+    running = true;
+
+    odom::Position movementStartPos = odometrySystemPointer->currentPos();
+    double deltaDist = distBetweenPoints(movementStartPos, odometrySystemPointer->currentPos());
+    
+    RightDriveSmart.spin(directionType::fwd, -5, voltageUnits::volt);
+    LeftDriveSmart.spin(directionType::fwd, -5, voltageUnits::volt);
+
+    while (deltaDist < distance) { deltaDist = distBetweenPoints(movementStartPos, odometrySystemPointer->currentPos()); wait(10, timeUnits::msec); }
+
+    LeftDriveSmart.spin(directionType::fwd, 0, volt);
+    RightDriveSmart.spin(directionType::fwd, 0, volt);
+
+    running = wasrunning;
+    return true;
+}
+
+
 // Pickup the acorn using the vision sensor to center it
 bool AutonSystem::pickupAcorn() {
 
@@ -468,9 +492,7 @@ bool AutonSystem::pickupAcorn() {
         DEBUGLOG("Acorn Pid Power: ", turnPower);
         DEBUGLOG("DIST: ", visionSensor.largestObject.width);
 
-        if (visionSensor.largestObject.width > 300) {
-            break;
-        }
+        if (visionSensor.largestObject.width > 265) { break; }
 
         wait(0.05, seconds);
     }
@@ -510,6 +532,10 @@ bool AutonSystem::dropAcorn() {
     // Drop Acorn Logic
     frontArmHolder.setRunning(true);
     frontArmHolder.setNewVal(0);
+
+    wait(0.5, seconds);
+
+    frontArmHolder.setRunning(false);    
 
     running = wasrunning;
     return true;
@@ -608,7 +634,6 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
         } else {
             tmpMove.tilePos = odom::TilePosition(tilePos["x"].as<float>(), tilePos["y"].as<float>(), tilePos["rot"].as<float>());
         }
-        //std::cout << "X: " << tmpMove.tilePos.x << " Y: " << tmpMove.tilePos.y << std::endl;
 
         // Loop Through Drive Path Array
         JsonArray drivePathArray = movement["drivePath"].as<JsonArray>();
@@ -619,13 +644,14 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
             } else {
                 tmpMove.drivePath.push_back(odom::TilePosition(point["x"].as<float>(), point["y"].as<float>(), point["rot"].as<float>()));    
             }
-            //std::cout << "X: " << tmpMove.drivePath.at(tmpMove.drivePath.size() - 1).x << " Y: " << tmpMove.drivePath.at(tmpMove.drivePath.size() - 1).y << std::endl;
         }
 
         readPath.addMovement(tmpMove);
     }
-    //std::cout << path << std::endl;
-    //std::cout << readPath.getSize() << std::endl;
+
+    DEBUGLOG("Finished Reading: ", jsonPath);
+    DEBUGLOG("Parsed Size: ", readPath.getSize());
+    DEBUGLOG("Read Size: ", length);
 
     if (length != readPath.getSize()) {
         brainError("Error Reading Json", true);
@@ -649,6 +675,8 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
             }
         case AUTON_MOVE_LONGGOTO:
             return aiPtr->longGoto(movement.drivePath);
+        case AUTON_MOVE_DRIVE_REVERSE:
+            return aiPtr->reverseDrive(movement.val);
         case AUTON_MOVE_TURNTO:
             return aiPtr->turnTo(movement.pos.rot);
         case AUTON_MOVE_PICKUP_ACORN:

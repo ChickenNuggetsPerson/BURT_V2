@@ -1262,14 +1262,20 @@ void MenuSystem::drawNotification(int rowNum, Notification notif) {
 }
 void MenuSystem::render() {
     // Render Page
-
-    if (renderPagePtr == nullptr) {
-        Brain.Screen.printAt(20, 100, "No Pages In Storage");
+    if (Brain.timer(timeUnits::sec) < sleepAt) {
+        if (renderPagePtr == nullptr) {
+            Brain.Screen.printAt(20, 100, "No Pages In Storage");
+        } else {
+            renderPagePtr->render();
+            if (firstTimeRender) { startUpdaterTask(renderPagePtr); firstTimeRender = false;}
+        }
     } else {
-        renderPagePtr->render();
-        if (firstTimeRender) { startUpdaterTask(renderPagePtr); firstTimeRender = false;}
+        Brain.Screen.setFont(fontType::mono30);
+        Brain.Screen.printAt(20, 30, "Sleeping...");
+        Brain.Screen.setFont(fontType::mono15);
+        Brain.Screen.printAt(20, 50, "Press the screen to wake up");
+        Brain.Screen.setFont(fontType::mono20);
     }
-
     
     // Render Notifications
     if (showingNotifications) {
@@ -1293,6 +1299,7 @@ void MenuSystem::addPage(const char* pageId, Page& page) {
     pageStorage.push_back(page);
 };
 void MenuSystem::gotoPage(const char* pageId) {
+    refreshSleep();
     std::string id = pageId;
     for (int i = 0; i < pageStorage.size(); i++) {
         if (pageStorage.at(i).identifier != pageId) { continue; }
@@ -1306,6 +1313,7 @@ void MenuSystem::gotoPage(const char* pageId) {
     }
 };
 void MenuSystem::gotoPage(int index) {
+    refreshSleep();
     if (index >= pageStorage.size()) { return; }
     if (currentPage == index) { return; }
     
@@ -1329,6 +1337,8 @@ Page* MenuSystem::searchPages(const char* pageId) {
     return nullptr;
 }
 void MenuSystem::screenPressed() {
+    if (Brain.timer(timeUnits::sec) > sleepAt) { refreshSleep(); return;}
+    refreshSleep();
     if (currentPage != 0) {
         pageStorage.at(currentPage).screenPressed(Brain.Screen.xPosition(), Brain.Screen.yPosition());
     } else {
