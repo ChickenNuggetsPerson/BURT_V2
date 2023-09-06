@@ -73,6 +73,7 @@ int controllerTask() {
 
     if(Competition.isDriverControl()) {
 
+      // Main Loop for geting controller input
       if (!inertialSensor.isCalibrating()) {
         leftFB = mainController.Axis3.position();
         rightFB = mainController.Axis2.position();
@@ -88,6 +89,10 @@ int controllerTask() {
       }
       if (mainController.ButtonL2.pressing()) {
         frontArmVal = -8;
+      }
+
+      if ((mainController.ButtonR2.pressing() || mainController.ButtonL2.pressing()) && !botAI.running && frontArmHolder.getRunning()) {
+        frontArmHolder.setRunning(false);
       }
       
     }
@@ -121,12 +126,10 @@ int controllerTask() {
       rightMotorA.setVelocity(motorFR, percent);
       rightMotorB.setVelocity(motorBR, percent);
 
-      if (!frontArmHolder.getRunning()) {
-        frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
-      }
-      //frontArmHolder.setNewVal((double)frontArmVal * 5);
+      frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
+
     }
-    
+
     // iterate over holders
     frontArmHolder.iterate();
 

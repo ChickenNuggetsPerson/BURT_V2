@@ -111,6 +111,8 @@ namespace auton {
   class AutonSystem {
     private:
 
+      bool forceStop = false;
+
       bool loaded = false;
       bool runningSkills = false;
 
@@ -150,6 +152,9 @@ namespace auton {
       void setStartPos(odom::TilePosition pos);
       odom::Position getStartPos();
       odom::Position getTargetPos();
+
+      inline void setForceStop(bool forceStop) { this->forceStop = forceStop; if (!forceStop) { running = false;} };
+      inline bool getForceStop() { return this->forceStop; };
 
       bool driveDist(double dist);
 

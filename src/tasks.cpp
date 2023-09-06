@@ -9,7 +9,7 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  
+
 };
 void leftPressed() {
   //queuingSystem.runQueue();
@@ -68,11 +68,16 @@ void pre_auton(void) {
 }
 
 
-void autonomous(void) { queuingSystem.autonStarted(); }
+void autonomous(void) { 
+  queuingSystem.autonStarted(); 
+}
 
 
 void usercontrol(void) {
   brainFancyDebug("UserControl Started", vex::color::green, true);
+  
+  botAI.setForceStop(true);
+  frontArmHolder.setRunning(false);
 }
 
 void whenStarted(void) {

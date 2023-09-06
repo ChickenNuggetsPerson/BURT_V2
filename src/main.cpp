@@ -20,6 +20,8 @@ using std::endl;
 int main() {
 
   cout << endl << endl << endl;
+
+  Competition.bStopTasksBetweenModes = true;
   
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);

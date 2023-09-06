@@ -6,6 +6,12 @@
 
 #include "visionSensorConfig.h"
 
+
+// Auton Specific Macros
+// Check if ForceStop is set to true
+#define CheckForceStop() if (this->forceStop) { return false; }
+#define CheckOdomStatus() if (!odometrySystemPointer->isTracking) { brainError("Skipping Auton Path, Odom not initialized"); return false; }
+
 using namespace vex;
 using namespace auton;
 
@@ -135,8 +141,6 @@ bool AutonSystem::getConfig(const char* configId) {
 // Saves the value to the sd card
 // Does not update internal storage so make sure to reintialize auton after writing configs
 void AutonSystem::saveConfig(const char* configId, bool value) {
-
-        //std::cout << "Saving: " << configId << " " << value << std::endl;
         DEBUGLOG("SAVING: ", configId, " ", value);
 
         for (auto config: configStorage) {
@@ -240,10 +244,8 @@ bool AutonSystem::turnTo(double deg) {
 // Turns to the desired rotation in degrees
 bool AutonSystem::turnTo(double deg, double turnTimeout) {
     
-    if (!odometrySystemPointer->isTracking) { 
-        brainError("Skipping Auton Path, Odom not initialized");
-        return false; 
-    }
+    CheckOdomStatus();
+    CheckForceStop();
 
     double timeout = Brain.timer(msec) + (turnTimeout * 1000);
 
@@ -262,6 +264,7 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
     double lastRot = odometrySystemPointer->currentPos().rot;
     int totalChecks = 0;
     while (true) {
+        CheckForceStop();
         
         heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double power = turnPID.iterate(heading);
@@ -299,8 +302,6 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
     return true;
 };
 
-
-
 bool AutonSystem::gotoLoc(odom::TilePosition pos) {
     return gotoLoc(odom::tilePosToPos(pos));
 };
@@ -320,10 +321,8 @@ bool AutonSystem::longGoto(std::vector<odom::TilePosition> pos) {
 // Main goto logic
 bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
-    if (!odometrySystemPointer->isTracking) { 
-        brainError("Skipping Auton Path, Odom not initialized");
-        return false; 
-    }
+    CheckOdomStatus();
+    CheckForceStop();
 
     bool wasRunning = running;
     running = true;
@@ -338,7 +337,10 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     double desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos.at(0)));
 
     // Turn to point to the location
-    turnTo(desiredHeading, 1.5);
+    // Only do it if the robot has to turn more than 10 degrees
+    if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 10)) {
+        turnTo(desiredHeading, 1.5);
+    }
 
     // PID to control drive speed
     pid::PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
@@ -362,6 +364,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     // Main Driving Loop
     while (traveling) {
+        CheckForceStop();
         
         odom::Position tempPos = odometrySystemPointer->currentPos();
 
@@ -438,10 +441,9 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 // Reverse Drive Movement
 // Drives backward by a certain distance
 bool AutonSystem::reverseDrive(double distance) {
-    if (!odometrySystemPointer->isTracking) {
-        brainError("Skipping Auton Path, Odom not initialized");
-        return false;
-    }
+    CheckOdomStatus();
+    CheckForceStop();
+
     bool wasrunning = running;
     running = true;
 
@@ -451,7 +453,11 @@ bool AutonSystem::reverseDrive(double distance) {
     RightDriveSmart.spin(directionType::fwd, -5, voltageUnits::volt);
     LeftDriveSmart.spin(directionType::fwd, -5, voltageUnits::volt);
 
-    while (deltaDist < distance) { deltaDist = distBetweenPoints(movementStartPos, odometrySystemPointer->currentPos()); wait(10, timeUnits::msec); }
+    while (deltaDist < distance) { 
+        CheckForceStop();
+        deltaDist = distBetweenPoints(movementStartPos, odometrySystemPointer->currentPos()); 
+        wait(10, timeUnits::msec); 
+    }
 
     LeftDriveSmart.spin(directionType::fwd, 0, volt);
     RightDriveSmart.spin(directionType::fwd, 0, volt);
@@ -464,14 +470,13 @@ bool AutonSystem::reverseDrive(double distance) {
 // Pickup the acorn using the vision sensor to center it
 bool AutonSystem::pickupAcorn() {
 
-    if (!odometrySystemPointer->isTracking) {
-        brainError("Skipping Auton Path, Odom not initialized");
-        return false;
-    }
+    CheckOdomStatus();
     if (!visionSensor.installed()) {
         brainError("Vision Sensor not initialized");
         return false;
     }
+    CheckForceStop();
+    
     bool wasrunning = running;
     running = true;
 
@@ -522,10 +527,9 @@ bool AutonSystem::pickupAcorn() {
 };
 bool AutonSystem::dropAcorn() {
 
-    if (!odometrySystemPointer->isTracking) {
-        brainError("Skipping Auton Path, Odom not initialized");
-        return false;
-    }
+    CheckOdomStatus();
+    CheckForceStop();
+    
     bool wasrunning = running;
     running = true;
 
@@ -553,6 +557,7 @@ void aiQueueSystem::addPtrs(AutonSystem* botAIPtr, odom::OdometrySystem* odometr
 void aiQueueSystem::runQueue() {
     if (running) { return; }
     running = true;
+    aiPtr->setForceStop(false);
 
     int i = 0;
     while (i < queue.size()) {
@@ -562,6 +567,7 @@ void aiQueueSystem::runQueue() {
 
     queue.clear();
     running = false;
+    aiPtr->setForceStop(true);
 
 }
 void aiQueueSystem::clear() {

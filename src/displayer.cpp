@@ -790,14 +790,14 @@ void brainDebug(const char* message) {
   
     BrainLogs.newLog(message, vex::color::purple);
 
-    DEBUGLOG("ERROR: ", message);
+    DEBUGLOG("DEBUG: ", message);
 }
 void brainDebug(const char* message, bool notification) {
   
     BrainLogs.newLog(message, vex::color::purple);
     mainRenderer.newNotification(message, 4, purple);
 
-    DEBUGLOG("ERROR: ", message);
+    DEBUGLOG("DEBUG: ", message);
 }
 
 // Displays debug message on brain screen

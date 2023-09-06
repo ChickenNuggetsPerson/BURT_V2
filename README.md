@@ -3,6 +3,8 @@
 
 <br>
 
+[BURT Path Builder](https://github.com/ChickenNuggetsPerson/BURT_V2_Path_Visualizer)
+
 ![HomePage](images/brain/home.png)
 
 The code for team 84075A in the Over Under game ( 2023 - 2024 )

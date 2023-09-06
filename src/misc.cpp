@@ -9,6 +9,7 @@
 vex::mutex sdReaderMutex;
 
 int misc::readFile(const char* fileName) {
+  //DEBUGLOG("Reading File: ", fileName);
   sdReaderMutex.lock();
   std::fstream readStream(fileName, std::ios_base::in);
   int readVal;
@@ -17,6 +18,7 @@ int misc::readFile(const char* fileName) {
   return readVal;
 }
 double misc::readFileDouble(const char* fileName) {
+  //DEBUGLOG("Reading File: ", fileName);
   sdReaderMutex.lock();
   std::fstream readStream(fileName, std::ios_base::in);
   int readVal;
@@ -26,6 +28,7 @@ double misc::readFileDouble(const char* fileName) {
 }
 
 void misc::writeFile(const char* fileName, int numToWrite) {
+  //DEBUGLOG("Writing File: ", fileName);
   sdReaderMutex.lock();
   std::ofstream writeStream(fileName);
 
@@ -37,6 +40,7 @@ void misc::writeFile(const char* fileName, int numToWrite) {
   sdReaderMutex.unlock();
 }
 void misc::writeFile(const char* fileName, double numToWrite) {
+  //DEBUGLOG("Writing File: ", fileName);
   sdReaderMutex.lock();
   std::ofstream writeStream(fileName);
 
@@ -49,6 +53,7 @@ void misc::writeFile(const char* fileName, double numToWrite) {
 };
 
 void misc::writeFile(const char* fileName, const char* content) {
+  //DEBUGLOG("Writing File: ", fileName);
   sdReaderMutex.lock();
   std::ofstream writeStream(fileName);
   writeStream << content;
@@ -57,6 +62,7 @@ void misc::writeFile(const char* fileName, const char* content) {
 };
 
 void misc::appendFile(const char* fileName, int numToAppend) {
+  //DEBUGLOG("Appending File: ", fileName);
   sdReaderMutex.lock();
   std::ofstream writeStream(fileName, std::ios_base::app);
 
@@ -69,6 +75,7 @@ void misc::appendFile(const char* fileName, int numToAppend) {
 }
 
 void misc::appendFile(const char* fileName, const char* content) {
+  //DEBUGLOG("Appending File: ", fileName);
   sdReaderMutex.lock();
   std::ofstream writeStream;
   writeStream.open(fileName, std::ios_base::app);
@@ -78,6 +85,7 @@ void misc::appendFile(const char* fileName, const char* content) {
 };
 
 bool misc::copyFile(const char* file, const char* dest) {
+  //DEBUGLOG("Copying File: ", file);
   sdReaderMutex.lock();
   std::string line;
   std::ifstream origonal{file};
@@ -99,6 +107,7 @@ bool misc::copyFile(const char* file, const char* dest) {
 
 
 bool misc::fileExists(const char* name) {
+  //DEBUGLOG("Checking File: ", name);
   sdReaderMutex.lock();
   if (FILE *file = fopen(name, "r")) {
       fclose(file);
