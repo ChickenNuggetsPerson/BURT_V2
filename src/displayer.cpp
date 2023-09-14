@@ -19,7 +19,7 @@ using namespace display;
 
 // Define head elements
 Logger BrainLogs(1, 1, "logs.txt", 13, fontType::mono15);
-MenuSystem mainRenderer(true, 60);
+MenuSystem mainRenderer(true, 600);
 
 
 // Called when the screen is pressed
@@ -39,7 +39,7 @@ bool checkBattery() {
 }
 
 int notificationCheck() {
-    
+
     int checkSpeed = 1;
 
     NotificationChecker NotChecker(&mainRenderer);
@@ -48,6 +48,7 @@ int notificationCheck() {
     NotChecker.addMotor("RightMotorB", &rightMotorB);
     NotChecker.addMotor("LeftMotorA", &leftMotorA);
     NotChecker.addMotor("LeftMotorB", &leftMotorB);
+    NotChecker.addMotor("FrontArmMotor", &frontArmMotor);
 
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
@@ -125,6 +126,10 @@ int gotoAutonPageButton(Page* self) {
 }
 int gotoDevicesDebugPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("deviceDebug");
+    return 1;
+}
+int gotoMotorDebugPageButton(Page* self) {
+    self->menuSystemPointer->gotoPage("motorsDebug");
     return 1;
 }
 
@@ -548,6 +553,23 @@ int updateDeviceDebug(Page* self) {
 }
 
 
+int updateMotorDebug(Page* self) {
+
+    self->setProgressBarValue("efl", (int)leftMotorA.efficiency());
+    self->setProgressBarValue("efr", (int)rightMotorA.efficiency());
+    self->setProgressBarValue("ebl", (int)leftMotorB.efficiency());
+    self->setProgressBarValue("ebr", (int)rightMotorB.efficiency());
+
+    self->setTextData("tfl", (int)floor(leftMotorA.temperature(temperatureUnits::celsius)));
+    self->setTextData("tfr", (int)floor(rightMotorA.temperature(temperatureUnits::celsius)));
+    self->setTextData("tbl", (int)floor(leftMotorB.temperature(temperatureUnits::celsius)));
+    self->setTextData("tbr", (int)floor(rightMotorB.temperature(temperatureUnits::celsius)));
+
+    return 1;
+}
+
+
+
 // Initialize All The Pages
 int brainDisplayerInit() {
 
@@ -569,6 +591,7 @@ int brainDisplayerInit() {
     Page autonConfigPage;
     Page systemConfigPage;
     Page devicesDebug;
+    Page motorsDebug;
 
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
@@ -584,17 +607,18 @@ int brainDisplayerInit() {
     // Configure the home page
     homePage.addText("BURT OS", 20, 50, color::white, fontType::mono40);
     homePage.addText("Developed by Hayden Steele", 22, 75, color::white, fontType::mono15);
-    homePage.addText("Skills Status", 22, 120, color::white, fontType::mono20, "skillsStatus");
+    homePage.addText("Skills Status", 22, 110, color::white, fontType::mono20, "skillsStatus");
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     homePage.addButton("Devies", 80, 210, 100, 30, gotoDevicesDebugPageButton, "systemButton");
+    homePage.addButton("Motors", 80, 170, 100, 30, gotoMotorDebugPageButton, "systemButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, false, batteryGradient.finalGradient);
     homePage.addText("Status: ", 325, 70, color::white, fontType::prop20);
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
     homePage.addLineGraph("batWatt", "Watts: %dW", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
     homePage.addDataUpdaterCB(updateHome, 0.5);
-    homePage.addAdjustableNum("speedChange", 0.8, 0.05, 1, 0, 20, 140, 100, 30, fontType::mono20, true);
+    homePage.addAdjustableNum("speedChange", 0.8, 0.05, 1, 0, 20, 120, 100, 30, fontType::mono20, true);
 
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, color::white, fontType::mono30, "title");
@@ -665,6 +689,22 @@ int brainDisplayerInit() {
     devicesDebug.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
     devicesDebug.addDataUpdaterCB(updateDeviceDebug, 1);
 
+
+    // Configure the motor debug page
+    motorsDebug.addText("Efficiency", 20, 30, color::white, fontType::mono30);
+    motorsDebug.addHorzProgressBar("efl", 20, 55, 175, 15, "FL %d%%", false, false, batteryGradient.finalGradient);
+    motorsDebug.addHorzProgressBar("efr", 20, 93, 175, 15, "FR %d%%", false, false, batteryGradient.finalGradient);
+    motorsDebug.addHorzProgressBar("ebl", 20, 131, 175, 15, "BL %d%%", false, false, batteryGradient.finalGradient);
+    motorsDebug.addHorzProgressBar("ebr", 20, 169, 175, 15, "BR %d%%", false, false, batteryGradient.finalGradient);
+
+    motorsDebug.addText("Temp: %d C", 110, 55, color::white, fontType::mono15, "tfl");
+    motorsDebug.addText("Temp: %d C", 110, 93, color::white, fontType::mono15, "tfr");
+    motorsDebug.addText("Temp: %d C", 110, 131, color::white, fontType::mono15, "tbl");
+    motorsDebug.addText("Temp: %d C", 110, 169, color::white, fontType::mono15, "tbr");
+
+    motorsDebug.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton);
+    motorsDebug.addDataUpdaterCB(updateMotorDebug, 0.1);
+
     // Add pages to the main renderer
     mainRenderer.addPage("loading", loadingPage);
     mainRenderer.addPage("main", homePage);
@@ -674,6 +714,7 @@ int brainDisplayerInit() {
     mainRenderer.addPage("queue", queuePage);
     mainRenderer.addPage("map", mapPage);
     mainRenderer.addPage("deviceDebug", devicesDebug);
+    mainRenderer.addPage("motorsDebug", motorsDebug);
 
     return 1;
 };

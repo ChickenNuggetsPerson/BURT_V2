@@ -9,30 +9,33 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
+  queuingSystem.clear();
+  
+  std::vector<const char*> options;
 
+  options.push_back("Pickup Acorn");
+  options.push_back("Drop Acorn");
+  options.push_back("Set Arm");
+  options.push_back("Release Arm");
+
+  switch (mainControllerPickOption(options)) {
+  case 0:
+    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_PICKUP_ACORN));
+    break;
+  case 1:
+    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_DROPOFF_ACORN));
+    break;
+  case 2:
+    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_ARM_SET, 75));
+    break;
+  case 3:
+    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_ARM_RELEASE));
+    break;
+  }
+
+  queuingSystem.runQueue();
 };
 void leftPressed() {
-  //queuingSystem.runQueue();
-
-
-  // Club Week Burt Presentation
-  frontArmHolder.setRunning(true);
-  while (true) {
-    if (mainController.ButtonRight.pressing()) { break; }
-
-    // Generate random number between 0 and 100 and check if it is even
-    if (((rand() % 100) + 1) % 2 == 0) {
-      // Even
-      botAI.turnTo((rand() % 360) + 1);
-    } else {
-      // Odd
-      frontArmHolder.setNewVal((rand() % 100) + 1);
-      wait(0.5, timeUnits::sec);
-    }
-
-    // Random Delay
-    wait((rand() % 5) + 1, timeUnits::sec);
-  }
 
 };
 void upPressed() {

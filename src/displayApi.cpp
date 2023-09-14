@@ -51,7 +51,7 @@ int mainDataUpdater(void* pageToUpdate) {
 }
 bool notMotorCheck(void* motorToCheck) {
     motor* motorPointer = (motor*)motorToCheck;
-    return motorPointer->temperature(temperatureUnits::fahrenheit) >= motorWarnTemp;
+    return motorPointer->temperature(temperatureUnits::celsius) >= motorWarnTemp;
 }
 
 
@@ -1356,7 +1356,7 @@ void MenuSystem::newNotification(const char* text, int displayTime, vex::color d
 
 // Notification Checker Functions
 bool NotificationChecker::checkMotor(MotCheck check) {
-    return check.motorPointer->temperature(percent) >= motorWarnTemp;
+    return check.motorPointer->temperature(temperatureUnits::celsius) >= motorWarnTemp;
 }
 void NotificationChecker::addCheck(const char* trueMessage, const char* falseMessage, bool (*cb)()) {
     checksStorage.push_back(NotCheck(trueMessage, falseMessage, cb, false, color::green, color::red, false));
@@ -1390,6 +1390,7 @@ void NotificationChecker::check() {
             } 
         }
         check.lastVal = newVal;
+        wait(0.2, timeUnits::sec);
     }
     for (auto &check: motorCheckStorage) {
         if (checkMotor(check) && check.lastWarn < Brain.timer(timeUnits::msec)) {
@@ -1401,5 +1402,6 @@ void NotificationChecker::check() {
 
             check.lastWarn = Brain.timer(timeUnits::msec) + (check.warnTimeout * 1000);
         }
+        wait(0.2, timeUnits::sec);
     }
 }

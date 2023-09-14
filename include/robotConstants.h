@@ -56,7 +56,7 @@ static double backEncoderDist = 4.5; // use if we decide to use back encoders
 static double PI = 3.14159; // PI variable used for all methods
 
 
-static double motorWarnTemp = 80.00; // The temp percent to start warning the user about motor temperatures
+static double motorWarnTemp = 50; // The temp in c
 
 
 // Define Ports
@@ -86,10 +86,10 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 
 // Auton Constants For Main Bot
 
-static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.12, 0, 0.0); 
+static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.10, 0, 0.1); 
 
-static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.4, 0.0, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.18, 0.0, 0.1);
+static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);
+static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.15, 0.0, 0.10);
 
 
 // Auton Start Positions

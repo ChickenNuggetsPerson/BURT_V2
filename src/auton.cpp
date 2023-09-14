@@ -360,7 +360,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     int targetNum = 0;
     int numOfTargets = pos.size();
 
-    int speedUp = 10;
+    int speedUp = 3;
 
     // Main Driving Loop
     while (traveling) {
@@ -370,8 +370,11 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
         travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
 
-        if (targetNum != numOfTargets - 1) { // Figure this out
-            //travelDist = travelDist + 3;
+        if (targetNum == numOfTargets - 1 && travelDist < 24.00) { 
+            double newMaxTurn = ((double)travelDist / 24.00) * 12.00;
+            //turnPid.setMax(12.00 - newMaxTurn);
+            //turnPid.setMin(-12.00 + newMaxTurn);
+            DEBUGLOG("New Turn Max: ", 12.00 - newMaxTurn);
         }
 
         desiredHeading = misc::radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
@@ -481,8 +484,9 @@ bool AutonSystem::pickupAcorn() {
     running = true;
 
     frontArmHolder.setNewVal(0);
+    frontArmHolder.setRunning(true);
 
-    pid::PID turnPid(pid::PIDConfig(0.15, 0.00, 0.00), 50);
+    pid::PID turnPid(pid::PIDConfig(0.15, 0.00, 0.10), 50);
     turnPid.setMax(12);
     turnPid.setMin(-12);
 
@@ -689,6 +693,13 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
             return aiPtr->pickupAcorn();
         case AUTON_MOVE_DROPOFF_ACORN:
             return aiPtr->dropAcorn();
+        case AUTON_MOVE_ARM_SET:
+            frontArmHolder.setRunning(true);
+            frontArmHolder.setNewVal(movement.val);
+            DEBUGLOG("New Front Arm: ", movement.val);
+            wait(0.5, sec);
+        case AUTON_MOVE_ARM_RELEASE:
+            frontArmHolder.setRunning(false);
         default:
             return false;
     }

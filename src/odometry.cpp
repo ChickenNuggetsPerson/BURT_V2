@@ -220,12 +220,9 @@ void OdometrySystem::track() {
     double deltaDist = (currentData.deltaLeft + currentData.deltaRight) / 2.0;
 
     // Use Trig to find change in X and Y
-    double deltaX = deltaDist * sin(currentData.heading);
-    double deltaY = deltaDist * cos(currentData.heading);
-
     // Apply deltas to the global positions
-    globalX += deltaX;
-    globalY += deltaY;    
+    globalX += deltaDist * sin(currentData.heading);
+    globalY += deltaDist * cos(currentData.heading);    
 
     lastData = currentData;
 

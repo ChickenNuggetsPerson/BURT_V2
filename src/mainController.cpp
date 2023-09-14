@@ -26,7 +26,17 @@ int turn = 0;
 
 controlSystem::MotorController motorController(&mainController);
 
+bool questioning = false;
+void toggleHold() {
+  if (questioning)
+    return;
+  frontArmHolder.setRunning(true);
+  frontArmHolder.setNewVal(70);
+}
+
 int controllerTask() {
+
+  mainController.ButtonA.pressed(toggleHold);
 
   DEBUGLOG("Starting controller");
 
@@ -81,7 +91,7 @@ int controllerTask() {
         leftFB = leftFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
         rightFB = rightFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
 
-        turn = mainController.Axis1.position();
+        turn = mainController.Axis1.position() * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);;
       }
       frontArmVal = 0;
       if (mainController.ButtonR2.pressing()) {
@@ -91,7 +101,7 @@ int controllerTask() {
         frontArmVal = -8;
       }
 
-      if ((mainController.ButtonR2.pressing() || mainController.ButtonL2.pressing()) && !botAI.running && frontArmHolder.getRunning()) {
+      if ((mainController.ButtonR2.pressing() || mainController.ButtonL2.pressing()) && frontArmHolder.getRunning()) {
         frontArmHolder.setRunning(false);
       }
       
@@ -112,19 +122,14 @@ int controllerTask() {
     }
 
 
-    if ( !botAI.running ) {
+    if ( !botAI.running || botAI.getForceStop()) {
 
       //motorController.step();
 
-      leftMotorA.spin(fwd);
-      leftMotorB.spin(fwd);
-      rightMotorA.spin(fwd);
-      rightMotorB.spin(fwd);
-
-      leftMotorA.setVelocity(motorFL, percent);
-      leftMotorB.setVelocity(motorBL, percent);
-      rightMotorA.setVelocity(motorFR, percent);
-      rightMotorB.setVelocity(motorBR, percent);
+      leftMotorA.spin(directionType:: fwd, (motorFL / 100.00) * 12, voltageUnits::volt);
+      leftMotorB.spin(directionType:: fwd, (motorBL / 100.00) * 12, voltageUnits::volt);
+      rightMotorA.spin(directionType:: fwd, (motorFR / 100.00) * 12, voltageUnits::volt);
+      rightMotorB.spin(directionType:: fwd, (motorBR / 100.00) * 12, voltageUnits::volt);
 
       frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
 
@@ -161,10 +166,13 @@ void mainControllerRender() {
     return;
   }
 
+  mainController.Screen.print("X: ");
   mainController.Screen.print(currentPos.x);
   mainController.Screen.newLine();
+  mainController.Screen.print("Y: ");
   mainController.Screen.print(currentPos.y);
   mainController.Screen.newLine();
+  mainController.Screen.print("Rot: ");
   mainController.Screen.print(misc::limitAngle(misc::radToDegree(currentPos.rot)));            
 
 
@@ -191,8 +199,10 @@ bool mainControllerOverlay(const char* question, const char* trueOption, const c
 int mainControllerPickOption(std::vector <const char*> options) {
   if (!mainController.installed()) { return 0; }
   haltRender = true;
+  questioning = true;
   while (rendering) { wait(1, timeUnits::msec); }
   int result = pickOption(options, &mainController);
   haltRender = false;
+  questioning = false;
   return result;
 };

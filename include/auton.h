@@ -1,6 +1,7 @@
 #pragma once
 
 #include "odometry.h"
+#include "robotConstants.h"
 #include <string>
 #include <vector>
 
@@ -24,6 +25,8 @@ static const int AUTON_MOVE_TURNTO = 4;
 static const int AUTON_MOVE_PICKUP_ACORN = 5;
 static const int AUTON_MOVE_DROPOFF_ACORN = 6;
 static const int AUTON_MOVE_DRIVE_REVERSE = 7;
+static const int AUTON_MOVE_ARM_SET = 8;
+static const int AUTON_MOVE_ARM_RELEASE = 9;
 
 
 namespace auton {
@@ -153,7 +156,7 @@ namespace auton {
       odom::Position getStartPos();
       odom::Position getTargetPos();
 
-      inline void setForceStop(bool forceStop) { this->forceStop = forceStop; if (!forceStop) { running = false;} };
+      inline void setForceStop(bool forceStop) { DEBUGLOG("Setting Force Stop: ", forceStop ? "true" : "false"); this->forceStop = forceStop; if (!forceStop) { running = false;} };
       inline bool getForceStop() { return this->forceStop; };
 
       bool driveDist(double dist);
