@@ -39,6 +39,8 @@ extern smartdrive Drivetrain;
 extern motor frontArmMotor;
 extern controlSystem::MotorHolder frontArmHolder;
 
+extern motor cataArmMotor;
+
 extern controller mainController;
 extern controller altController;
 

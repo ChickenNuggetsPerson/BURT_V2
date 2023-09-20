@@ -19,24 +19,26 @@ void rightPressed() {
   options.push_back("Release Arm");
 
   switch (mainControllerPickOption(options)) {
-  case 0:
-    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_PICKUP_ACORN));
-    break;
-  case 1:
-    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_DROPOFF_ACORN));
-    break;
-  case 2:
-    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_ARM_SET, 75));
-    break;
-  case 3:
-    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_ARM_RELEASE));
-    break;
+    case 0:
+      queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_PICKUP_ACORN));
+      break;
+    case 1:
+      queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_DROPOFF_ACORN));
+      break;
+    case 2:
+      queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_ARM_SET, 75));
+      break;
+    case 3:
+      queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_ARM_RELEASE));
+      break;
   }
 
   queuingSystem.runQueue();
 };
 void leftPressed() {
-
+  queuingSystem.clear();
+  queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_GOTO, botAI.getStartPos()));
+  queuingSystem.runQueue();
 };
 void upPressed() {
 

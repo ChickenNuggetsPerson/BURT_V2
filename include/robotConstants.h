@@ -71,6 +71,7 @@ static const int32_t leftEncoderPort = vex::PORT6;
 static const int32_t rightEncoderPort = vex::PORT7;
 
 static const int32_t frontArmMotorPort = vex::PORT3;
+static const int32_t cataMotorPort = vex::PORT4;
 
 
 // Odom Constants

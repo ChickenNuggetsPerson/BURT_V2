@@ -31,6 +31,8 @@ smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSens
 motor frontArmMotor(frontArmMotorPort, ratio36_1, false);
 controlSystem::MotorHolder frontArmHolder(&frontArmMotor, pid::PIDConfig(0.2, 0.00, 0.0), rotationUnits::deg);
 
+motor cataArmMotor(cataMotorPort, ratio36_1, false);
+
 controller mainController = controller(primary);
 controller altController = controller(partner);
 

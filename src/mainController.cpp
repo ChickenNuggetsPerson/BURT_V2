@@ -59,6 +59,10 @@ int controllerTask() {
   frontArmMotor.setPosition(0, degrees);
   frontArmHolder.setRunning(false);
 
+  cataArmMotor.spin(fwd);
+  cataArmMotor.setVelocity(0, percent);
+  cataArmMotor.setBrake(brakeType::coast);
+
 /*
   controlSystem::ControlObject acornPickerUper;
   acornPickerUper.mainMotorPtr = &testMotor;
@@ -77,6 +81,7 @@ int controllerTask() {
   }
 
   int frontArmVal = 0;
+  int cataArmMove = 0;
 
   // Main driving loop
   while(true) {
@@ -103,6 +108,11 @@ int controllerTask() {
 
       if ((mainController.ButtonR2.pressing() || mainController.ButtonL2.pressing()) && frontArmHolder.getRunning()) {
         frontArmHolder.setRunning(false);
+      }
+
+      cataArmMove = 0;
+      if (mainController.ButtonR1.pressing()) {
+        cataArmMove = 10;
       }
       
     }
@@ -132,6 +142,7 @@ int controllerTask() {
       rightMotorB.spin(directionType:: fwd, (motorBR / 100.00) * 12, voltageUnits::volt);
 
       frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
+      cataArmMotor.spin(fwd, cataArmMove, voltageUnits::volt);
 
     }
 
