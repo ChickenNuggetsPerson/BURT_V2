@@ -40,6 +40,7 @@ extern motor frontArmMotor;
 extern controlSystem::MotorHolder frontArmHolder;
 
 extern motor cataArmMotor;
+extern controlSystem::CatapultSystem cataSystem;
 
 extern controller mainController;
 extern controller altController;

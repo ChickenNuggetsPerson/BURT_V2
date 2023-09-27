@@ -9,6 +9,14 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
+
+  for(int i = 0; i < 5; i++) {
+    cataSystem.reset();
+    cataSystem.launch();
+  }
+
+
+  return;
   queuingSystem.clear();
   
   std::vector<const char*> options;

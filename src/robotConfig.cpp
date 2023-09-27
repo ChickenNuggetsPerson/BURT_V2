@@ -28,10 +28,11 @@ motor_group RightDriveSmart = motor_group(rightMotorA, rightMotorB);
 
 smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSensor, 319.19, 254, 254, mm, 1);
 
-motor frontArmMotor(frontArmMotorPort, ratio36_1, false);
+motor frontArmMotor(frontArmMotorPort, ratio36_1, true);
 controlSystem::MotorHolder frontArmHolder(&frontArmMotor, pid::PIDConfig(0.2, 0.00, 0.0), rotationUnits::deg);
 
-motor cataArmMotor(cataMotorPort, ratio36_1, false);
+motor cataArmMotor(cataMotorPort, gearSetting::ratio36_1, false);
+controlSystem::CatapultSystem cataSystem(&cataArmMotor);
 
 controller mainController = controller(primary);
 controller altController = controller(partner);

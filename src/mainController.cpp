@@ -142,7 +142,7 @@ int controllerTask() {
       rightMotorB.spin(directionType:: fwd, (motorBR / 100.00) * 12, voltageUnits::volt);
 
       frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
-      cataArmMotor.spin(fwd, cataArmMove, voltageUnits::volt);
+      cataSystem.setSpeed(cataArmMove);
 
     }
 
@@ -185,6 +185,7 @@ void mainControllerRender() {
   mainController.Screen.newLine();
   mainController.Screen.print("Rot: ");
   mainController.Screen.print(misc::limitAngle(misc::radToDegree(currentPos.rot)));            
+  //mainController.Screen.print((int)cataArmMotor.position(rotationUnits::deg) % 360);
 
 
   rendering = false;

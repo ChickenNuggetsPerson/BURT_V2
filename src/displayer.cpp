@@ -49,6 +49,7 @@ int notificationCheck() {
     NotChecker.addMotor("LeftMotorA", &leftMotorA);
     NotChecker.addMotor("LeftMotorB", &leftMotorB);
     NotChecker.addMotor("FrontArmMotor", &frontArmMotor);
+    NotChecker.addMotor("Catapult", &cataArmMotor);
 
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
