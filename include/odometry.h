@@ -15,6 +15,7 @@ namespace odom {
         Position(double xPos, double yPos);
         Position();
     };
+    std::ostream& operator<<(std::ostream& os, const odom::Position& pos);
 
     // Positions based on tiles
     struct TilePosition {
@@ -25,6 +26,7 @@ namespace odom {
         TilePosition(double xPos, double yPos);
         TilePosition();
     };
+    std::ostream& operator<<(std::ostream& os, const odom::TilePosition& pos);
 
     // Used by the odometry system for keeping track of changes in location
     struct odomRawData {
@@ -94,6 +96,5 @@ namespace odom {
     };
 
 }
-
 
 

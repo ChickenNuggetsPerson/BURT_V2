@@ -549,7 +549,20 @@ bool AutonSystem::dropAcorn() {
     return true;
 }
 
-
+bool AutonSystem::catapult(int times) {
+    CheckOdomStatus();
+    for (int i = 0; i < times; i++) {
+        if (this->forceStop) { return false; }
+        cataSystem.reset();
+        cataSystem.launch();
+    }
+    return true;
+};
+bool AutonSystem::setWingsStatus(bool status) {
+    CheckOdomStatus();
+    setWingsOpen(status);
+    return true;
+}
 
 
 
@@ -700,6 +713,12 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
             wait(0.5, sec);
         case AUTON_MOVE_ARM_RELEASE:
             frontArmHolder.setRunning(false);
+        case AUTON_MOVE_CATAPULT:
+            return aiPtr->catapult(movement.val);
+        case AUTON_MOVE_WINGS_OPEN:
+            return aiPtr->setWingsStatus(true);
+        case AUTON_MOVE_WINGS_CLOSE:
+            return aiPtr->setWingsStatus(false);
         default:
             return false;
     }
@@ -711,7 +730,7 @@ void aiQueueSystem::autonStarted() {
     // Wait for the odometry system to startup
     while (!odomPtr->isTracking) { wait(0.01, seconds); }
 
-   runQueue();
+    runQueue();
 
     // Auton is done?
 }

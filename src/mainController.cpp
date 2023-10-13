@@ -34,9 +34,20 @@ void toggleHold() {
   frontArmHolder.setNewVal(70);
 }
 
+bool armsOpen = false;
+void toggleArms() {
+  armsOpen = !armsOpen;
+}
+void setWingsOpen(bool status) {
+  armsOpen = status;
+};
+
 int controllerTask() {
 
+  vex::digital_out sideArms = vex::digital_out(Brain.ThreeWirePort.A);
+
   mainController.ButtonA.pressed(toggleHold);
+  mainController.ButtonB.pressed(toggleArms);
 
   DEBUGLOG("Starting controller");
 
@@ -143,6 +154,10 @@ int controllerTask() {
 
       frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
       cataSystem.setSpeed(cataArmMove);
+
+      
+      //DEBUGLOG(armsOpen ? "true" : "false");
+      sideArms.set(armsOpen);
 
     }
 

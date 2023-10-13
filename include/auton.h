@@ -27,6 +27,9 @@ static const int AUTON_MOVE_DROPOFF_ACORN = 6;
 static const int AUTON_MOVE_DRIVE_REVERSE = 7;
 static const int AUTON_MOVE_ARM_SET = 8;
 static const int AUTON_MOVE_ARM_RELEASE = 9;
+static const int AUTON_MOVE_WINGS_OPEN = 10;
+static const int AUTON_MOVE_WINGS_CLOSE = 11;
+static const int AUTON_MOVE_CATAPULT = 12;
 
 
 namespace auton {
@@ -174,6 +177,9 @@ namespace auton {
 
       bool pickupAcorn();
       bool dropAcorn();
+
+      bool catapult(int times);
+      bool setWingsStatus(bool status);
   };
 
 

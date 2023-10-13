@@ -560,11 +560,13 @@ int updateMotorDebug(Page* self) {
     self->setProgressBarValue("efr", (int)rightMotorA.efficiency());
     self->setProgressBarValue("ebl", (int)leftMotorB.efficiency());
     self->setProgressBarValue("ebr", (int)rightMotorB.efficiency());
+    self->setProgressBarValue("cat", (int)cataArmMotor.efficiency());
 
     self->setTextData("tfl", (int)floor(leftMotorA.temperature(temperatureUnits::celsius)));
     self->setTextData("tfr", (int)floor(rightMotorA.temperature(temperatureUnits::celsius)));
     self->setTextData("tbl", (int)floor(leftMotorB.temperature(temperatureUnits::celsius)));
     self->setTextData("tbr", (int)floor(rightMotorB.temperature(temperatureUnits::celsius)));
+    self->setTextData("cat", (int)floor(cataArmMotor.temperature(temperatureUnits::celsius)));
 
     return 1;
 }
@@ -698,6 +700,9 @@ int brainDisplayerInit() {
     motorsDebug.addHorzProgressBar("ebl", 20, 131, 175, 15, "BL %d%%", false, false, batteryGradient.finalGradient);
     motorsDebug.addHorzProgressBar("ebr", 20, 169, 175, 15, "BR %d%%", false, false, batteryGradient.finalGradient);
 
+    motorsDebug.addHorzProgressBar("cat", 220, 55, 175, 15, "Catapult %d%%", false, false, batteryGradient.finalGradient);
+    motorsDebug.addText("Temp: %d C", 360, 55, color::white, fontType::mono15, "cat");
+
     motorsDebug.addText("Temp: %d C", 110, 55, color::white, fontType::mono15, "tfl");
     motorsDebug.addText("Temp: %d C", 110, 93, color::white, fontType::mono15, "tfr");
     motorsDebug.addText("Temp: %d C", 110, 131, color::white, fontType::mono15, "tbl");
@@ -745,14 +750,13 @@ int brainDisplayer() {
     return 1;
 }
 
- 
 
 
 
 
 
 
- 
+
 // Main Loop For Rendering the Controllers
 int controllerDisplay() {
     while (true){

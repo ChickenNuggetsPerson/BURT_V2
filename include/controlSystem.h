@@ -152,10 +152,10 @@ namespace controlSystem {
                 //DEBUGLOG("Reset");
 
                 this->running = true;
-                this->motorPtr->spin(vex::directionType::fwd, 8, vex::voltageUnits::volt);
-                int countDown = 200;
-                while (this->motorPtr->velocity(vex::percentUnits::pct) > 50 || countDown > 0) {
-                    //DEBUGLOG(this->motorPtr->velocity(vex::percentUnits::pct));
+                this->motorPtr->spin(vex::directionType::fwd, 5, vex::voltageUnits::volt);
+                int countDown = 100;
+                while (this->motorPtr->torque(vex::torqueUnits::Nm) < 0.3 || countDown > 0) {
+                    //DEBUGLOG("Torque: ", this->motorPtr->torque(vex::torqueUnits::Nm));
                     wait(3, vex::timeUnits::msec);
                     countDown--;
                 }

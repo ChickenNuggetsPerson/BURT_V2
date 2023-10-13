@@ -32,6 +32,10 @@ Position::Position(double xPos, double yPos) {
     rot = NAN;
 };
 Position::Position() {};
+std::ostream& operator<<(std::ostream& os, const odom::Position& pos) {
+    os << "{ x: " << pos.x << ", y: " << pos.y << ", rot: " << pos.rot << " }";
+    return os;
+}
 
 // TilePosition Constructor
 TilePosition::TilePosition(double xPos, double yPos, double rotation) {
@@ -45,13 +49,14 @@ TilePosition::TilePosition(double xPos, double yPos) {
     rot = NAN;
 };
 TilePosition::TilePosition() {};
-
-
+std::ostream& operator<<(std::ostream& os, const odom::TilePosition& pos) {
+    os << "{ x: " << pos.x << ", y: " << pos.y << ", rot: " << pos.rot << " }";
+    return os;
+}
 
 
 
 // Main system for tracking the position of the robot
-
 int mainTrackingTask(void* system) {
     OdometrySystem* systemPointer = (OdometrySystem*)system;
 
