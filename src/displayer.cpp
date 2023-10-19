@@ -727,7 +727,7 @@ int brainDisplayerInit() {
 
 
 
-
+#include "motionProfiling.h"
 
 // Main Loop For Rendering the Brain Display
 int brainDisplayer() {
@@ -737,7 +737,7 @@ int brainDisplayer() {
     BrainLogs.init();
     
     double deltaTime = 0.00;
-    while(true) {
+    while(false) {
         double startTime = Brain.timer(msec);
         Brain.Screen.clearScreen();
         mainRenderer.render(); // Render the screen
@@ -746,6 +746,54 @@ int brainDisplayer() {
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime)); // Calculate the fps
         Brain.Screen.render(); // Use the Screen.Render() to stop visual bugs
     }
+
+
+    motionProfiling::Profile result = motionProfiling::genVelProfile(140);
+
+    Brain.Screen.clearScreen();
+    
+    int screenXSize = 480;
+    int screenYSize = 240;
+
+    Brain.Screen.setFillColor(color::transparent);
+    Brain.Screen.setPenColor(color::white);
+    Brain.Screen.setPenWidth(1);
+
+    Brain.Screen.drawRectangle(screenXSize * 0.1, screenYSize * 0.1, screenXSize * 0.8, screenYSize * 0.8);
+
+    Brain.Screen.setPenWidth(2);
+
+    double prevX = screenXSize * 0.1;
+    double prevY = screenYSize * 0.9;
+
+    double x = 0.00;
+    double y = 0.00;
+
+    double wStep = ((screenXSize * 0.8) / 10) * motionProfiling::timeIncrement;
+    for (int i = 0; i < result.get()->size(); i++) {
+        
+        double val = (screenYSize * 0.9) - result.get()->at(i);
+        Brain.Screen.setPenColor(color::red);
+        Brain.Screen.drawLine(prevX, prevY, (screenXSize * 0.1) + i * wStep, val);
+
+        prevX = (screenXSize * 0.1) + i * wStep;
+        prevY = val;
+
+
+        double otherY = y;
+
+        x += motionProfiling::timeIncrement;
+        y += result.get()->at(i) * motionProfiling::timeIncrement;
+
+        Brain.Screen.setPenColor(color::green);
+        Brain.Screen.drawLine(
+            (screenXSize * 0.1) + (i-1) * wStep, 
+            (screenYSize * 0.9) - otherY, 
+            (screenXSize * 0.1) + i * wStep, 
+            (screenYSize * 0.9) - y);
+    }
+
+    DEBUGLOG("Final Y: ", y);
 
     return 1;
 }

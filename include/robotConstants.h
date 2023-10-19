@@ -53,7 +53,7 @@ static double backEncoderDist = 4.5; // use if we decide to use back encoders
 
 // Misc Constants
 
-static double PI = 3.14159; // PI variable used for all methods
+static double PI = M_PI; // PI variable used for all methods
 
 
 static double motorWarnTemp = 50; // The temp in c
