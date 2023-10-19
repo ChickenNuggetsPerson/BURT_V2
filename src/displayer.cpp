@@ -748,7 +748,7 @@ int brainDisplayer() {
     }
 
 
-    motionProfiling::Profile result = motionProfiling::genVelProfile(140);
+    motionProfiling::Profile result = motionProfiling::genVelProfile(42);
 
     Brain.Screen.clearScreen();
     

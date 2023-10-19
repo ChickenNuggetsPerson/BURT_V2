@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "robotConstants.h"
+#include "robotConfig.h"
 
 // https://www.desmos.com/calculator/avvhmhcaec
 double velFunction(double x, double d, double t) {
