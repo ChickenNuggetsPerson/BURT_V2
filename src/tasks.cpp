@@ -12,7 +12,13 @@ void rightPressed() {
 
 };
 void leftPressed() {
-
+  while (true) {
+    cataSystem.reset();
+    cataSystem.launch();
+    if (mainController.ButtonRight.pressing()) {
+      break;
+    }
+  }
 };
 void upPressed() {
   botAI.gotoLoc(botAI.getStartPos());

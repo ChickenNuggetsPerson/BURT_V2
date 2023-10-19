@@ -42,6 +42,8 @@ void setWingsOpen(bool status) {
   armsOpen = status;
 };
 
+bool reversedDrive = false;
+
 int controllerTask() {
 
   vex::digital_out sideArms = vex::digital_out(Brain.ThreeWirePort.A);
@@ -74,22 +76,12 @@ int controllerTask() {
   cataArmMotor.setVelocity(0, percent);
   cataArmMotor.setBrake(brakeType::coast);
 
-/*
-  controlSystem::ControlObject acornPickerUper;
-  acornPickerUper.mainMotorPtr = &testMotor;
-  acornPickerUper.type = controlSystem::MovementType::HoldSpin;
-  acornPickerUper.primaryVal = 10;
-  acornPickerUper.brakes = brakeType::coast;
-  acornPickerUper.units = rotationUnits::deg;
-  acornPickerUper.velUnits = velocityUnits::rpm;
-  acornPickerUper.ref = controlSystem::ControllerRef::btn_R2;
-  motorController.addObject(acornPickerUper);
-*/
 
   bool tankDrive = true;
   if (Brain.SDcard.isInserted()) {
     tankDrive = (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1);
   }
+  //reversedDrive = false;
 
   int frontArmVal = 0;
   int cataArmMove = 0;
@@ -107,7 +99,7 @@ int controllerTask() {
         leftFB = leftFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
         rightFB = rightFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
 
-        turn = mainController.Axis1.position() * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);;
+        turn = mainController.Axis1.position() * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
       }
       frontArmVal = 0;
       if (mainController.ButtonR2.pressing()) {
@@ -128,29 +120,38 @@ int controllerTask() {
       
     }
     
-    if (tankDrive) {
-      motorFL = leftFB;
-      motorFR = rightFB;
+    if (tankDrive) { // Andrew Drive
+      if (false) {
+        motorFL = rightFB * -1;
+        motorFR = leftFB * -1;
 
-      motorBL = leftFB;
-      motorBR = rightFB;
-    } else {
+        motorBL = rightFB * -1;
+        motorBR = leftFB * -1;
+      } else {
+        motorFL = leftFB;
+        motorFR = rightFB;
+
+        motorBL = leftFB;
+        motorBR = rightFB;
+      }
+
+    } else { // Hayden Drive
+      if (true) { leftFB *= -1; }  // Reverse driving when arms are open
       motorFL = leftFB + turn;
       motorFR = leftFB - turn;
 
       motorBL = leftFB + turn;
-      motorBR = leftFB - turn;      
+      motorBR = leftFB - turn;   
+      
     }
 
 
     if ( !botAI.running || botAI.getForceStop()) {
 
-      //motorController.step();
-
-      leftMotorA.spin(directionType:: fwd, (motorFL / 100.00) * 12, voltageUnits::volt);
-      leftMotorB.spin(directionType:: fwd, (motorBL / 100.00) * 12, voltageUnits::volt);
-      rightMotorA.spin(directionType:: fwd, (motorFR / 100.00) * 12, voltageUnits::volt);
-      rightMotorB.spin(directionType:: fwd, (motorBR / 100.00) * 12, voltageUnits::volt);
+      leftMotorA.setVelocity(motorFL, percentUnits::pct);
+      leftMotorB.setVelocity(motorBL, percentUnits::pct);
+      rightMotorA.setVelocity(motorFR, percentUnits::pct);
+      rightMotorB.setVelocity(motorBR, percentUnits::pct);
 
       frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
       cataSystem.setSpeed(cataArmMove);
