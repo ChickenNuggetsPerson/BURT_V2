@@ -5,11 +5,12 @@
 #include <vector>
 
 #include "visionSensorConfig.h"
+#include "motionProfiling.h"
 
 
 // Auton Specific Macros
 // Check if ForceStop is set to true
-#define CheckForceStop() if (this->forceStop) { return false; }
+#define CheckForceStop() if (this->forceStop) {  DEBUGLOG("Stopping: Forced Stop"); return false; }
 #define CheckOdomStatus() if (!odometrySystemPointer->isTracking) { brainError("Skipping Auton Path, Odom not initialized"); return false; }
 
 using namespace vex;
@@ -303,13 +304,117 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
 };
 
 bool AutonSystem::gotoLoc(odom::TilePosition pos) {
-    return gotoLoc(odom::tilePosToPos(pos));
+    return gotoLoc(odom::Position(pos));
 };
+// Motion Profiling System
 bool AutonSystem::gotoLoc(odom::Position pos) {
-    std::vector<odom::Position> tmp;
-    tmp.push_back(pos);
-    return longGoto(tmp);
+    
+    CheckOdomStatus();
+    CheckForceStop();
+
+    bool wasRunning = running;
+    running = true;
+    
+    target = pos;
+
+    odom::Position currentPos = odometrySystemPointer->currentPos();
+
+    double travelDist = distBetweenPoints(currentPos, pos);
+    double desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos));
+
+    // Turn to point to the location
+    // Only do it if the robot has to turn more than 10 degrees
+    if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 10)) {
+        turnTo(desiredHeading, 1.5);
+    }
+
+    // Generate Velocity Profile
+    motionProfiling::Profile speedProfile = motionProfiling::genVelProfile(distBetweenPoints(odometrySystemPointer->currentPos(), pos));
+    double driveVelocity = 0.00;
+
+    double wheelCircumference = 2 * PI * (wheelDiameter / 2);
+    double motorGear = 72;
+    double wheelGear = 36;
+
+    double gearRatio = motorGear / wheelGear;
+
+    // PID to keep the robot driving straight
+    pid::PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
+    turnPid.setMax(12);
+    turnPid.setMin(-12);
+    double turnPower = 0.00;
+
+    bool traveling = true;
+
+    double startTime = Brain.Timer.system();
+
+    LeftDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
+    RightDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
+
+    // Main Driving Loop
+    while (traveling) {
+        CheckForceStop();
+        
+        currentPos = odometrySystemPointer->currentPos();
+
+        travelDist = distBetweenPoints(currentPos, pos);
+        desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos));
+
+
+        // Get speedprofile index
+        int speedIndex = (int)floor(((Brain.Timer.system() - startTime) / 1000.00) / motionProfiling::timeIncrement);
+
+        // Set desired velocity from the speedProfile
+        if (speedIndex >= speedProfile.get()->size()) {
+            traveling = false;
+            break;
+        }
+        driveVelocity = speedProfile.get()->at(speedIndex);
+
+        // Get turn power  -  TODO: Implement Turning
+        double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
+        double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
+        turnPower = turnPid.iterate(turnCurrent, turnWant);
+
+
+        // Calculate Desired Velocities
+        double leftVelocity = driveVelocity - turnPower;
+        double rightVelocity = driveVelocity + turnPower;
+
+
+        // Convert Velocity ( in/s ) to rpm of motor
+        double leftMotorVel = (60 * leftVelocity) / (gearRatio * wheelCircumference);
+        double rightMotorVel = (60 * rightVelocity) / (gearRatio * wheelCircumference);
+
+        // Apply Velocities
+        LeftDriveSmart.setVelocity(leftMotorVel   * 1.1, vex::velocityUnits::rpm);
+        RightDriveSmart.setVelocity(rightMotorVel * 1.1, vex::velocityUnits::rpm);
+
+        DEBUGLOG("");
+        DEBUGLOG("GOTO DIST: ", travelDist);
+        DEBUGLOG("GOTO DRIVE Profile: ", driveVelocity);
+        DEBUGLOG("GOTO Out Motor Vel: ", leftMotorVel);
+        DEBUGLOG("GOTO TURN PID: ", turnPower);
+        
+        if (speedIndex >= speedProfile.get()->size()) {
+            traveling = false;
+        }
+
+        wait(0.05, seconds);
+    }
+
+    wait(0.1, seconds);
+
+    if (!isnan(pos.rot)) {
+        turnTo(pos.rot, 1.5);
+    }
+
+    wait(0.1, seconds);
+
+    running = wasRunning;
+    return true;
 };
+
 bool AutonSystem::longGoto(std::vector<odom::TilePosition> pos) {
     std::vector<odom::Position> tmpVec;
     for (int i = 0; i < pos.size(); i++) {
@@ -317,8 +422,7 @@ bool AutonSystem::longGoto(std::vector<odom::TilePosition> pos) {
     }
     return longGoto(tmpVec);
 };
-
-// Main goto logic
+// Old System
 bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     CheckOdomStatus();

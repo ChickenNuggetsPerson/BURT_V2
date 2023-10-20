@@ -6,6 +6,8 @@ namespace odom {
 
     static int tileWidth = 24; // Vex Tiles are 2ft across
 
+    struct TilePosition; // Forward Declaration
+    
     // Positions are based on inches from the bottom left of the feild
     struct Position {
         double x = 0.00;   // In Inches
@@ -13,9 +15,10 @@ namespace odom {
         double rot = 0.00; 
         Position(double xPos, double yPos, double rotation);
         Position(double xPos, double yPos);
+        Position(TilePosition pos);
         Position();
     };
-    std::ostream& operator<<(std::ostream& os, const odom::Position& pos);
+    
 
     // Positions based on tiles
     struct TilePosition {
@@ -24,9 +27,10 @@ namespace odom {
         double rot = 0.00; // In Degrees
         TilePosition(double xPos, double yPos, double rotation);
         TilePosition(double xPos, double yPos);
+        TilePosition(Position pos);
         TilePosition();
     };
-    std::ostream& operator<<(std::ostream& os, const odom::TilePosition& pos);
+
 
     // Used by the odometry system for keeping track of changes in location
     struct odomRawData {

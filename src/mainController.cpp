@@ -76,6 +76,7 @@ int controllerTask() {
   cataArmMotor.setVelocity(0, percent);
   cataArmMotor.setBrake(brakeType::coast);
 
+  bool wasStopped = false;
 
   bool tankDrive = true;
   if (Brain.SDcard.isInserted()) {
@@ -148,6 +149,20 @@ int controllerTask() {
 
     if ( !botAI.running || botAI.getForceStop()) {
 
+      if (wasStopped) { // Refresh the motors after auton
+        leftMotorA.spin(fwd);
+        leftMotorB.spin(fwd);
+        rightMotorA.spin(fwd);
+        rightMotorB.spin(fwd);
+
+        leftMotorA.setVelocity(0, percent);
+        leftMotorB.setVelocity(0, percent);
+        rightMotorA.setVelocity(0, percent);
+        rightMotorB.setVelocity(0, percent);
+
+        wasStopped = false;
+      }
+
       leftMotorA.setVelocity(motorFL, percentUnits::pct);
       leftMotorB.setVelocity(motorBL, percentUnits::pct);
       rightMotorA.setVelocity(motorFR, percentUnits::pct);
@@ -156,10 +171,11 @@ int controllerTask() {
       frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
       cataSystem.setSpeed(cataArmMove);
 
-      
       //DEBUGLOG(armsOpen ? "true" : "false");
       sideArms.set(armsOpen);
 
+    } else {
+      wasStopped = true;
     }
 
     // iterate over holders

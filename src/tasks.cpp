@@ -9,7 +9,11 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-
+  botAI.setForceStop(false);
+  //botAI.driveDist(24*2); 
+  botAI.driveDist(24);
+  //botAI.gotoLoc(botAI.getStartPos());
+  botAI.setForceStop(true);
 };
 void leftPressed() {
   while (true) {
@@ -21,7 +25,8 @@ void leftPressed() {
   }
 };
 void upPressed() {
-  botAI.gotoLoc(botAI.getStartPos());
+  //botAI.gotoLoc(botAI.getStartPos());
+  
 }
 void downPressed() {
   
@@ -66,6 +71,9 @@ void usercontrol(void) {
 }
 
 void whenStarted(void) {
+
+  DEBUGLOG("BATTERY STATUS: ", Brain.Battery.capacity());
+
   WSDebugger.init();
   if (!WSDebugger.isSending()) {return;}
   while (true) {

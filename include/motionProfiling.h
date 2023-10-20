@@ -7,8 +7,8 @@ namespace motionProfiling {
 
     using Profile = std::unique_ptr<std::vector<double>>;
 
-    static double baseMoveTime = 0.5;
-    static double maxVel = 7;
+    static double baseMoveTime = 0.1;
+    static double maxVel = 36;
     static double timeIncrement = 0.1;
 
     Profile genVelProfile(double dist);

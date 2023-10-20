@@ -737,7 +737,7 @@ int brainDisplayer() {
     BrainLogs.init();
     
     double deltaTime = 0.00;
-    while(false) {
+    while(true) {
         double startTime = Brain.timer(msec);
         Brain.Screen.clearScreen();
         mainRenderer.render(); // Render the screen
