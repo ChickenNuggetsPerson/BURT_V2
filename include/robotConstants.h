@@ -90,7 +90,7 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.10, 0, 0.1); 
 
 static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.15, 0.0, 0.10);
+static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.12, 0.0, 0.5);
 
 
 // Auton Start Positions

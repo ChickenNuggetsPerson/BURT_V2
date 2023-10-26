@@ -98,7 +98,8 @@ void Logger::reloadLogger(const char* outFile) {
     } else {
         logFile = outFile;
     }
-    isSaving = Brain.SDcard.isInserted();
+    //isSaving = Brain.SDcard.isInserted();
+    isSaving = false; // I suspect the log system is causing weird sd card issues
     if (!isSaving) { 
         initialized = true;   
         return; 

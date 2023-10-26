@@ -9,13 +9,22 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  botAI.setForceStop(false);
+  //botAI.setForceStop(false);
   //botAI.driveDist(24*2); 
-  botAI.driveDist(24);
+  //botAI.driveDist(24);
   //botAI.gotoLoc(botAI.getStartPos());
-  botAI.setForceStop(true);
+  //botAI.setForceStop(true);
+
+  queuingSystem.clear();
+  queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 15));
+  queuingSystem.runQueue();
 };
 void leftPressed() {
+  
+  frontArmHolder.calibrate();
+  
+  return;
+
   while (true) {
     cataSystem.reset();
     cataSystem.launch();
@@ -76,7 +85,7 @@ void whenStarted(void) {
 
   WSDebugger.init();
   if (!WSDebugger.isSending()) {return;}
-  while (true) {
+  while (false) {
       WSDebugger.sendData("RMA", rightMotorA.temperature(vex::percent));
       WSDebugger.sendData("RMB", rightMotorB.temperature(vex::percent));
       WSDebugger.sendData("LMA", leftMotorA.temperature(vex::percent));

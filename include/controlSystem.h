@@ -90,13 +90,27 @@ namespace controlSystem {
         public:
 
             MotorHolder(vex::motor* ptr, pid::PIDConfig config, vex::rotationUnits measureUnits) {
-                motorPtr = ptr;
-                pidSystem.changeConfig(config);
-                units = measureUnits;
+                this->motorPtr = ptr;
+                this->pidSystem.changeConfig(config);
+                this->units = measureUnits;
+
+                //this->pidSystem.setMax(4);
+                //this->pidSystem.setMax(-4);
+            }
+
+            void calibrate() {
+                this->setRunning(false);
+                motorPtr->setPosition(-50, units);
+                this->setRunning(true);
+                this->setNewVal(100);
+                wait(0.5, vex::timeUnits::sec);
+                this->setRunning(false);
             }
 
             void iterate() {
+
                 if (!running) {return;}
+
                 double power = 0.00;
                 if (hasNewVal) {
                     power = pidSystem.iterate(motorPtr->position(units), newVal);
@@ -106,6 +120,8 @@ namespace controlSystem {
                 }
             
                 motorPtr->spin(vex::directionType::rev, power, vex::voltageUnits::volt);
+
+                //DEBUGLOG(motorPtr->position(units), " ", power, " ", pidSystem.getSet());
 
             }
 
@@ -121,7 +137,7 @@ namespace controlSystem {
                 if (newStatus) {
                     motorPtr->setBrake(vex::brakeType::coast);
                 } else {
-                    motorPtr->setBrake(vex::brakeType::brake);
+                    motorPtr->setBrake(vex::brakeType::coast);
                 }
                 running = newStatus;
             }

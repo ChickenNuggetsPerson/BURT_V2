@@ -30,7 +30,7 @@ static const int AUTON_MOVE_ARM_RELEASE = 9;
 static const int AUTON_MOVE_WINGS_OPEN = 10;
 static const int AUTON_MOVE_WINGS_CLOSE = 11;
 static const int AUTON_MOVE_CATAPULT = 12;
-
+static const int AUTON_MOVE_ARM_CALIBRATE = 13;
 
 namespace auton {
 

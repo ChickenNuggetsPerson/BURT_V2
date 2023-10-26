@@ -90,6 +90,8 @@ int controllerTask() {
   // Main driving loop
   while(true) {
 
+    frontArmVal = 0;
+
     if(Competition.isDriverControl()) {
 
       // Main Loop for geting controller input
@@ -102,12 +104,14 @@ int controllerTask() {
 
         turn = mainController.Axis1.position() * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
       }
-      frontArmVal = 0;
+
       if (mainController.ButtonR2.pressing()) {
         frontArmVal = 8;
+        frontArmMotor.setBrake(brakeType::brake);
       }
       if (mainController.ButtonL2.pressing()) {
         frontArmVal = -8;
+        frontArmMotor.setBrake(brakeType::brake);
       }
 
       if ((mainController.ButtonR2.pressing() || mainController.ButtonL2.pressing()) && frontArmHolder.getRunning()) {
@@ -168,7 +172,6 @@ int controllerTask() {
       rightMotorA.setVelocity(motorFR, percentUnits::pct);
       rightMotorB.setVelocity(motorBR, percentUnits::pct);
 
-      frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
       cataSystem.setSpeed(cataArmMove);
 
       //DEBUGLOG(armsOpen ? "true" : "false");
@@ -179,6 +182,7 @@ int controllerTask() {
     }
 
     // iterate over holders
+    frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
     frontArmHolder.iterate();
 
     // wait before repeating the process

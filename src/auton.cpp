@@ -117,7 +117,8 @@ void AutonSystem::generatePath() {
         if (!getConfig("startSide")) {
             result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_LEFT_JSON);
         } else {
-            result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_RIGHT_JSON);
+            //result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_RIGHT_JSON);
+            result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_RIGHT));
         }
         if (!Brain.SDcard.isInserted()) {
             queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST));
@@ -264,6 +265,10 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
 
     double lastRot = odometrySystemPointer->currentPos().rot;
     int totalChecks = 0;
+
+    LeftDriveSmart.spin(directionType::fwd, 0, volt);
+    RightDriveSmart.spin(directionType::fwd, 0, volt);
+
     while (true) {
         CheckForceStop();
         
@@ -296,8 +301,8 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
         wait(0.05, seconds);
     }
 
-    LeftDriveSmart.spin(directionType::fwd, 0, volt);
-    RightDriveSmart.spin(directionType::fwd, 0, volt);
+    LeftDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
+    RightDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
 
     running = wasRunning;
     return true;
@@ -340,8 +345,8 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
 
     // PID to keep the robot driving straight
     pid::PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
-    turnPid.setMax(12);
-    turnPid.setMin(-12);
+    turnPid.setMax(10);
+    turnPid.setMin(-10);
     double turnPower = 0.00;
 
     bool traveling = true;
@@ -372,6 +377,11 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         driveVelocity = speedProfile.get()->at(speedIndex);
 
         // Get turn power  -  TODO: Implement Turning
+        if (speedIndex >= speedProfile.get()->size() / 2) {
+            turnPid.setMax(2);
+            turnPid.setMin(-2);
+        }
+
         double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
         turnPower = turnPid.iterate(turnCurrent, turnWant);
@@ -805,7 +815,7 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
         case AUTON_MOVE_DRIVE_REVERSE:
             return aiPtr->reverseDrive(movement.val);
         case AUTON_MOVE_TURNTO:
-            return aiPtr->turnTo(movement.pos.rot);
+            return aiPtr->turnTo(movement.val);
         case AUTON_MOVE_PICKUP_ACORN:
             return aiPtr->pickupAcorn();
         case AUTON_MOVE_DROPOFF_ACORN:
@@ -817,6 +827,11 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
             wait(0.5, sec);
         case AUTON_MOVE_ARM_RELEASE:
             frontArmHolder.setRunning(false);
+        case AUTON_MOVE_ARM_CALIBRATE:
+            DEBUGLOG("Calibrating Front Arm");
+            frontArmHolder.calibrate();
+            wait(1.1, seconds);
+            return true;
         case AUTON_MOVE_CATAPULT:
             return aiPtr->catapult(movement.val);
         case AUTON_MOVE_WINGS_OPEN:

@@ -27,11 +27,15 @@ autonPath buildPath(int pathID) {
             path.startPos = odom::tilePosToPos(AUTON_START_RIGHT);
             // Pick up triball, score it, maybe touch bar
             brainFancyDebug("Building AUTON_PATH_Right", vex::color::cyan);
-            std::vector<TilePosition> tmpPath;
-            tmpPath.push_back(TilePosition(4, 1));
-            tmpPath.push_back(TilePosition(3.5, 1.5));
-            tmpPath.push_back(TilePosition(3.5, 2, 90));
-            path.addMovement(autonMovement(AUTON_MOVE_LONGGOTO, tmpPath));
+
+            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_CALIBRATE));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(4, 1)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(3.5, 2, 90)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 18));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DROPOFF_ACORN));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, 80));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_REVERSE, 12));
+
             break;
         }          
         case AUTON_PATH_SKILLS: {

@@ -51,5 +51,9 @@ namespace pid {
 
             double iterate(double newVal);
             double iterate(double newVal, double newDesired);
+
+            double getSet() {
+                return desiredVal;
+            };
     };
 }
