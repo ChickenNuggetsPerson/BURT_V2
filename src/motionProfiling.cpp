@@ -19,26 +19,41 @@ double velFunction(double x, double d, double t) {
 // Make sure to de-allocate vector when done
 motionProfiling::Profile motionProfiling::genVelProfile(double dist) {
     double time = motionProfiling::baseMoveTime;
-    
+
+    motionProfiling::Profile curve(new std::vector<double>);
+    double baseDist = 12; // Inches
+    double scaleDown = 0.97;
 
     while (true) {
-        if (velFunction(time/2, dist, time) > motionProfiling::maxVel) {
+        if (velFunction(time/2, baseDist, time) > motionProfiling::maxVel) {
             time += timeIncrement;
             continue;
         }
-
-        DEBUGLOG("Max Vel: ", velFunction(time/2, dist, time));
-        DEBUGLOG("Time: ", time);
-
-        // Generate the curve
-        motionProfiling::Profile curve(new std::vector<double>);
-
+        // Add to the curve
         for (double i = 0.00; i <= time; i+= timeIncrement) {
-            curve->push_back(velFunction(i, dist, time));
+            curve->push_back(velFunction(i, baseDist, time));
         }
-
-        return curve;
+        break;
     }
 
-    return nullptr;
+    int length = curve.get()->size();
+    double middleSpeed = curve.get()->at(length/2);
+
+    motionProfiling::Profile finalCurve(new std::vector<double>);
+    // Add the first half of the curve
+    for (int i = 0; i < length / 2; i++) {
+        finalCurve.get()->push_back(curve.get()->at(i) * scaleDown);
+    }
+
+    while (baseDist < dist) {
+        double deltaDist = middleSpeed * timeIncrement;
+        finalCurve.get()->push_back(middleSpeed * scaleDown);
+        baseDist += deltaDist;
+    }
+
+    for (int i = length / 2; i < length; i++) {
+        finalCurve.get()->push_back(curve.get()->at(i) * scaleDown);
+    }
+
+    return finalCurve;
 }

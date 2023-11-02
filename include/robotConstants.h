@@ -87,16 +87,16 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 
 // Auton Constants For Main Bot
 
-static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.10, 0, 0.1); 
+static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.072, 0.0, 0.0); 
 
 static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.12, 0.0, 0.5);
+static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.12, 0.0, 0.0);
 
 
 // Auton Start Positions
-static odom::TilePosition AUTON_START_LEFT(1, 0, 0);
-static odom::TilePosition AUTON_START_RIGHT(4, 0, 0);
-static odom::TilePosition AUTON_START_SKILLS(1, 0, 0);
+static odom::TilePosition AUTON_START_LEFT(1,  -0.1291, 0);
+static odom::TilePosition AUTON_START_RIGHT(4,  -0.1291, 0);
+static odom::TilePosition AUTON_START_SKILLS(1, -0.1291, 0);
 // Auton JSON Path Locations
 static std::string AUTON_PATH_FOLDER = "paths/";
 static std::string AUTON_PATH_RIGHT_JSON = "right.json";

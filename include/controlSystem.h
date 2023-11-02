@@ -82,8 +82,7 @@ namespace controlSystem {
 
             vex::rotationUnits units;
 
-            bool hasNewVal = false;
-            double newVal = 0.00;
+            double desiredVal = 0.00;
 
             bool running = true;
 
@@ -93,9 +92,6 @@ namespace controlSystem {
                 this->motorPtr = ptr;
                 this->pidSystem.changeConfig(config);
                 this->units = measureUnits;
-
-                //this->pidSystem.setMax(4);
-                //this->pidSystem.setMax(-4);
             }
 
             void calibrate() {
@@ -112,13 +108,8 @@ namespace controlSystem {
                 if (!running) {return;}
 
                 double power = 0.00;
-                if (hasNewVal) {
-                    power = pidSystem.iterate(motorPtr->position(units), newVal);
-                    hasNewVal = false;
-                } else {
-                    power = pidSystem.iterate(motorPtr->position(units));
-                }
-            
+
+                power = pidSystem.iterate(motorPtr->position(units), desiredVal);
                 motorPtr->spin(vex::directionType::rev, power, vex::voltageUnits::volt);
 
                 //DEBUGLOG(motorPtr->position(units), " ", power, " ", pidSystem.getSet());
@@ -130,10 +121,12 @@ namespace controlSystem {
             }
 
             void setNewVal(double newVal) {
-                this->newVal = newVal;
-                hasNewVal = true;
+                this->desiredVal = newVal;
             }
             void setRunning(bool newStatus) {
+
+                DEBUGLOG("NEW ARM RUNNING: ", newStatus ? "TRUE" : "FALSE");
+
                 if (newStatus) {
                     motorPtr->setBrake(vex::brakeType::coast);
                 } else {
