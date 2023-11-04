@@ -91,7 +91,6 @@ int updateHome(Page* self) {
 }
 
 
-
 // Define Standard Buttons
 int gotoPrevPageButton(Page* self) {
     self->menuSystemPointer->gotoPrevPage();

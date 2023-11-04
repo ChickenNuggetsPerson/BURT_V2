@@ -45,12 +45,14 @@ motionProfiling::Profile motionProfiling::genVelProfile(double dist) {
         finalCurve.get()->push_back(curve.get()->at(i) * scaleDown);
     }
 
+    // Integrate the max velocity until the distance is correct
     while (baseDist < dist) {
         double deltaDist = middleSpeed * timeIncrement;
         finalCurve.get()->push_back(middleSpeed * scaleDown);
         baseDist += deltaDist;
     }
 
+    // Add the end of the curve
     for (int i = length / 2; i < length; i++) {
         finalCurve.get()->push_back(curve.get()->at(i) * scaleDown);
     }

@@ -63,8 +63,9 @@ autonPath buildPath(int pathID) {
             path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_SET, -10));
 
             // Go infront of matchload
-            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1, 1, -135)));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 24));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1, 0.75, -135)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 26));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -120));
 
             // Touch bar and start catapulting
             path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_SET, 100));

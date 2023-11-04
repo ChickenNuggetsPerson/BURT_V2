@@ -264,7 +264,7 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
 
 
     double accuracy = 1;
-    int checks = 3;
+    int checks = 8;
 
 
     double lastRot = odometrySystemPointer->currentPos().rot;
@@ -378,8 +378,8 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
 
         // Get turn power
         if (speedIndex >= speedProfile.get()->size() / 2) {
-            turnPid.setMax(2);
-            turnPid.setMin(-2);
+            turnPid.setMax(10);
+            turnPid.setMin(-10);
         }
 
         double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
