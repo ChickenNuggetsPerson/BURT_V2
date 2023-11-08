@@ -345,7 +345,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     double gearRatio = motorGear / wheelGear;
 
     // PID to keep the robot driving straight
-    pid::PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
+    pid::PID turnPid(AUTON_GOTO_TURN_VEl_PID_CONFIG);
     turnPid.setMax(20);
     turnPid.setMin(-20);
     double turnPower = 0.00;
@@ -458,46 +458,61 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     // PID to control drive speed
     pid::PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
-    drivePid.setMax(12);
-    drivePid.setMin(-12);
+    drivePid.setMax(11);
+    drivePid.setMin(-11);
     double drivePower = 0.00;
 
     // PID to keep the robot driving straight
-    pid::PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
-    turnPid.setMax(12);
-    turnPid.setMin(-12);
+    pid::PID turnPid(AUTON_GOTO_TURN_VOLT_PID_CONFIG);
+    turnPid.setMax(10);
+    turnPid.setMin(-10);
     double turnPower = 0.00;
 
-    int stopped = 0;
     bool traveling = true;
 
-    int targetNum = 0;
+    int targetIndex = 0;
     int numOfTargets = pos.size();
 
-    int speedUp = 3;
+
+
+    int avgSize = 10;
+    double driveAverage[10];
+
+
 
     // Main Driving Loop
     while (traveling) {
         CheckForceStop();
-        
-        odom::Position tempPos = odometrySystemPointer->currentPos();
 
-        travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
+        currentPos = odometrySystemPointer->currentPos();
 
-        if (targetNum == numOfTargets - 1 && travelDist < 24.00) { 
-            double newMaxTurn = ((double)travelDist / 24.00) * 12.00;
-            //turnPid.setMax(12.00 - newMaxTurn);
-            //turnPid.setMin(-12.00 + newMaxTurn);
-            DEBUGLOG("New Turn Max: ", 12.00 - newMaxTurn);
+        travelDist = distBetweenPoints(currentPos, pos.at(targetIndex));
+        if (targetIndex < numOfTargets - 1) {
+            // travelDist += distBetweenPoints(pos.at(targetIndex), pos.at(targetIndex + 1)) / 2;
         }
 
-        desiredHeading = misc::radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
-
-        drivePower = drivePid.iterate(travelDist / speedUp);
+        desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos.at(targetIndex)));
+        drivePower = drivePid.iterate(travelDist);
 
         double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
-        double turnWant = findNearestRot(misc::radToDegree(tempPos.rot), desiredHeading);
+        double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
         turnPower = turnPid.iterate(turnCurrent, turnWant);
+
+
+
+
+        for (int i=0; i < avgSize - 1; i++) {
+            driveAverage[i] = driveAverage[i + 1];
+        }
+        driveAverage[avgSize - 1] = drivePower;
+        double tempAvg = 0.00;
+        for (int i=0; i < avgSize; i++) {
+            tempAvg += driveAverage[i];
+        }
+        drivePower = tempAvg / avgSize;
+
+
+
 
         double leftPower = drivePower - turnPower;
         double rightPower = drivePower + turnPower;
@@ -505,47 +520,29 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
         LeftDriveSmart.spin(directionType::fwd, leftPower, voltageUnits::volt);
         RightDriveSmart.spin(directionType::fwd, rightPower, voltageUnits::volt);
 
-        if (WSDebugger.isSending()) {
-            WSDebugger.sendData("DP", drivePower);
-            WSDebugger.sendData("TP", turnPower);
-        }
-        // std::cout << travelDist << " " << drivePower << " " << turnPower << std::endl;
-        // DEBUGLOG("GOTO DIST: ", travelDist);
-        // DEBUGLOG("GOTO DRIVE PID: ", drivePower);
-        // DEBUGLOG("GOTO TURN PID: ", turnPower);
 
-        if (drivePower < 2 && speedUp < 2) {
-            stopped++;
-        }
 
-        if (targetNum != numOfTargets - 1 && travelDist < 15) {
-            stopped = 0;
-            targetNum++;
-            if (targetNum == numOfTargets) {            
-                target = pos.at(targetNum - 1);
+        // If robot is close to the point, increase point index
+        // If done with path, exit loop
+        // DEBUGLOG(turnWant, " ", turnCurrent);
+        if (travelDist < 8) {
+            if (targetIndex < numOfTargets - 1) {
+                targetIndex++;
+                target = pos.at(targetIndex);
             } else {
-                target = pos.at(targetNum);
+                
+                if (travelDist < 2) {
+                    traveling = false;
+                }
+
             }
         }
-        if (stopped > 10) {
-            stopped = 0;
-            targetNum++;
-            if (targetNum == numOfTargets) {            
-                target = pos.at(targetNum - 1);
-            } else {
-                target = pos.at(targetNum);
-            }
-        }
-
-        if (targetNum >= numOfTargets) {
-            traveling = false;
-        }
-
-        speedUp--;
-        if (speedUp < 1) {speedUp = 1;}
 
         wait(0.05, seconds);
     }
+
+    LeftDriveSmart.spin(directionType::fwd, 0, voltageUnits::volt);
+    RightDriveSmart.spin(directionType::fwd, 0, voltageUnits::volt);
 
     if (!std::isnan(pos.at(pos.size() - 1).rot)) {
         turnTo(pos.at(pos.size() - 1).rot, 1.5);
@@ -680,7 +677,7 @@ bool AutonSystem::setWingsStatus(bool status) {
 
 
 
-
+#include "libs/spline.h"
 void aiQueueSystem::addPtrs(AutonSystem* botAIPtr, odom::OdometrySystem* odometryPointer) {
     aiPtr = botAIPtr;
     odomPtr = odometryPointer;
@@ -710,7 +707,7 @@ std::vector<autonMovement> aiQueueSystem::getQueue() {
 bool aiQueueSystem::addToQueue(autonPath path) {
     loaded = false;
     for (int i = 0; i < path.getSize(); i++) {
-        queue.push_back(path.getStep(i));
+        this->addToQueue(path.getStep(i));
     }
     aiPtr->setStartPos(odom::posToTilePos(path.startPos));
     loaded = true;
@@ -718,7 +715,41 @@ bool aiQueueSystem::addToQueue(autonPath path) {
 }
 bool aiQueueSystem::addToQueue(autonMovement movement) {
     loaded = false;
+    if (movement.movementType == AUTON_MOVE_LONGGOTO) {
+
+        int resolution = 5;
+        double timeBetweenPoints = 2;
+
+        std::vector<double> timePoses;
+        std::vector<double> xPoses;
+        std::vector<double> yPoses;
+        for (int i = 0; i < movement.drivePath.size(); i++) {
+            timePoses.push_back(i * timeBetweenPoints);
+            xPoses.push_back(movement.drivePath.at(i).x);
+            yPoses.push_back(movement.drivePath.at(i).y);
+        }
+
+        tk::spline xSpline(timePoses, xPoses);
+        tk::spline ySpline(timePoses, yPoses);
+
+        
+        std::vector<odom::TilePosition> pos;
+        for (int i = 0; i < ((movement.drivePath.size() - 1) * resolution) + 1; i++) {
+            pos.push_back(
+                odom::TilePosition(
+                        xSpline(i * (timeBetweenPoints / resolution)), 
+                        ySpline(i * (timeBetweenPoints / resolution))
+                    )
+                );
+        }
+
+        movement.drivePath.clear();
+        movement.drivePath = pos;
+
+    }
+
     queue.push_back(movement);
+
     loaded = true;
     return true;
 }

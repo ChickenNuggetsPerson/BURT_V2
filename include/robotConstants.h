@@ -82,7 +82,7 @@ static odom::TilePosition ODOM_DEFAULT_RESET_POS(0, 0, 0);
 static PIDConfig AUTON_TURNTO_PID_CONFIG(0.15, 0, 0.25);
 
 static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.2, 0.00, 0.06);
-static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
+static PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.08, 0.00, 0.00);
 */
 
 // Auton Constants For Main Bot
@@ -90,7 +90,8 @@ static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
 static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.072, 0.0, 0.0); 
 
 static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.12, 0.0, 0.0);
+static pid::PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.12, 0.0, 0.0);
+static pid::PIDConfig AUTON_GOTO_TURN_VOLT_PID_CONFIG(0.05, 0.0, 0.0);
 
 
 // Auton Start Positions
