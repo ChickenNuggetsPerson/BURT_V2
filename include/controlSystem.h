@@ -82,30 +82,37 @@ namespace controlSystem {
 
             vex::rotationUnits units;
 
-            bool hasNewVal = false;
-            double newVal = 0.00;
+            double desiredVal = 0.00;
 
             bool running = true;
 
         public:
 
             MotorHolder(vex::motor* ptr, pid::PIDConfig config, vex::rotationUnits measureUnits) {
-                motorPtr = ptr;
-                pidSystem.changeConfig(config);
-                units = measureUnits;
+                this->motorPtr = ptr;
+                this->pidSystem.changeConfig(config);
+                this->units = measureUnits;
+            }
+
+            void calibrate() {
+                this->setRunning(false);
+                motorPtr->setPosition(-50, units);
+                this->setRunning(true);
+                this->setNewVal(100);
+                wait(0.5, vex::timeUnits::sec);
+                this->setRunning(false);
             }
 
             void iterate() {
+
                 if (!running) {return;}
+
                 double power = 0.00;
-                if (hasNewVal) {
-                    power = pidSystem.iterate(motorPtr->position(units), newVal);
-                    hasNewVal = false;
-                } else {
-                    power = pidSystem.iterate(motorPtr->position(units));
-                }
-            
+
+                power = pidSystem.iterate(motorPtr->position(units), desiredVal);
                 motorPtr->spin(vex::directionType::rev, power, vex::voltageUnits::volt);
+
+                //DEBUGLOG(motorPtr->position(units), " ", power, " ", pidSystem.getSet());
 
             }
 
@@ -114,14 +121,16 @@ namespace controlSystem {
             }
 
             void setNewVal(double newVal) {
-                this->newVal = newVal;
-                hasNewVal = true;
+                this->desiredVal = newVal;
             }
             void setRunning(bool newStatus) {
+
+                DEBUGLOG("NEW ARM RUNNING: ", newStatus ? "TRUE" : "FALSE");
+
                 if (newStatus) {
                     motorPtr->setBrake(vex::brakeType::coast);
                 } else {
-                    motorPtr->setBrake(vex::brakeType::brake);
+                    motorPtr->setBrake(vex::brakeType::coast);
                 }
                 running = newStatus;
             }

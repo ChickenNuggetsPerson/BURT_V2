@@ -13,15 +13,15 @@ void setNewDriveMax(double max) {
 };
 
 
-int motorFL = 0;
-int motorFR = 0;
-int motorBL = 0;
-int motorBR = 0;
+double motorFL = 0;
+double motorFR = 0;
+double motorBL = 0;
+double motorBR = 0;
 
-int leftFB = 0;
-int rightFB = 0;
+double leftFB = 0;
+double rightFB = 0;
 
-int turn = 0;
+double turn = 0;
 
 
 controlSystem::MotorController motorController(&mainController);
@@ -32,6 +32,8 @@ void toggleHold() {
     return;
   frontArmHolder.setRunning(true);
   frontArmHolder.setNewVal(70);
+
+  DEBUGLOG("Max Speed: ", 10);
 }
 
 bool armsOpen = false;
@@ -46,7 +48,8 @@ bool reversedDrive = false;
 
 int controllerTask() {
 
-  vex::digital_out sideArms = vex::digital_out(Brain.ThreeWirePort.A);
+  vex::digital_out sideArmA = vex::digital_out(Brain.ThreeWirePort.A);
+  // vex::digital_out sideArmB = vex::digital_out(Brain.ThreeWirePort.B);
 
   mainController.ButtonA.pressed(toggleHold);
   mainController.ButtonB.pressed(toggleArms);
@@ -76,6 +79,7 @@ int controllerTask() {
   cataArmMotor.setVelocity(0, percent);
   cataArmMotor.setBrake(brakeType::coast);
 
+  bool wasStopped = false;
 
   bool tankDrive = true;
   if (Brain.SDcard.isInserted()) {
@@ -89,6 +93,8 @@ int controllerTask() {
   // Main driving loop
   while(true) {
 
+    frontArmVal = 0;
+
     if(Competition.isDriverControl()) {
 
       // Main Loop for geting controller input
@@ -99,14 +105,16 @@ int controllerTask() {
         leftFB = leftFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
         rightFB = rightFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
 
-        turn = mainController.Axis1.position() * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
+        turn = (mainController.Axis1.position() * 0.8)* (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
       }
-      frontArmVal = 0;
+
       if (mainController.ButtonR2.pressing()) {
         frontArmVal = 8;
+        frontArmMotor.setBrake(brakeType::brake);
       }
       if (mainController.ButtonL2.pressing()) {
         frontArmVal = -8;
+        frontArmMotor.setBrake(brakeType::brake);
       }
 
       if ((mainController.ButtonR2.pressing() || mainController.ButtonL2.pressing()) && frontArmHolder.getRunning()) {
@@ -148,22 +156,35 @@ int controllerTask() {
 
     if ( !botAI.running || botAI.getForceStop()) {
 
+      if (wasStopped) { // Refresh the motors after auton
+        leftMotorA.spin(fwd);
+        leftMotorB.spin(fwd);
+        rightMotorA.spin(fwd);
+        rightMotorB.spin(fwd);
+
+        leftMotorA.setVelocity(0, percent);
+        leftMotorB.setVelocity(0, percent);
+        rightMotorA.setVelocity(0, percent);
+        rightMotorB.setVelocity(0, percent);
+
+        wasStopped = false;
+      }
+
       leftMotorA.setVelocity(motorFL, percentUnits::pct);
       leftMotorB.setVelocity(motorBL, percentUnits::pct);
       rightMotorA.setVelocity(motorFR, percentUnits::pct);
       rightMotorB.setVelocity(motorBR, percentUnits::pct);
 
-      frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
       cataSystem.setSpeed(cataArmMove);
 
-      
-      //DEBUGLOG(armsOpen ? "true" : "false");
-      sideArms.set(armsOpen);
-
+    } else {
+      wasStopped = true;
     }
 
     // iterate over holders
+    frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
     frontArmHolder.iterate();
+    sideArmA.set(armsOpen);
 
     // wait before repeating the process
     vex::wait(20, msec);

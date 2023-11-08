@@ -3,13 +3,16 @@
 #include "robotConfig.h"
 #include "paths.h"
 #include <vector>
+#include <cmath>
+
 
 #include "visionSensorConfig.h"
+#include "motionProfiling.h"
 
 
 // Auton Specific Macros
 // Check if ForceStop is set to true
-#define CheckForceStop() if (this->forceStop) { return false; }
+#define CheckForceStop() if (this->forceStop) {  DEBUGLOG("Stopping: Forced Stop"); return false; }
 #define CheckOdomStatus() if (!odometrySystemPointer->isTracking) { brainError("Skipping Auton Path, Odom not initialized"); return false; }
 
 using namespace vex;
@@ -111,12 +114,15 @@ void AutonSystem::generatePath() {
     bool result = false;
     runningSkills = getConfig("isSkills");
     if (runningSkills) {
-        result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_SKILLS_JSON);
+        // result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_SKILLS_JSON);
+        result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_SKILLS));
     } else {
         if (!getConfig("startSide")) {
-            result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_LEFT_JSON);
+            // result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_LEFT_JSON);
+            result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_LEFT));
         } else {
-            result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_RIGHT_JSON);
+            //result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_RIGHT_JSON);
+            result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_RIGHT));
         }
         if (!Brain.SDcard.isInserted()) {
             queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST));
@@ -257,26 +263,26 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
     pid::PID turnPID(AUTON_TURNTO_PID_CONFIG, target);
 
 
-    double accuracy = 0.5;
-    int checks = 3;
+    double accuracy = 1;
+    int checks = 8;
 
 
     double lastRot = odometrySystemPointer->currentPos().rot;
     int totalChecks = 0;
+
+    LeftDriveSmart.spin(directionType::fwd, 0, volt);
+    RightDriveSmart.spin(directionType::fwd, 0, volt);
+
     while (true) {
         CheckForceStop();
         
         heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double power = turnPID.iterate(heading);
 
-        if (WSDebugger.isSending()) {
-            WSDebugger.sendData("T", power);
-        }
-
         LeftDriveSmart.spin(directionType::fwd, -power, volt);
         RightDriveSmart.spin(directionType::fwd, power, volt);
 
-        DEBUGLOG("TURNTO PID: ", power);
+        // DEBUGLOG("TURNTO PID: ", power);
 
         double deltaHeading = lastRot - heading;
         if (deltaHeading <= accuracy && deltaHeading >= -accuracy) {
@@ -295,21 +301,130 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
         wait(0.05, seconds);
     }
 
-    LeftDriveSmart.spin(directionType::fwd, 0, volt);
-    RightDriveSmart.spin(directionType::fwd, 0, volt);
+    LeftDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
+    RightDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
 
     running = wasRunning;
     return true;
 };
 
 bool AutonSystem::gotoLoc(odom::TilePosition pos) {
-    return gotoLoc(odom::tilePosToPos(pos));
+    return gotoLoc(odom::Position(pos));
 };
+
+// Motion Profiling System
 bool AutonSystem::gotoLoc(odom::Position pos) {
-    std::vector<odom::Position> tmp;
-    tmp.push_back(pos);
-    return longGoto(tmp);
+    
+    CheckOdomStatus();
+    CheckForceStop();
+
+    bool wasRunning = running;
+    running = true;
+    
+    target = pos;
+
+    odom::Position currentPos = odometrySystemPointer->currentPos();
+
+    double travelDist = distBetweenPoints(currentPos, pos);
+    double desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos));
+
+    // Turn to point to the location
+    // Only do it if the robot has to turn more than 10 degrees
+    if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 10)) {
+        turnTo(desiredHeading, 1.5);
+    }
+
+    // Generate Velocity Profile
+    motionProfiling::Profile speedProfile = motionProfiling::genVelProfile(distBetweenPoints(odometrySystemPointer->currentPos(), pos));
+    double driveVelocity = 0.00;
+
+    double wheelCircumference = 2 * PI * (wheelDiameter / 2);
+    double motorGear = 72;
+    double wheelGear = 36;
+
+    double gearRatio = motorGear / wheelGear;
+
+    // PID to keep the robot driving straight
+    pid::PID turnPid(AUTON_GOTO_TURN_VEl_PID_CONFIG);
+    turnPid.setMax(20);
+    turnPid.setMin(-20);
+    double turnPower = 0.00;
+
+    bool traveling = true;
+
+    double startTime = Brain.Timer.system();
+
+    LeftDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
+    RightDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
+
+    // Main Driving Loop
+    while (traveling) {
+        CheckForceStop();
+        
+        currentPos = odometrySystemPointer->currentPos();
+
+        travelDist = distBetweenPoints(currentPos, pos);
+        desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos));
+
+        // Get speedprofile index
+        int speedIndex = (int)floor(((Brain.Timer.system() - startTime) / 1000.00) / motionProfiling::timeIncrement);
+
+        // Set desired velocity from the speedProfile
+        if (speedIndex >= speedProfile.get()->size()) {
+            traveling = false;
+            break;
+        }
+        driveVelocity = speedProfile.get()->at(speedIndex);
+
+        // Get turn power
+        if (speedIndex >= speedProfile.get()->size() / 2) {
+            turnPid.setMax(10);
+            turnPid.setMin(-10);
+        }
+
+        double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
+        double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
+        turnPower = turnPid.iterate(turnCurrent, turnWant);
+
+
+        // Calculate Desired Velocities
+        double leftVelocity = driveVelocity - turnPower;
+        double rightVelocity = driveVelocity + turnPower;
+
+
+        // Convert Velocity ( in/s ) to rpm of motor
+        double leftMotorVel = (60 * leftVelocity) / (gearRatio * wheelCircumference);
+        double rightMotorVel = (60 * rightVelocity) / (gearRatio * wheelCircumference);
+
+        // Apply Velocities
+        LeftDriveSmart.setVelocity(leftMotorVel   * 1.1, vex::velocityUnits::rpm);
+        RightDriveSmart.setVelocity(rightMotorVel * 1.1, vex::velocityUnits::rpm);
+
+        // DEBUGLOG("");
+        // DEBUGLOG("GOTO DIST: ", travelDist);
+        // DEBUGLOG("GOTO DRIVE Profile: ", driveVelocity);
+        // DEBUGLOG("GOTO Out Motor Vel: ", leftMotorVel);
+        // DEBUGLOG("GOTO TURN PID: ", turnPower);
+        
+        if (speedIndex >= speedProfile.get()->size()) {
+            traveling = false;
+        }
+
+        wait(0.05, seconds);
+    }
+
+    wait(0.1, seconds);
+
+    if (!std::isnan(pos.rot)) {
+        turnTo(pos.rot, 1.5);
+    }
+
+    wait(0.1, seconds);
+
+    running = wasRunning;
+    return true;
 };
+
 bool AutonSystem::longGoto(std::vector<odom::TilePosition> pos) {
     std::vector<odom::Position> tmpVec;
     for (int i = 0; i < pos.size(); i++) {
@@ -317,8 +432,7 @@ bool AutonSystem::longGoto(std::vector<odom::TilePosition> pos) {
     }
     return longGoto(tmpVec);
 };
-
-// Main goto logic
+// Old System
 bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     CheckOdomStatus();
@@ -344,46 +458,59 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     // PID to control drive speed
     pid::PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
-    drivePid.setMax(12);
-    drivePid.setMin(-12);
+    drivePid.setMax(11);
+    drivePid.setMin(-11);
     double drivePower = 0.00;
 
     // PID to keep the robot driving straight
-    pid::PID turnPid(AUTON_GOTO_TURN_PID_CONFIG);
-    turnPid.setMax(12);
-    turnPid.setMin(-12);
+    pid::PID turnPid(AUTON_GOTO_TURN_VOLT_PID_CONFIG);
+    turnPid.setMax(10);
+    turnPid.setMin(-10);
     double turnPower = 0.00;
 
-    int stopped = 0;
     bool traveling = true;
 
-    int targetNum = 0;
+    int targetIndex = 0;
     int numOfTargets = pos.size();
 
-    int speedUp = 3;
+
+    int avgSize = 10;
+    double driveAverage[10];
+
 
     // Main Driving Loop
     while (traveling) {
         CheckForceStop();
-        
-        odom::Position tempPos = odometrySystemPointer->currentPos();
 
-        travelDist = distBetweenPoints(tempPos, pos.at(targetNum));
+        currentPos = odometrySystemPointer->currentPos();
 
-        if (targetNum == numOfTargets - 1 && travelDist < 24.00) { 
-            double newMaxTurn = ((double)travelDist / 24.00) * 12.00;
-            //turnPid.setMax(12.00 - newMaxTurn);
-            //turnPid.setMin(-12.00 + newMaxTurn);
-            DEBUGLOG("New Turn Max: ", 12.00 - newMaxTurn);
+        travelDist = distBetweenPoints(currentPos, pos.at(targetIndex));
+        if (targetIndex < numOfTargets - 1) {
+            // travelDist += distBetweenPoints(pos.at(targetIndex), pos.at(targetIndex + 1)) / 2;
         }
 
-        desiredHeading = misc::radToDegree(angleBetweenPoints(tempPos, pos.at(targetNum)));
-
-        drivePower = drivePid.iterate(travelDist / speedUp);
+        desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos.at(targetIndex)));
+        drivePower = drivePid.iterate(travelDist);
 
         double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
-        double turnWant = findNearestRot(misc::radToDegree(tempPos.rot), desiredHeading);
+        double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
         turnPower = turnPid.iterate(turnCurrent, turnWant);
+
+
+
+        // Average out the forward drive power
+        for (int i=0; i < avgSize - 1; i++) {
+            driveAverage[i] = driveAverage[i + 1];
+        }
+        driveAverage[avgSize - 1] = drivePower;
+        double tempAvg = 0.00;
+        for (int i=0; i < avgSize; i++) {
+            tempAvg += driveAverage[i];
+        }
+        drivePower = tempAvg / avgSize;
+
+
+
 
         double leftPower = drivePower - turnPower;
         double rightPower = drivePower + turnPower;
@@ -391,49 +518,30 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
         LeftDriveSmart.spin(directionType::fwd, leftPower, voltageUnits::volt);
         RightDriveSmart.spin(directionType::fwd, rightPower, voltageUnits::volt);
 
-        if (WSDebugger.isSending()) {
-            WSDebugger.sendData("DP", drivePower);
-            WSDebugger.sendData("TP", turnPower);
-        }
-        //std::cout << travelDist << " " << drivePower << " " << turnPower << std::endl;
-        DEBUGLOG("GOTO DIST: ", travelDist);
-        DEBUGLOG("GOTO DRIVE PID: ", drivePower);
-        DEBUGLOG("GOTO TURN PID: ", turnPower);
 
-        if (drivePower < 2 && speedUp < 2) {
-            stopped++;
-        }
 
-        if (targetNum != numOfTargets - 1 && travelDist < 15) {
-            stopped = 0;
-            targetNum++;
-            if (targetNum == numOfTargets) {            
-                target = pos.at(targetNum - 1);
+        // If robot is close to the point, increase point index
+        // If done with path, exit loop
+        if (travelDist < 5) {
+            if (targetIndex < numOfTargets - 1) {
+                targetIndex++;
+                target = pos.at(targetIndex);
             } else {
-                target = pos.at(targetNum);
+                
+                if (travelDist < 2) {
+                    traveling = false;
+                }
+
             }
         }
-        if (stopped > 10) {
-            stopped = 0;
-            targetNum++;
-            if (targetNum == numOfTargets) {            
-                target = pos.at(targetNum - 1);
-            } else {
-                target = pos.at(targetNum);
-            }
-        }
-
-        if (targetNum >= numOfTargets) {
-            traveling = false;
-        }
-
-        speedUp--;
-        if (speedUp < 1) {speedUp = 1;}
 
         wait(0.05, seconds);
     }
 
-    if (!isnan(pos.at(pos.size() - 1).rot)) {
+    LeftDriveSmart.spin(directionType::fwd, 0, voltageUnits::volt);
+    RightDriveSmart.spin(directionType::fwd, 0, voltageUnits::volt);
+
+    if (!std::isnan(pos.at(pos.size() - 1).rot)) {
         turnTo(pos.at(pos.size() - 1).rot, 1.5);
     }
     
@@ -566,7 +674,7 @@ bool AutonSystem::setWingsStatus(bool status) {
 
 
 
-
+#include "libs/spline.h"
 void aiQueueSystem::addPtrs(AutonSystem* botAIPtr, odom::OdometrySystem* odometryPointer) {
     aiPtr = botAIPtr;
     odomPtr = odometryPointer;
@@ -596,7 +704,7 @@ std::vector<autonMovement> aiQueueSystem::getQueue() {
 bool aiQueueSystem::addToQueue(autonPath path) {
     loaded = false;
     for (int i = 0; i < path.getSize(); i++) {
-        queue.push_back(path.getStep(i));
+        this->addToQueue(path.getStep(i));
     }
     aiPtr->setStartPos(odom::posToTilePos(path.startPos));
     loaded = true;
@@ -604,7 +712,41 @@ bool aiQueueSystem::addToQueue(autonPath path) {
 }
 bool aiQueueSystem::addToQueue(autonMovement movement) {
     loaded = false;
+    if (movement.movementType == AUTON_MOVE_LONGGOTO) {
+
+        int resolution = 5;
+        double timeBetweenPoints = 2;
+
+        std::vector<double> timePoses;
+        std::vector<double> xPoses;
+        std::vector<double> yPoses;
+        for (int i = 0; i < movement.drivePath.size(); i++) {
+            timePoses.push_back(i * timeBetweenPoints);
+            xPoses.push_back(movement.drivePath.at(i).x);
+            yPoses.push_back(movement.drivePath.at(i).y);
+        }
+
+        tk::spline xSpline(timePoses, xPoses);
+        tk::spline ySpline(timePoses, yPoses);
+
+        
+        std::vector<odom::TilePosition> pos;
+        for (int i = 0; i < ((movement.drivePath.size() - 1) * resolution) + 1; i++) {
+            pos.push_back(
+                odom::TilePosition(
+                        xSpline(i * (timeBetweenPoints / resolution)), 
+                        ySpline(i * (timeBetweenPoints / resolution))
+                    )
+                );
+        }
+
+        movement.drivePath.clear();
+        movement.drivePath = pos;
+
+    }
+
     queue.push_back(movement);
+
     loaded = true;
     return true;
 }
@@ -684,41 +826,78 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
     return readPath;
 };
 bool aiQueueSystem::runMovement(autonMovement movement) {
+    DEBUGLOG("");
+    
     switch (movement.movementType) {
+
         case AUTON_MOVE_DELAY:
+            DEBUGLOG("AUTO RUN: Delay");
             wait(movement.val, timeUnits::msec);
             return true;
+
         case AUTON_MOVE_DRIVE_DIST:
+            DEBUGLOG("AUTO RUN: Drive Dist");
             return aiPtr->driveDist(movement.val);
+
         case AUTON_MOVE_GOTO:
+            DEBUGLOG("AUTO RUN: Goto");
             if (movement.tilePosBool) {
                 return aiPtr->gotoLoc(movement.tilePos);
             } else {
                 return aiPtr->gotoLoc(movement.pos);
             }
+
         case AUTON_MOVE_LONGGOTO:
+            DEBUGLOG("AUTO RUN: Long Goto");
             return aiPtr->longGoto(movement.drivePath);
+
         case AUTON_MOVE_DRIVE_REVERSE:
+            DEBUGLOG("AUTO RUN: Drive Reverse");
             return aiPtr->reverseDrive(movement.val);
+
         case AUTON_MOVE_TURNTO:
-            return aiPtr->turnTo(movement.pos.rot);
+            DEBUGLOG("AUTO RUN: Turn To");
+            return aiPtr->turnTo(movement.val);
+
         case AUTON_MOVE_PICKUP_ACORN:
+            DEBUGLOG("AUTO RUN: Pickup Acorn");
             return aiPtr->pickupAcorn();
+
         case AUTON_MOVE_DROPOFF_ACORN:
+            DEBUGLOG("AUTO RUN: Drop off Acorn");
             return aiPtr->dropAcorn();
+
         case AUTON_MOVE_ARM_SET:
+            DEBUGLOG("AUTO RUN: Arm Set");
             frontArmHolder.setRunning(true);
             frontArmHolder.setNewVal(movement.val);
             DEBUGLOG("New Front Arm: ", movement.val);
             wait(0.5, sec);
+            return true;
+
         case AUTON_MOVE_ARM_RELEASE:
+            DEBUGLOG("AUTO RUN: Arm Release");
             frontArmHolder.setRunning(false);
+            return true;
+
+        case AUTON_MOVE_ARM_CALIBRATE:
+            DEBUGLOG("AUTO RUN: Calibrate Arm");
+            frontArmHolder.calibrate();
+            wait(1.1, seconds);
+            return true;
+
         case AUTON_MOVE_CATAPULT:
+            DEBUGLOG("AUTO RUN: Catapult");
             return aiPtr->catapult(movement.val);
+
         case AUTON_MOVE_WINGS_OPEN:
+            DEBUGLOG("AUTO RUN: Wings Open");
             return aiPtr->setWingsStatus(true);
+
         case AUTON_MOVE_WINGS_CLOSE:
+            DEBUGLOG("AUTO RUN: Wings Close");
             return aiPtr->setWingsStatus(false);
+
         default:
             return false;
     }

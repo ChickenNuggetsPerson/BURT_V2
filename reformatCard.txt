@@ -1,0 +1,11 @@
+
+
+// Get the SD Card Location 
+
+diskutil list
+
+
+// Reformat 
+
+
+diskutil partitionDisk /dev/disk* MBR fat32 "Burt" 100%

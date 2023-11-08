@@ -53,7 +53,7 @@ static double backEncoderDist = 4.5; // use if we decide to use back encoders
 
 // Misc Constants
 
-static double PI = 3.14159; // PI variable used for all methods
+static double PI = M_PI; // PI variable used for all methods
 
 
 static double motorWarnTemp = 50; // The temp in c
@@ -82,28 +82,29 @@ static odom::TilePosition ODOM_DEFAULT_RESET_POS(0, 0, 0);
 static PIDConfig AUTON_TURNTO_PID_CONFIG(0.15, 0, 0.25);
 
 static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.2, 0.00, 0.06);
-static PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.08, 0.00, 0.00);
+static PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.08, 0.00, 0.00);
 */
 
 // Auton Constants For Main Bot
 
-static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.10, 0, 0.1); 
+static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.072, 0.0, 0.0); 
 
-static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_PID_CONFIG(0.15, 0.0, 0.10);
+static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);       // LongGoto Function
+static pid::PIDConfig AUTON_GOTO_TURN_VOLT_PID_CONFIG(0.05, 0.0, 0.0);  // LongGoto Function
+static pid::PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.12, 0.0, 0.0);   // Single goto function
 
 
 // Auton Start Positions
-static odom::TilePosition AUTON_START_LEFT(1, 0, 0);
-static odom::TilePosition AUTON_START_RIGHT(4, 0, 0);
-static odom::TilePosition AUTON_START_SKILLS(1, 0, 0);
+static odom::TilePosition AUTON_START_LEFT(1,  -0.1291, 0);
+static odom::TilePosition AUTON_START_RIGHT(4,  -0.1291, 0);
+static odom::TilePosition AUTON_START_SKILLS(1, -0.1291, 0);
 // Auton JSON Path Locations
 static std::string AUTON_PATH_FOLDER = "paths/";
 static std::string AUTON_PATH_RIGHT_JSON = "right.json";
 static std::string AUTON_PATH_LEFT_JSON = "left.json";
 static std::string AUTON_PATH_SKILLS_JSON = "skills.json";
 
-
+// When rebuilding SD Card, remember auton config path
 
 // Config File Paths
 static std::string systemConfigFolder = "systemConfig/";

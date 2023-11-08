@@ -32,10 +32,12 @@ Position::Position(double xPos, double yPos) {
     rot = NAN;
 };
 Position::Position() {};
-std::ostream& operator<<(std::ostream& os, const odom::Position& pos) {
-    os << "{ x: " << pos.x << ", y: " << pos.y << ", rot: " << pos.rot << " }";
-    return os;
-}
+Position::Position(TilePosition pos) {
+    Position tmp = tilePosToPos(pos);
+    this->x = tmp.x;
+    this->y = tmp.y;
+    this->rot = tmp.rot;
+};
 
 // TilePosition Constructor
 TilePosition::TilePosition(double xPos, double yPos, double rotation) {
@@ -49,11 +51,12 @@ TilePosition::TilePosition(double xPos, double yPos) {
     rot = NAN;
 };
 TilePosition::TilePosition() {};
-std::ostream& operator<<(std::ostream& os, const odom::TilePosition& pos) {
-    os << "{ x: " << pos.x << ", y: " << pos.y << ", rot: " << pos.rot << " }";
-    return os;
-}
-
+TilePosition::TilePosition(Position pos) {
+    TilePosition tmp = posToTilePos(pos);
+    this->x = tmp.x;
+    this->y = tmp.y;
+    this->rot = tmp.rot;
+};
 
 
 // Main system for tracking the position of the robot
@@ -97,7 +100,7 @@ int mainTrackingTask(void* system) {
 }
 
 OdometrySystem::OdometrySystem() {
-       
+    
 }
 
 void OdometrySystem::restart() {
@@ -118,7 +121,7 @@ void OdometrySystem::restart(Position currentPos) {
     trackingTask = vex::task(mainTrackingTask, (void*)this, vex::task::taskPriorityNormal);
 };
 void OdometrySystem::restart(TilePosition currentPos) {
-    restart(tilePosToPos(currentPos));
+    restart(Position(currentPos));
 };
 
 void OdometrySystem::setPos(Position newPos) {
@@ -127,7 +130,7 @@ void OdometrySystem::setPos(Position newPos) {
     globalRot = newPos.rot;
 };
 void OdometrySystem::setPos(TilePosition newPos) {
-    setPos(tilePosToPos(newPos));
+    setPos(Position(newPos));
 };
 
 
@@ -142,7 +145,7 @@ TilePosition OdometrySystem::currentTilePos() {
 
 
 void OdometrySystem::updateTilePos() {
-    currentTilePosition = posToTilePos(Position(globalX, globalY, globalRot));
+    currentTilePosition = TilePosition(Position(globalX, globalY, globalRot));
 };
 
 
@@ -201,7 +204,7 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     newData.heading = inertialAvg;    
     newData.deltaHeading = newData.heading - oldData.heading;
 
- 
+
     // Set the current data
     newData.rightEncoder = newRightEncoder; // Right encoder
     newData.leftEncoder = newLeftEncoder;   // Left encoder

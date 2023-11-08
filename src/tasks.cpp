@@ -9,6 +9,11 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
+  //botAI.setForceStop(false);
+  //botAI.driveDist(24*2); 
+  //botAI.driveDist(24);
+  //botAI.gotoLoc(botAI.getStartPos());
+  //botAI.setForceStop(true);
 
 };
 void leftPressed() {
@@ -21,9 +26,17 @@ void leftPressed() {
   }
 };
 void upPressed() {
-  botAI.gotoLoc(botAI.getStartPos());
+  //botAI.gotoLoc(botAI.getStartPos());
+  
 }
 void downPressed() {
+  while (true)
+  {
+    queuingSystem.clear();
+    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_TURNTO, 90));
+    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_TURNTO, -90));
+    queuingSystem.runQueue();
+  }
   
 }
 
@@ -66,16 +79,19 @@ void usercontrol(void) {
 }
 
 void whenStarted(void) {
-  WSDebugger.init();
-  if (!WSDebugger.isSending()) {return;}
-  while (true) {
-      WSDebugger.sendData("RMA", rightMotorA.temperature(vex::percent));
-      WSDebugger.sendData("RMB", rightMotorB.temperature(vex::percent));
-      WSDebugger.sendData("LMA", leftMotorA.temperature(vex::percent));
-      WSDebugger.sendData("LMB", leftMotorB.temperature(vex::percent));
-      WSDebugger.sendData("bat", Brain.Battery.capacity());
-      WSDebugger.sendData("watt", Brain.Battery.current(currentUnits::amp) * Brain.Battery.voltage(voltageUnits::volt));
 
-      wait(5, vex::timeUnits::sec);
-  }
+  DEBUGLOG("BATTERY STATUS: ", Brain.Battery.capacity());
+
+  // WSDebugger.init();
+  // if (!WSDebugger.isSending()) {return;}
+  // while (false) {
+      // WSDebugger.sendData("RMA", rightMotorA.temperature(vex::percent));
+      // WSDebugger.sendData("RMB", rightMotorB.temperature(vex::percent));
+      // WSDebugger.sendData("LMA", leftMotorA.temperature(vex::percent));
+      // WSDebugger.sendData("LMB", leftMotorB.temperature(vex::percent));
+      // WSDebugger.sendData("bat", Brain.Battery.capacity());
+      // WSDebugger.sendData("watt", Brain.Battery.current(currentUnits::amp) * Brain.Battery.voltage(voltageUnits::volt));
+
+      // wait(5, vex::timeUnits::sec);
+  // }
 }

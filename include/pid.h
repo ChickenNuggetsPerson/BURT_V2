@@ -24,10 +24,10 @@ namespace pid {
             double I = 0.0;
             double D = 0.0;
 
-            int error;
-            int prevError = 0;
-            int derivative;
-            int totalError = 0;
+            double error;
+            double prevError = 0;
+            double derivative;
+            double totalError = 0;
 
             double desiredVal = 0.00;
 
@@ -51,5 +51,9 @@ namespace pid {
 
             double iterate(double newVal);
             double iterate(double newVal, double newDesired);
+
+            double getSet() {
+                return desiredVal;
+            };
     };
 }
