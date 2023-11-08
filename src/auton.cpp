@@ -474,10 +474,8 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     int numOfTargets = pos.size();
 
 
-
     int avgSize = 10;
     double driveAverage[10];
-
 
 
     // Main Driving Loop
@@ -500,7 +498,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
 
 
-
+        // Average out the forward drive power
         for (int i=0; i < avgSize - 1; i++) {
             driveAverage[i] = driveAverage[i + 1];
         }
@@ -524,8 +522,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
         // If robot is close to the point, increase point index
         // If done with path, exit loop
-        // DEBUGLOG(turnWant, " ", turnCurrent);
-        if (travelDist < 8) {
+        if (travelDist < 5) {
             if (targetIndex < numOfTargets - 1) {
                 targetIndex++;
                 target = pos.at(targetIndex);

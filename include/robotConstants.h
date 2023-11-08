@@ -89,9 +89,9 @@ static PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.08, 0.00, 0.00);
 
 static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.072, 0.0, 0.0); 
 
-static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.12, 0.0, 0.0);
-static pid::PIDConfig AUTON_GOTO_TURN_VOLT_PID_CONFIG(0.05, 0.0, 0.0);
+static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);       // LongGoto Function
+static pid::PIDConfig AUTON_GOTO_TURN_VOLT_PID_CONFIG(0.05, 0.0, 0.0);  // LongGoto Function
+static pid::PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.12, 0.0, 0.0);   // Single goto function
 
 
 // Auton Start Positions
@@ -104,7 +104,7 @@ static std::string AUTON_PATH_RIGHT_JSON = "right.json";
 static std::string AUTON_PATH_LEFT_JSON = "left.json";
 static std::string AUTON_PATH_SKILLS_JSON = "skills.json";
 
-
+// When rebuilding SD Card, remember auton config path
 
 // Config File Paths
 static std::string systemConfigFolder = "systemConfig/";
