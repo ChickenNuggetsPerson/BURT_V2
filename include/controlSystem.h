@@ -96,14 +96,19 @@ namespace controlSystem {
 
             void calibrate() {
                 this->setRunning(false);
-                motorPtr->setPosition(-50, units);
+                motorPtr->setPosition(-83, units);
                 this->setRunning(true);
-                this->setNewVal(100);
+                this->setNewVal(210);
                 wait(0.5, vex::timeUnits::sec);
                 this->setRunning(false);
             }
 
             void iterate() {
+
+                // DEBUGLOG(motorPtr->position(units));
+
+                // 152 horz
+                // 213 Calb
 
                 if (!running) {return;}
 

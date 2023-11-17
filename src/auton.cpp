@@ -42,10 +42,11 @@ AutonSystem::AutonSystem(odom::OdometrySystem* systemPointer, aiQueueSystem* que
     queuePtr->addPtrs(this, systemPointer);
 
     // Define the Config
-    configStorage.push_back(autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247)));
-    configStorage.push_back(autonConfig("startSide", "Left", "Right", false, vex::color(50, 50, 50), vex::color(0, 0, 0)));
-    configStorage.push_back(autonConfig("isSkills", "Match", "Skills", false));
-    
+    configStorage = {
+        autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247)),
+        autonConfig("startSide", "Left", "Right", false, vex::color(50, 50, 50), vex::color(0, 0, 0)),
+        autonConfig("isSkills", "Match", "Skills", false)
+    };    
 }
 
 int genTask() { // For some reason if it is generated twice, it fixes all issues
@@ -81,6 +82,8 @@ void AutonSystem::init() {
 
     odometrySystemPointer->restart();
 
+    runningSkills = getConfig("isSkills");
+
     // Initalize Auton Variables
     if (getConfig("teamColor")) {
         teamColor = TEAM_RED;
@@ -112,9 +115,11 @@ void AutonSystem::generatePath() {
 
     // New Path System
     bool result = false;
-    runningSkills = getConfig("isSkills");
     if (runningSkills) {
         // result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_SKILLS_JSON);
+
+        mainControllerMessage("Running Skills", 5);
+
         result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_SKILLS));
     } else {
         if (!getConfig("startSide")) {
@@ -331,7 +336,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     // Turn to point to the location
     // Only do it if the robot has to turn more than 10 degrees
     if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 10)) {
-        turnTo(desiredHeading, 1.5);
+        turnTo(desiredHeading, 2.5);
     }
 
     // Generate Velocity Profile
@@ -416,7 +421,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     wait(0.1, seconds);
 
     if (!std::isnan(pos.rot)) {
-        turnTo(pos.rot, 1.5);
+        turnTo(pos.rot, 2.5);
     }
 
     wait(0.1, seconds);
@@ -464,8 +469,8 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     // PID to keep the robot driving straight
     pid::PID turnPid(AUTON_GOTO_TURN_VOLT_PID_CONFIG);
-    turnPid.setMax(10);
-    turnPid.setMin(-10);
+    turnPid.setMax(12);
+    turnPid.setMin(-12);
     double turnPower = 0.00;
 
     bool traveling = true;
@@ -473,10 +478,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     int targetIndex = 0;
     int numOfTargets = pos.size();
 
-
-    int avgSize = 10;
-    double driveAverage[10];
-
+    int counter = 0;
 
     // Main Driving Loop
     while (traveling) {
@@ -486,29 +488,29 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
         travelDist = distBetweenPoints(currentPos, pos.at(targetIndex));
         if (targetIndex < numOfTargets - 1) {
-            // travelDist += distBetweenPoints(pos.at(targetIndex), pos.at(targetIndex + 1)) / 2;
+            //travelDist += distBetweenPoints(pos.at(targetIndex), pos.at(targetIndex + 1)) / 2;
         }
 
         desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos.at(targetIndex)));
-        drivePower = drivePid.iterate(travelDist);
 
         double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
         turnPower = turnPid.iterate(turnCurrent, turnWant);
 
+    
+        // drivePower = drivePid.iterate(travelDist);
+        drivePower = 8;
 
+        double turnError = fabs(turnWant - turnCurrent);
 
-        // Average out the forward drive power
-        for (int i=0; i < avgSize - 1; i++) {
-            driveAverage[i] = driveAverage[i + 1];
+        counter ++;
+        if (counter % 10 == 0) {
+            DEBUGLOG(turnError);
         }
-        driveAverage[avgSize - 1] = drivePower;
-        double tempAvg = 0.00;
-        for (int i=0; i < avgSize; i++) {
-            tempAvg += driveAverage[i];
-        }
-        drivePower = tempAvg / avgSize;
 
+        // if (turnError > 5) {
+            // drivePower = drivePower * ( (pow(turnError, -0.1) / 0.5 ) - 0.75 );
+        // }
 
 
 
@@ -522,13 +524,13 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
         // If robot is close to the point, increase point index
         // If done with path, exit loop
-        if (travelDist < 5) {
+        if (travelDist < 6) {
             if (targetIndex < numOfTargets - 1) {
                 targetIndex++;
                 target = pos.at(targetIndex);
             } else {
                 
-                if (travelDist < 2) {
+                if (travelDist < 6) {
                     traveling = false;
                 }
 
@@ -542,7 +544,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     RightDriveSmart.spin(directionType::fwd, 0, voltageUnits::volt);
 
     if (!std::isnan(pos.at(pos.size() - 1).rot)) {
-        turnTo(pos.at(pos.size() - 1).rot, 1.5);
+        turnTo(pos.at(pos.size() - 1).rot, 2);
     }
     
     running = wasRunning;
@@ -712,9 +714,9 @@ bool aiQueueSystem::addToQueue(autonPath path) {
 }
 bool aiQueueSystem::addToQueue(autonMovement movement) {
     loaded = false;
-    if (movement.movementType == AUTON_MOVE_LONGGOTO) {
+    if (movement.movementType == AUTON_MOVE_LONGGOTO && movement.drivePath.size() > 2) {
 
-        int resolution = 5;
+        int resolution = 2;
         double timeBetweenPoints = 2;
 
         std::vector<double> timePoses;
@@ -735,7 +737,8 @@ bool aiQueueSystem::addToQueue(autonMovement movement) {
             pos.push_back(
                 odom::TilePosition(
                         xSpline(i * (timeBetweenPoints / resolution)), 
-                        ySpline(i * (timeBetweenPoints / resolution))
+                        ySpline(i * (timeBetweenPoints / resolution)),
+                        movement.drivePath.at(movement.drivePath.size() -1).rot
                     )
                 );
         }

@@ -15,6 +15,8 @@ static bool devRobot = false;
     std::cout << std::endl; \
 } while(0);
 
+// #define DEBUGLOG(...) { };
+
 template<typename T>
 void variablePrint(const T& arg) {
     std::cout << arg;
@@ -28,20 +30,7 @@ void variablePrint(const T& arg, const Args&... args) {
 
 
 
-// Define Robot Measurements 
-
-// Main Robot Consts
-//  wheelDiameter: 2.5
-//  encoderDist: 5.25
-//  ratio: 5/3
-
-// Dev Robot Const
-//  wheelDiameter: 4
-//  encoderDist: 4.5
-//  ratio 1/1
-
 // Set the ratio to 1/1 if using shaft encoders
-
 
 static double wheelDiameter = 2.75;
 static double motorRatio = 1;
@@ -77,20 +66,14 @@ static const int32_t cataMotorPort = vex::PORT5;
 // Odom Constants
 static odom::TilePosition ODOM_DEFAULT_RESET_POS(0, 0, 0);
 
-// Auton Constants For Test Bot
-/*
-static PIDConfig AUTON_TURNTO_PID_CONFIG(0.15, 0, 0.25);
-
-static PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.2, 0.00, 0.06);
-static PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.08, 0.00, 0.00);
-*/
 
 // Auton Constants For Main Bot
 
 static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.072, 0.0, 0.0); 
 
-static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.0, 0.0);       // LongGoto Function
+static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.4, 0.0, 0.0);       // LongGoto Function
 static pid::PIDConfig AUTON_GOTO_TURN_VOLT_PID_CONFIG(0.05, 0.0, 0.0);  // LongGoto Function
+
 static pid::PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.12, 0.0, 0.0);   // Single goto function
 
 

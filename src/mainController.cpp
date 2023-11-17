@@ -48,8 +48,11 @@ bool reversedDrive = false;
 
 int controllerTask() {
 
-  vex::digital_out sideArmA = vex::digital_out(Brain.ThreeWirePort.A);
-  // vex::digital_out sideArmB = vex::digital_out(Brain.ThreeWirePort.B);
+  vex::digital_out solenoid_A = vex::digital_out(Brain.ThreeWirePort.B);
+  vex::digital_out solenoid_B = vex::digital_out(Brain.ThreeWirePort.C);
+  vex::digital_out solenoid_Master = vex::digital_out(Brain.ThreeWirePort.A);
+
+  solenoid_Master.set(true);
 
   mainController.ButtonA.pressed(toggleHold);
   mainController.ButtonB.pressed(toggleArms);
@@ -95,25 +98,25 @@ int controllerTask() {
 
     frontArmVal = 0;
 
-    if(Competition.isDriverControl()) {
+    if (Competition.isDriverControl()) {
 
       // Main Loop for geting controller input
       if (!inertialSensor.isCalibrating()) {
         leftFB = mainController.Axis3.position();
         rightFB = mainController.Axis2.position();
 
-        leftFB = leftFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
-        rightFB = rightFB * (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
+        leftFB = leftFB * motorMaxSpeed;
+        rightFB = rightFB * motorMaxSpeed;
 
-        turn = (mainController.Axis1.position() * 0.8)* (mainController.ButtonL1.pressing() ? boostMotorSpeed : motorMaxSpeed);
+        turn = (mainController.Axis1.position() * motorMaxSpeed);
       }
 
       if (mainController.ButtonR2.pressing()) {
-        frontArmVal = 8;
+        frontArmVal = 10;
         frontArmMotor.setBrake(brakeType::brake);
       }
       if (mainController.ButtonL2.pressing()) {
-        frontArmVal = -8;
+        frontArmVal = -10;
         frontArmMotor.setBrake(brakeType::brake);
       }
 
@@ -144,7 +147,7 @@ int controllerTask() {
       }
 
     } else { // Hayden Drive
-      if (true) { leftFB *= -1; }  // Reverse driving when arms are open
+      if (false) { leftFB *= -1; }  // Reverse driving when arms are open
       motorFL = leftFB + turn;
       motorFR = leftFB - turn;
 
@@ -184,7 +187,9 @@ int controllerTask() {
     // iterate over holders
     frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
     frontArmHolder.iterate();
-    sideArmA.set(armsOpen);
+    
+    solenoid_A.set(!armsOpen);
+    solenoid_B.set(!armsOpen);
 
     // wait before repeating the process
     vex::wait(20, msec);
@@ -207,7 +212,7 @@ void mainControllerRender() {
   mainController.Screen.clearScreen();
   mainController.Screen.setCursor(1, 1);
 
-  odom::Position currentPos = Odometry.currentPos();
+  odom::TilePosition currentPos = Odometry.currentTilePos();
 
   if (displayMessage.endTime > Brain.timer(timeUnits::msec)) {
     mainController.Screen.print(displayMessage.text);

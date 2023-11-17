@@ -73,7 +73,7 @@ int updateHome(Page* self) {
     setNewDriveMax(self->getAdjustNum("speedChange"));
 
     if ( botAI.isRunningSkills()) {
-        self->setTextData("skillsStatus", color::green, "( Running Skills )");
+        self->setTextData("skillsStatus", color::green, "[ Running Skills ]");
     } else {
         self->setTextData("skillsStatus", color::white, " ");
     }
@@ -581,8 +581,13 @@ int brainDisplayerInit() {
     // Init Gradients
     Gradient batteryGradient = Gradient(1, 100, 15, 70);
     Gradient heatGradient = Gradient(100, 1, 60, 80);
-    Gradient rainbowGradient = Gradient(0, 360, 0, 100);
-    std::vector<colorRange> whiteRange = {colorRange(-200, 200, color::white)};
+
+    Gradient loadingGradient;
+    if (Competition.isFieldControl()) {
+        loadingGradient = Gradient(0, 360, 0, 100);
+    } else {
+        loadingGradient.finalGradient = {colorRange(-200, 200, color::white)};
+    }
 
     // Define Pages
     Page loadingPage;
@@ -598,11 +603,7 @@ int brainDisplayerInit() {
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
     loadingPage.addText("Developed by Hayden Steele", 140, 130, color::white, fontType::mono15);
-    if (Competition.isFieldControl()) {
-        loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, false, rainbowGradient.finalGradient);
-    } else {
-        loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, false, whiteRange);
-    }
+    loadingPage.addHorzProgressBar("load", 140, 150, 210, 20, " ", false, false, loadingGradient.finalGradient);
 
     loadingPage.addDataUpdaterCB(updateLoadingPage, 0.01);
 

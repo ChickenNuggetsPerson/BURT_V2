@@ -10,7 +10,7 @@ autonPath buildPath(int pathID) {
     autonPath path = autonPath();
     
 
-    pathID = AUTON_PATH_TEST;
+    // pathID = AUTON_PATH_TEST;
 
     switch (pathID) {
         case AUTON_PATH_LEFT: {
@@ -20,10 +20,16 @@ autonPath buildPath(int pathID) {
             
             path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_CALIBRATE));
             path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1, 1)));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1.5, 2, -90)));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 18));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_DROPOFF_ACORN));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -80));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1.25, 2, -90)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DELAY, 200));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 20));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DELAY, 200));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -90));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DELAY, 200));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_SET, 0));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DELAY, 200));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_RELEASE));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -85));
             path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_REVERSE, 12));
             
             break;
@@ -50,12 +56,17 @@ autonPath buildPath(int pathID) {
 
             // Drive to Middle
             path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_CALIBRATE));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1, 1)));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1.5, 2.5, -90)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, {
+                odom::TilePosition(1, 1),
+                odom::TilePosition(1.5, 2.5, -90)
+            }));
 
             // Drive forward
-            std::vector<odom::TilePosition> tmp1 = { odom::TilePosition(0.45, 2.5) };
-            path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, tmp1));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, { 
+                odom::TilePosition(0.45, 2.5),
+                odom::TilePosition(0.45, 2.5),
+                odom::TilePosition(0.45, 2.5),
+            }));
         
             //  Drop off Acorn and back up
             path.addMovement(auton::autonMovement(AUTON_MOVE_DROPOFF_ACORN));
@@ -69,7 +80,7 @@ autonPath buildPath(int pathID) {
             path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -120));
 
             // Touch bar and start catapulting
-            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_SET, 100));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_SET, 200));
             path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_RELEASE));
             path.addMovement(auton::autonMovement(AUTON_MOVE_CATAPULT, 12));
 
@@ -82,19 +93,15 @@ autonPath buildPath(int pathID) {
             path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1, 0)));
 
             // Drive across area
-            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(4.4, 0)));
-            // std::vector<odom::TilePosition> tmp2 = { odom::TilePosition(4.4, 0) };
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, tmp2));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(4.25, 0.1)));
             path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(4, 1)));
-            // std::vector<odom::TilePosition> tmp3 = { odom::TilePosition(4, 1) };
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, tmp3));
             path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(3, 2.5)));
 
             // Open wings and push
-            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -90));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, 90));
             path.addMovement(auton::autonMovement(AUTON_MOVE_WINGS_OPEN));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_REVERSE, 36));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 12));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 36));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_REVERSE, 12));
             
             break;
         }         
@@ -102,21 +109,25 @@ autonPath buildPath(int pathID) {
             path.startPos = odom::tilePosToPos(TilePosition(0,0));
             brainFancyDebug("Building AUTON_PATH_TEST", vex::color::cyan);
 
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_WINGS_OPEN));
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_DELAY, 500));
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_WINGS_CLOSE));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_CALIBRATE));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DELAY, 500));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_SET, 0));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_RELEASE));
 
-            std::vector<odom::TilePosition> tmp;
-            
-            tmp.push_back(odom::TilePosition(1, 0));
-            tmp.push_back(odom::TilePosition(4, 0));
-            tmp.push_back(odom::TilePosition(4, 4));
-            tmp.push_back(odom::TilePosition(0, 4));
-            tmp.push_back(odom::TilePosition(0, 2));
-            tmp.push_back(odom::TilePosition(1, 0));
-
-
-            path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, tmp));
+            /*
+            path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, {
+                odom::TilePosition(0, 0),
+                odom::TilePosition(0, 3),
+                odom::TilePosition(-3, 6),
+                odom::TilePosition(-3, 15),
+                odom::TilePosition(-4, 21),
+                odom::TilePosition(-3, 26),
+                odom::TilePosition(0, 21),
+                odom::TilePosition(-3, 15),
+                odom::TilePosition(-3, 4),
+                odom::TilePosition(0, 0, 0)
+            }));
+            */
             
             break;
         }

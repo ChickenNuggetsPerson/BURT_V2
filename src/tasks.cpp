@@ -82,16 +82,4 @@ void whenStarted(void) {
 
   DEBUGLOG("BATTERY STATUS: ", Brain.Battery.capacity());
 
-  // WSDebugger.init();
-  // if (!WSDebugger.isSending()) {return;}
-  // while (false) {
-      // WSDebugger.sendData("RMA", rightMotorA.temperature(vex::percent));
-      // WSDebugger.sendData("RMB", rightMotorB.temperature(vex::percent));
-      // WSDebugger.sendData("LMA", leftMotorA.temperature(vex::percent));
-      // WSDebugger.sendData("LMB", leftMotorB.temperature(vex::percent));
-      // WSDebugger.sendData("bat", Brain.Battery.capacity());
-      // WSDebugger.sendData("watt", Brain.Battery.current(currentUnits::amp) * Brain.Battery.voltage(voltageUnits::volt));
-
-      // wait(5, vex::timeUnits::sec);
-  // }
 }

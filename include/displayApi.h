@@ -152,6 +152,7 @@ namespace display {
 
             std::vector<colorRange> finalGradient;
 
+            Gradient() {};
             Gradient(double startHue, double endHue, int startOfRange, int endOfRange) {
                 rangeStart = startOfRange;
                 rangeEnd = endOfRange;     
