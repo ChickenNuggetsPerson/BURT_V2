@@ -1,0 +1,11 @@
+Start of Logs
+[ 0.277 ] Auton Initialized
+[ 0.283 ] Building AUTON_PATH_Right
+[ 0.285 ] Starting Calibration
+[ 0.356 ] Controller Connected
+[ 0.561 ] Connected To Feild
+[ 2.314 ] Calibrated
+[ 2.32 ] Starting Odometry System
+[ 61.304 ] Auton Started
+[ 120.65 ] UserControl Started
+[ 315.367 ] Controller Disconnected

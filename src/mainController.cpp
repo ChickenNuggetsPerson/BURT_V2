@@ -85,9 +85,9 @@ int controllerTask() {
   bool wasStopped = false;
 
   bool tankDrive = true;
-  if (Brain.SDcard.isInserted()) {
-    tankDrive = (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 1);
-  }
+  // if (Brain.SDcard.isInserted()) {
+    // tankDrive = (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 0);
+  // }
   //reversedDrive = false;
 
   int frontArmVal = 0;

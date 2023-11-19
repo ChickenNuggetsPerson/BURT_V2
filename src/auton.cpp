@@ -45,7 +45,8 @@ AutonSystem::AutonSystem(odom::OdometrySystem* systemPointer, aiQueueSystem* que
     configStorage = {
         autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247)),
         autonConfig("startSide", "Left", "Right", false, vex::color(50, 50, 50), vex::color(0, 0, 0)),
-        autonConfig("isSkills", "Match", "Skills", false)
+        autonConfig("isSkills", "Match", "Skills", false),
+        autonConfig("isDisabled", "Is Disabled", false)
     };    
 }
 
@@ -98,6 +99,11 @@ void AutonSystem::generatePath() {
     queueSystemPtr->clear();
     // Build Path
     
+    if (botAI.getConfig("isDisabled")) {
+        mainControllerMessage("Auton Disabled", 5);
+    }
+
+
     // Old Path System
     /*runningSkills = getConfig("isSkills");
     if (runningSkills) {

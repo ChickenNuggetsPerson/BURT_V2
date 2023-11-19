@@ -9,11 +9,6 @@ using namespace vex;
 
 // Debug Functions
 void rightPressed() {
-  //botAI.setForceStop(false);
-  //botAI.driveDist(24*2); 
-  //botAI.driveDist(24);
-  //botAI.gotoLoc(botAI.getStartPos());
-  //botAI.setForceStop(true);
 
 };
 void leftPressed() {
@@ -30,14 +25,7 @@ void upPressed() {
   
 }
 void downPressed() {
-  while (true)
-  {
-    queuingSystem.clear();
-    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_TURNTO, 90));
-    queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_TURNTO, -90));
-    queuingSystem.runQueue();
-  }
-  
+
 }
 
 // Setup callbacks and initialize auton
@@ -67,6 +55,17 @@ void pre_auton(void) {
 
 
 void autonomous(void) { 
+
+  if (botAI.getConfig("isDisabled")) {
+    return;
+  }
+
+  if (!Brain.SDcard.isInserted()) {
+    mainControllerMessage("SD Card not Inserted", 5);
+    
+    return;
+  }
+
   queuingSystem.autonStarted(); 
 }
 
