@@ -148,21 +148,6 @@ void OdometrySystem::updateTilePos() {
     currentTilePosition = TilePosition(Position(globalX, globalY, globalRot));
 };
 
-
-// Keeps a running average of the last 10 readings of the inertial sensor
-void OdometrySystem::calcInertialAvg() {
-    for (int i=0; i < inertialAvgSize - 1; i++) {
-        inertialLastVals[i] = inertialLastVals[i + 1];
-    }
-    inertialLastVals[inertialAvgSize - 1] = misc::degreeToRad(inertialSensor.rotation(rotationUnits::deg));
-    double tempAvg = 0.00;
-    for (int i=0; i < inertialAvgSize; i++) {
-        tempAvg += inertialLastVals[i];
-    }
-    inertialAvg = tempAvg / inertialAvgSize;
-}
-
-
 // Reset the encoders
 void OdometrySystem::resetEncoders() {
     rightMotorA.resetPosition();
@@ -200,8 +185,9 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     // Calculate the arc lengths
     newData.deltaRight = newRightEncoder - oldData.rightEncoder;
     newData.deltaLeft = newLeftEncoder - oldData.leftEncoder;
-    calcInertialAvg();
-    newData.heading = inertialAvg;    
+
+
+    newData.heading = inertialAverager.iterate(misc::degreeToRad(inertialSensor.rotation(rotationUnits::deg)));    
     newData.deltaHeading = newData.heading - oldData.heading;
 
 

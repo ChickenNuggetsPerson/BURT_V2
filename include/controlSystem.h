@@ -163,13 +163,12 @@ namespace controlSystem {
             }
 
             void reset() {
-                //DEBUGLOG("Reset");
+                DEBUGLOG("Reset");
 
                 this->running = true;
-                this->motorPtr->spin(vex::directionType::fwd, 5, vex::voltageUnits::volt);
+                this->motorPtr->spin(vex::directionType::fwd, 8, vex::voltageUnits::volt);
                 int countDown = 100;
                 while (this->motorPtr->torque(vex::torqueUnits::Nm) < 0.3 || countDown > 0) {
-                    //DEBUGLOG("Torque: ", this->motorPtr->torque(vex::torqueUnits::Nm));
                     wait(3, vex::timeUnits::msec);
                     countDown--;
                 }
@@ -178,10 +177,10 @@ namespace controlSystem {
                 this->running = false;
             }
             void launch() {
-                //DEBUGLOG("Launch");
+                DEBUGLOG("Launch");
 
                 this->running = true;
-                this->motorPtr->spin(vex::directionType::fwd, 10, vex::voltageUnits::volt);
+                this->motorPtr->spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
                 while ((int)this->motorPtr->position(vex::rotationUnits::deg) % 360 < 180) {
                     wait(3, vex::timeUnits::msec);
                 }

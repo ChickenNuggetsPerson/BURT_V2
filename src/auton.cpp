@@ -479,6 +479,8 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     turnPid.setMin(-12);
     double turnPower = 0.00;
 
+    misc::ValueAverager turnWantAvg = misc::ValueAverager();
+
     bool traveling = true;
 
     int targetIndex = 0;
@@ -493,14 +495,17 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
         currentPos = odometrySystemPointer->currentPos();
 
         travelDist = distBetweenPoints(currentPos, pos.at(targetIndex));
-        if (targetIndex < numOfTargets - 1) {
+        
+        // if (targetIndex < numOfTargets - 1) {
             //travelDist += distBetweenPoints(pos.at(targetIndex), pos.at(targetIndex + 1)) / 2;
-        }
+        // }
 
         desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos.at(targetIndex)));
 
         double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
-        double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
+        double turnWant = turnWantAvg.iterate(
+            findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)
+        );
         turnPower = turnPid.iterate(turnCurrent, turnWant);
 
     
@@ -508,17 +513,17 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
         drivePower = 8;
 
         double turnError = fabs(turnWant - turnCurrent);
+        drivePower = drivePower * pow(0.98, turnError);
 
         counter ++;
         if (counter % 10 == 0) {
-            DEBUGLOG(turnError);
+            // DEBUGLOG(centerPower);
         }
 
-        // if (turnError > 5) {
-            // drivePower = drivePower * ( (pow(turnError, -0.1) / 0.5 ) - 0.75 );
-        // }
+        
 
-
+        // double leftPower = - centerPower;
+        // double rightPower =  centerPower;
 
         double leftPower = drivePower - turnPower;
         double rightPower = drivePower + turnPower;

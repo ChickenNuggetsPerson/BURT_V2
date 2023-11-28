@@ -4,6 +4,7 @@
 
 #include "robotConstants.h"
 
+#include "misc.h"
 #include "tasks.h"
 #include "displayer.h"
 #include "auton.h"
@@ -13,7 +14,7 @@
 #include "mainController.h"
 #include "altController.h"
 #include "controlSystem.h"
-#include "misc.h"
+
 
 
 using namespace vex;

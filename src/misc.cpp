@@ -8,28 +8,38 @@
 
 vex::mutex sdReaderMutex;
 
+int isWriting = 0;
+int readTimeout = 50;
+
 int misc::readFile(const char* fileName) {
-  //DEBUGLOG("Reading File: ", fileName);
+
   sdReaderMutex.lock();
+
+  isWriting = readTimeout;
+
   std::fstream readStream(fileName, std::ios_base::in);
   int readVal;
   readStream >> readVal;
   sdReaderMutex.unlock();
+  
   return readVal;
 }
 double misc::readFileDouble(const char* fileName) {
-  //DEBUGLOG("Reading File: ", fileName);
+
   sdReaderMutex.lock();
+  isWriting = readTimeout;
   std::fstream readStream(fileName, std::ios_base::in);
   int readVal;
   readStream >> readVal;
   sdReaderMutex.unlock();
+  
   return readVal;
 }
 
 void misc::writeFile(const char* fileName, int numToWrite) {
-  //DEBUGLOG("Writing File: ", fileName);
+
   sdReaderMutex.lock();
+  isWriting = readTimeout;
   std::ofstream writeStream(fileName);
 
   std::ostringstream writeString;
@@ -38,10 +48,12 @@ void misc::writeFile(const char* fileName, int numToWrite) {
   writeStream << writeString.str();
   writeStream.close();
   sdReaderMutex.unlock();
+  
 }
 void misc::writeFile(const char* fileName, double numToWrite) {
-  //DEBUGLOG("Writing File: ", fileName);
+
   sdReaderMutex.lock();
+  isWriting = readTimeout;
   std::ofstream writeStream(fileName);
 
   std::ostringstream writeString;
@@ -50,20 +62,24 @@ void misc::writeFile(const char* fileName, double numToWrite) {
   writeStream << writeString.str();
   writeStream.close();
   sdReaderMutex.unlock();
+  
 };
 
 void misc::writeFile(const char* fileName, const char* content) {
-  //DEBUGLOG("Writing File: ", fileName);
+
   sdReaderMutex.lock();
+  isWriting = readTimeout;
   std::ofstream writeStream(fileName);
   writeStream << content;
   writeStream.close();
   sdReaderMutex.unlock();
+  
 };
 
 void misc::appendFile(const char* fileName, int numToAppend) {
-  //DEBUGLOG("Appending File: ", fileName);
+
   sdReaderMutex.lock();
+  isWriting = readTimeout;
   std::ofstream writeStream(fileName, std::ios_base::app);
 
   std::ostringstream writeString;
@@ -72,21 +88,25 @@ void misc::appendFile(const char* fileName, int numToAppend) {
   writeStream << writeString.str();
   writeStream.close();
   sdReaderMutex.unlock();
+  
 }
 
 void misc::appendFile(const char* fileName, const char* content) {
-  //DEBUGLOG("Appending File: ", fileName);
+
   sdReaderMutex.lock();
+  isWriting = readTimeout;
   std::ofstream writeStream;
   writeStream.open(fileName, std::ios_base::app);
   writeStream << "\n" << content;
   writeStream.close();
   sdReaderMutex.unlock();
+  
 };
 
 bool misc::copyFile(const char* file, const char* dest) {
-  //DEBUGLOG("Copying File: ", file);
+
   sdReaderMutex.lock();
+  isWriting = readTimeout;
   std::string line;
   std::ifstream origonal{file};
   std::ofstream outFile{dest};
@@ -96,25 +116,30 @@ bool misc::copyFile(const char* file, const char* dest) {
       outFile << line << "\n";
     }
     sdReaderMutex.unlock();
+    
     return true;
   } else {
     origonal.close();
     outFile.close();
     sdReaderMutex.unlock();
+    
     return false;
   }
 }
 
 
 bool misc::fileExists(const char* name) {
-  //DEBUGLOG("Checking File: ", name);
+
   sdReaderMutex.lock();
+  isWriting = readTimeout;
   if (FILE *file = fopen(name, "r")) {
       fclose(file);
       sdReaderMutex.unlock();
+      
       return true;
   } else {
       sdReaderMutex.unlock();
+      
       return false;
   }   
 }
@@ -138,6 +163,8 @@ double misc::limitAngle(double angle) {
 // Example Code I found Online... I Will have to do more research on this
 DynamicJsonDocument* misc::readJsonFromFile(const std::string& filePath) {
   sdReaderMutex.lock();
+  isWriting = readTimeout;
+
   std::ifstream file(filePath);  // Open the file and position the stream at the end
   if (!file.is_open()) { 
     sdReaderMutex.unlock();
@@ -155,6 +182,7 @@ DynamicJsonDocument* misc::readJsonFromFile(const std::string& filePath) {
 
   file.close();
   sdReaderMutex.unlock();
+  
 
   // Fix this... For some reason, it always says No Memory
   switch (error.code()) {
@@ -180,14 +208,18 @@ DynamicJsonDocument* misc::readJsonFromFile(const std::string& filePath) {
 
 bool misc::writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData) {
   sdReaderMutex.lock();
+  isWriting = readTimeout;
+
   std::ofstream file(filePath);
   if (file.is_open()) {
     serializeJson(jsonData, file);
     file.close();
     sdReaderMutex.unlock();
+    
     return true;
   } else {
     sdReaderMutex.unlock();
+    
     return false;
   }
 }

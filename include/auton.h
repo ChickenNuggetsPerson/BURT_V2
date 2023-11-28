@@ -80,7 +80,6 @@ namespace auton {
   };
 
 
-
   struct autonConfig {
     std::string id;
 
@@ -182,7 +181,6 @@ namespace auton {
       bool setWingsStatus(bool status);
   };
 
-
   class aiQueueSystem {
     private:
       AutonSystem* aiPtr;
@@ -210,4 +208,5 @@ namespace auton {
 
       void autonStarted();
   };
+
 }

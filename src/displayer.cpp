@@ -741,9 +741,18 @@ int brainDisplayer() {
         double startTime = Brain.timer(msec);
         Brain.Screen.clearScreen();
         mainRenderer.render(); // Render the screen
+
         Brain.Screen.setFont(fontType::mono15);
+        Brain.Screen.setFillColor(isWriting > 0 ? vex::color::red : vex::color::transparent);
+        
+        if (isWriting >= 0) {
+            isWriting--;
+        }
+
+        Brain.Screen.drawRectangle(-1, 220, 75, 20);
         Brain.Screen.printAt(1, 235, "FPS: %d", int(deltaTime)); // Show the screen FPS
         deltaTime = 1000 / (round(Brain.timer(msec) - startTime)); // Calculate the fps
+        
         Brain.Screen.render(); // Use the Screen.Render() to stop visual bugs
     }
 

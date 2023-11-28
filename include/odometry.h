@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vex.h"
+#include "misc.h"
 
 namespace odom {
 
@@ -66,11 +67,7 @@ namespace odom {
             TilePosition currentTilePosition;
             void updateTilePos();
 
-            // Keeps a running average of the inertial sensor's readings to reduce noise from the sensor
-            const int inertialAvgSize = 10;
-            double inertialLastVals[10] = {0.00};
-            double inertialAvg;
-            void calcInertialAvg();
+            misc::ValueAverager inertialAverager = misc::ValueAverager();
 
             // Tracks changes in position between odom steps
             odomRawData lastData; 

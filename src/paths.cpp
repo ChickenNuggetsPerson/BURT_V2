@@ -10,7 +10,7 @@ autonPath buildPath(int pathID) {
     autonPath path = autonPath();
     
 
-    // pathID = AUTON_PATH_TEST;
+    pathID = AUTON_PATH_TEST;
 
     switch (pathID) {
         case AUTON_PATH_LEFT: {
@@ -106,28 +106,16 @@ autonPath buildPath(int pathID) {
             break;
         }         
         case AUTON_PATH_TEST: {
-            path.startPos = odom::tilePosToPos(TilePosition(0,0));
+            path.startPos = odom::tilePosToPos(TilePosition(1,0));
             brainFancyDebug("Building AUTON_PATH_TEST", vex::color::cyan);
 
-            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_CALIBRATE));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_DELAY, 500));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_SET, 0));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_ARM_RELEASE));
-
-            /*
+            
             path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, {
-                odom::TilePosition(0, 0),
-                odom::TilePosition(0, 3),
-                odom::TilePosition(-3, 6),
-                odom::TilePosition(-3, 15),
-                odom::TilePosition(-4, 21),
-                odom::TilePosition(-3, 26),
-                odom::TilePosition(0, 21),
-                odom::TilePosition(-3, 15),
-                odom::TilePosition(-3, 4),
-                odom::TilePosition(0, 0, 0)
+                odom::TilePosition(4, 0),
+                odom::TilePosition(4, 0),
+                odom::TilePosition(4, 0),
             }));
-            */
+            
             
             break;
         }

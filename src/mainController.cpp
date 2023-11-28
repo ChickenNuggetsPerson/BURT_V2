@@ -23,9 +23,6 @@ double rightFB = 0;
 
 double turn = 0;
 
-
-controlSystem::MotorController motorController(&mainController);
-
 bool questioning = false;
 void toggleHold() {
   if (questioning)
