@@ -28,15 +28,15 @@ motor_group RightDriveSmart = motor_group(rightMotorA, rightMotorB);
 
 smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSensor, 319.19, 254, 254, mm, 1);
 
-motor frontArmMotor(frontArmMotorPort, ratio36_1, true);
-controlSystem::MotorHolder frontArmHolder(&frontArmMotor, pid::PIDConfig(0.2, 0.00, 0.0), rotationUnits::deg);
 
-motor cataArmMotor(cataMotorPort, gearSetting::ratio36_1, true);
-controlSystem::CatapultSystem cataSystem(&cataArmMotor);
+motor leftArmMotor = motor(leftArmMotorPort, ratio36_1, true);
+motor rightArmMotor = motor(rightArmMotorPort, ratio36_1, false);
+
+motor catapultMotor = motor(cataMotorPort, ratio36_1, false);
+StateMachine wingStateMachine;
 
 controller mainController = controller(primary);
 controller altController = controller(partner);
-
 
 
 // Start all of the background tasks

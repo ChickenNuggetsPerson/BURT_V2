@@ -44,11 +44,13 @@ int adjustingNumber(void* pagePointer) {
 
     return 1;
 };
+// Page updater task
 int mainDataUpdater(void* pageToUpdate) {
     Page* pagePointer = (Page*)pageToUpdate;
     pagePointer->updateData();
     return 1;
 }
+// Motor temperature check task
 bool notMotorCheck(void* motorToCheck) {
     motor* motorPointer = (motor*)motorToCheck;
     return motorPointer->temperature(temperatureUnits::celsius) >= motorWarnTemp;
@@ -99,7 +101,7 @@ void Logger::reloadLogger(const char* outFile) {
         logFile = outFile;
     }
     //isSaving = Brain.SDcard.isInserted();
-    isSaving = false; // I suspect the log system is causing weird sd card issues
+    isSaving = false; // I suspect the log system is causing weird sd card issues, so I am setting this to false
     if (!isSaving) { 
         initialized = true;   
         return; 
@@ -593,12 +595,6 @@ void Plot::draw() {
                     break;
                 case AUTON_MOVE_TURNTO:
                     //return pointer->turnTo(move.pos.rot);
-                    break;
-                case AUTON_MOVE_PICKUP_ACORN:
-                    //return pointer->pickupAcorn();
-                    break;
-                case AUTON_MOVE_DROPOFF_ACORN:
-                    //return pointer->dropAcorn();
                     break;
             }
             i++;

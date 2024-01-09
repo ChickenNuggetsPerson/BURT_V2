@@ -4,55 +4,160 @@
 using namespace vex;
 
 
-// Controller Stuff
+//  Wing State Machine Functions
+const double Wing_rotationOne = 30;
+const double Wing_rotationTwo = 445;
+const double Wing_rotationThree = 870;
+const double Wing_rotationClose = 1010;
+const double Wing_Speed = 2000;
 
-double motorMaxSpeed = 0.8;
-double boostMotorSpeed = 1;
-void setNewDriveMax(double max) {
-  motorMaxSpeed = max;
-};
+#define WingBtnCheck() { int btn = getBtnPressed(); if (btn != -1) { return btn; } };
+int getBtnPressed() {
+  if (mainController.ButtonB.pressing()) // B
+      return W_pos1;
+  if (mainController.ButtonA.pressing()) // A
+      return W_pos2;
+  if (mainController.ButtonY.pressing()) // Y
+      return W_pos3;
+  if (mainController.ButtonX.pressing()) // X
+      return W_close;
+  if (mainController.ButtonDown.pressing()) // Down
+      return W_CataAlign;
+
+  if (mainController.ButtonR1.pressing() || mainController.ButtonR2.pressing() || mainController.ButtonL1.pressing() || mainController.ButtonL2.pressing())
+      return W_loose;
+
+  return -1;
+}
+int wingLooseState() {
+
+  int leftDir = 0;
+  int rightDir = 0;
+
+  if (mainController.ButtonR1.pressing()) 
+      rightDir++;
+  if (mainController.ButtonR2.pressing()) 
+      rightDir--;
+
+  if (mainController.ButtonL1.pressing()) 
+      leftDir++;
+  if (mainController.ButtonL2.pressing()) 
+      leftDir--;
+
+  leftArmMotor.spin(vex::directionType::fwd, 10 * leftDir, vex::voltageUnits::volt);
+  rightArmMotor.spin(vex::directionType::fwd, 10 * rightDir, vex::voltageUnits::volt);
+
+  WingBtnCheck()
+
+  return W_loose;
+}
+int wingPos1State() {
+  rightArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+
+  WingBtnCheck()
+
+  return W_pos1;
+}
+int wingPos2State() {
+  rightArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+
+  WingBtnCheck()
+
+  return W_pos2;
+}
+int wingPos3State() {
+  rightArmMotor.spinToPosition(Wing_rotationThree, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(Wing_rotationThree, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+
+  WingBtnCheck()
+
+  return W_pos3;
+}
+int wingCloseState() {
+  rightArmMotor.spinToPosition(Wing_rotationClose, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(Wing_rotationClose, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+
+  WingBtnCheck()
+
+  return W_close;
+}
+int wingCataAlignState() {
+  // Fix this
+
+  rightArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+
+  WingBtnCheck()
+
+  return W_CataAlign;
+}
+int wingLeftAutonState() {
+  
+  // Also fix this
+
+  rightArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+
+  WingBtnCheck()
+
+  return W_LeftAutonPoleTouch;
+}
 
 
-double motorFL = 0;
-double motorFR = 0;
-double motorBL = 0;
-double motorBR = 0;
+bool cata_autoLaunch = false;
+void startCatapult() {
+    cata_autoLaunch = true;
+}
+void stopCatapult() {
+    cata_autoLaunch = false;
+}
+void toggleCata() {
+    cata_autoLaunch = !cata_autoLaunch;
+}
+auto upBtn = ButtonSystem(&Brain, &mainController, ButtonSystem_Btn::Up, false, startCatapult, stopCatapult, 0.00);
+auto leftBtn = ButtonSystem(&Brain, &mainController, ButtonSystem_Btn::Left, true, toggleCata, toggleCata, 10);
+void catapultCheck() {
+    upBtn.check();
+    leftBtn.check();
 
-double leftFB = 0;
-double rightFB = 0;
+    if (cata_autoLaunch) {
+        catapultMotor.spin(vex::directionType::fwd, 10, vex::voltageUnits::volt);
+    } else {
+        catapultMotor.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+    }
+}
 
-double turn = 0;
+
+
+
+
+
 
 bool questioning = false;
-void toggleHold() {
-  if (questioning)
-    return;
-  frontArmHolder.setRunning(true);
-  frontArmHolder.setNewVal(70);
-
-  DEBUGLOG("Max Speed: ", 10);
-}
-
-bool armsOpen = false;
-void toggleArms() {
-  armsOpen = !armsOpen;
-}
-void setWingsOpen(bool status) {
-  armsOpen = status;
-};
-
-bool reversedDrive = false;
-
 int controllerTask() {
 
-  vex::digital_out solenoid_A = vex::digital_out(Brain.ThreeWirePort.B);
-  vex::digital_out solenoid_B = vex::digital_out(Brain.ThreeWirePort.C);
-  vex::digital_out solenoid_Master = vex::digital_out(Brain.ThreeWirePort.A);
+  wingStateMachine.addState(W_loose, wingLooseState);
+  wingStateMachine.addState(W_pos1, wingPos1State);
+  wingStateMachine.addState(W_pos2, wingPos2State);
+  wingStateMachine.addState(W_pos3, wingPos3State);
+  wingStateMachine.addState(W_close, wingCloseState);
+  wingStateMachine.addState(W_CataAlign, wingCataAlignState);
+  wingStateMachine.addState(W_LeftAutonPoleTouch, wingLeftAutonState);
+  wingStateMachine.start(W_pos1);
 
-  solenoid_Master.set(true);
 
-  mainController.ButtonA.pressed(toggleHold);
-  mainController.ButtonB.pressed(toggleArms);
+  // Set up variables
+  double motorFL = 0;
+  double motorFR = 0;
+  double motorBL = 0;
+  double motorBR = 0;
+
+  double leftFB = 0;
+  double rightFB = 0;
+
+  double turn = 0;
 
   DEBUGLOG("Starting controller");
 
@@ -69,15 +174,6 @@ int controllerTask() {
   rightMotorA.setVelocity(0, percent);
   rightMotorB.setVelocity(0, percent);
 
-  frontArmMotor.spin(fwd);
-  //frontArmMotor.setBrake(brakeType::brake);
-  frontArmMotor.setVelocity(0, percent);
-  frontArmMotor.setPosition(0, degrees);
-  frontArmHolder.setRunning(false);
-
-  cataArmMotor.spin(fwd);
-  cataArmMotor.setVelocity(0, percent);
-  cataArmMotor.setBrake(brakeType::coast);
 
   bool wasStopped = false;
 
@@ -90,6 +186,20 @@ int controllerTask() {
   int frontArmVal = 0;
   int cataArmMove = 0;
 
+
+  // Set up the wings
+  leftArmMotor.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
+  rightArmMotor.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
+
+	vex::wait(800, vex::timeUnits::msec);
+
+	leftArmMotor.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+  rightArmMotor.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+
+	leftArmMotor.setPosition(0, vex::rotationUnits::deg);
+  rightArmMotor.setPosition(0, vex::rotationUnits::deg);
+
+
   // Main driving loop
   while(true) {
 
@@ -101,24 +211,7 @@ int controllerTask() {
       if (!inertialSensor.isCalibrating()) {
         leftFB = mainController.Axis3.position();
         rightFB = mainController.Axis2.position();
-
-        leftFB = leftFB * motorMaxSpeed;
-        rightFB = rightFB * motorMaxSpeed;
-
-        turn = (mainController.Axis1.position() * motorMaxSpeed);
-      }
-
-      if (mainController.ButtonR2.pressing()) {
-        frontArmVal = 10;
-        frontArmMotor.setBrake(brakeType::brake);
-      }
-      if (mainController.ButtonL2.pressing()) {
-        frontArmVal = -10;
-        frontArmMotor.setBrake(brakeType::brake);
-      }
-
-      if ((mainController.ButtonR2.pressing() || mainController.ButtonL2.pressing()) && frontArmHolder.getRunning()) {
-        frontArmHolder.setRunning(false);
+        turn = mainController.Axis1.position();
       }
 
       cataArmMove = 0;
@@ -129,22 +222,14 @@ int controllerTask() {
     }
     
     if (tankDrive) { // Andrew Drive
-      if (false) {
-        motorFL = rightFB * -1;
-        motorFR = leftFB * -1;
+      motorFL = leftFB;
+      motorFR = rightFB;
 
-        motorBL = rightFB * -1;
-        motorBR = leftFB * -1;
-      } else {
-        motorFL = leftFB;
-        motorFR = rightFB;
-
-        motorBL = leftFB;
-        motorBR = rightFB;
-      }
+      motorBL = leftFB;
+      motorBR = rightFB;
 
     } else { // Hayden Drive
-      if (false) { leftFB *= -1; }  // Reverse driving when arms are open
+
       motorFL = leftFB + turn;
       motorFR = leftFB - turn;
 
@@ -175,18 +260,14 @@ int controllerTask() {
       rightMotorA.setVelocity(motorFR, percentUnits::pct);
       rightMotorB.setVelocity(motorBR, percentUnits::pct);
 
-      cataSystem.setSpeed(cataArmMove);
-
     } else {
       wasStopped = true;
     }
 
-    // iterate over holders
-    frontArmMotor.spin(fwd, frontArmVal, voltageUnits::volt);
-    frontArmHolder.iterate();
-    
-    solenoid_A.set(!armsOpen);
-    solenoid_B.set(!armsOpen);
+    // iterate over systems
+    wingStateMachine.iterate();
+    catapultCheck();
+
 
     // wait before repeating the process
     vex::wait(20, msec);

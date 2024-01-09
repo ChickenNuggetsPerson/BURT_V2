@@ -22,15 +22,17 @@ static const int AUTON_MOVE_DRIVE_DIST = 1;
 static const int AUTON_MOVE_GOTO = 2;
 static const int AUTON_MOVE_LONGGOTO = 3;
 static const int AUTON_MOVE_TURNTO = 4;
-static const int AUTON_MOVE_PICKUP_ACORN = 5;
-static const int AUTON_MOVE_DROPOFF_ACORN = 6;
+// static const int AUTON_MOVE_PICKUP_ACORN = 5;   
+// static const int AUTON_MOVE_DROPOFF_ACORN = 6;
 static const int AUTON_MOVE_DRIVE_REVERSE = 7;
-static const int AUTON_MOVE_ARM_SET = 8;
-static const int AUTON_MOVE_ARM_RELEASE = 9;
-static const int AUTON_MOVE_WINGS_OPEN = 10;
-static const int AUTON_MOVE_WINGS_CLOSE = 11;
+// static const int AUTON_MOVE_ARM_SET = 8;     
+// static const int AUTON_MOVE_ARM_RELEASE = 9;   
+// static const int AUTON_MOVE_WINGS_OPEN = 10;
+// static const int AUTON_MOVE_WINGS_CLOSE = 11;
 static const int AUTON_MOVE_CATAPULT = 12;
-static const int AUTON_MOVE_ARM_CALIBRATE = 13;
+// static const int AUTON_MOVE_ARM_CALIBRATE = 13;
+
+static const int AUTON_MOVE_WING_SET_STATE = 14;
 
 namespace auton {
 
@@ -174,11 +176,7 @@ namespace auton {
 
       bool reverseDrive(double distance);
 
-      bool pickupAcorn();
-      bool dropAcorn();
-
-      bool catapult(int times);
-      bool setWingsStatus(bool status);
+      bool catapult(int launchTime);
   };
 
   class aiQueueSystem {

@@ -3,6 +3,20 @@
 
 <br>
 
+## Pros to C++ Switch TODO
+- [ ] Change wings to State Machine
+  - [X] Refactor State Machine Class for C++ 
+  - [X] Add wing motors
+  - [X] Change wings over to state machine
+  - [X] Redo Auton Functions
+  - [X] Redo Auton Logic ( Catapult Logic, Wing Logic )
+- [ ] Simplify Auton Selector System
+- [ ] Have Auton Verification sent to controller
+- [ ] Implement new controller layout
+- [ ] Maybe switch catapult to flywheel system ( Regardless, use state machine )
+
+<br>
+
 [BURT Path Builder](https://github.com/ChickenNuggetsPerson/BURT_V2_Path_Visualizer)
 
 ![HomePage](images/brain/home.png)

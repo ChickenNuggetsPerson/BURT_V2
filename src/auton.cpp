@@ -590,101 +590,17 @@ bool AutonSystem::reverseDrive(double distance) {
     return true;
 }
 
-
-// Pickup the acorn using the vision sensor to center it
-bool AutonSystem::pickupAcorn() {
-
+bool AutonSystem::catapult(int launchTime) {
     CheckOdomStatus();
-    if (!visionSensor.installed()) {
-        brainError("Vision Sensor not initialized");
-        return false;
-    }
-    CheckForceStop();
-    
-    bool wasrunning = running;
-    running = true;
 
-    frontArmHolder.setNewVal(0);
-    frontArmHolder.setRunning(true);
+    startCatapult();
 
-    pid::PID turnPid(pid::PIDConfig(0.15, 0.00, 0.10), 50);
-    turnPid.setMax(12);
-    turnPid.setMin(-12);
+    vex::wait(launchTime, vex::timeUnits::sec);
 
-    while (true) {
-        visionSensor.takeSnapshot(SIG_1);
-        double centerPercent = (double)visionSensor.largestObject.centerX / 350.00;
-        double turnPower = turnPid.iterate(centerPercent * 100);
+    stopCatapult();
 
-        LeftDriveSmart.spin(directionType::fwd, -turnPower + 4, volt);
-        RightDriveSmart.spin(directionType::fwd, turnPower + 4, volt);
-
-        DEBUGLOG("Acorn Pid Power: ", turnPower);
-        DEBUGLOG("DIST: ", visionSensor.largestObject.width);
-
-        if (visionSensor.largestObject.width > 265) { break; }
-
-        wait(0.05, seconds);
-    }
-
-    LeftDriveSmart.spin(directionType::fwd, 0, volt);
-    RightDriveSmart.spin(directionType::fwd, 0, volt);
-
-    // Pickup Acorn Logic
-    frontArmHolder.setRunning(true);
-    frontArmHolder.setNewVal(100);
-
-    wait(0.5, seconds);
-
-    LeftDriveSmart.spin(directionType::fwd, -4, volt);
-    RightDriveSmart.spin(directionType::fwd, -4, volt);
-
-    wait(0.5, seconds);
-
-    frontArmHolder.setRunning(false);
-
-    LeftDriveSmart.spin(directionType::fwd, 0, volt);
-    RightDriveSmart.spin(directionType::fwd, 0, volt);
-
-    running = wasrunning;
-    return true;
-
-};
-bool AutonSystem::dropAcorn() {
-
-    CheckOdomStatus();
-    CheckForceStop();
-    
-    bool wasrunning = running;
-    running = true;
-
-    // Drop Acorn Logic
-    frontArmHolder.setRunning(true);
-    frontArmHolder.setNewVal(0);
-
-    wait(0.5, seconds);
-
-    frontArmHolder.setRunning(false);    
-
-    running = wasrunning;
-    return true;
-}
-
-bool AutonSystem::catapult(int times) {
-    CheckOdomStatus();
-    for (int i = 0; i < times; i++) {
-        if (this->forceStop) { return false; }
-        cataSystem.reset();
-        cataSystem.launch();
-    }
     return true;
 };
-bool AutonSystem::setWingsStatus(bool status) {
-    CheckOdomStatus();
-    setWingsOpen(status);
-    return true;
-}
-
 
 
 #include "libs/spline.h"
@@ -873,44 +789,15 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
             DEBUGLOG("AUTO RUN: Turn To");
             return aiPtr->turnTo(movement.val);
 
-        case AUTON_MOVE_PICKUP_ACORN:
-            DEBUGLOG("AUTO RUN: Pickup Acorn");
-            return aiPtr->pickupAcorn();
-
-        case AUTON_MOVE_DROPOFF_ACORN:
-            DEBUGLOG("AUTO RUN: Drop off Acorn");
-            return aiPtr->dropAcorn();
-
-        case AUTON_MOVE_ARM_SET:
-            DEBUGLOG("AUTO RUN: Arm Set");
-            frontArmHolder.setRunning(true);
-            frontArmHolder.setNewVal(movement.val);
-            DEBUGLOG("New Front Arm: ", movement.val);
-            wait(0.5, sec);
-            return true;
-
-        case AUTON_MOVE_ARM_RELEASE:
-            DEBUGLOG("AUTO RUN: Arm Release");
-            frontArmHolder.setRunning(false);
-            return true;
-
-        case AUTON_MOVE_ARM_CALIBRATE:
-            DEBUGLOG("AUTO RUN: Calibrate Arm");
-            frontArmHolder.calibrate();
-            wait(1.1, seconds);
-            return true;
-
         case AUTON_MOVE_CATAPULT:
             DEBUGLOG("AUTO RUN: Catapult");
             return aiPtr->catapult(movement.val);
 
-        case AUTON_MOVE_WINGS_OPEN:
-            DEBUGLOG("AUTO RUN: Wings Open");
-            return aiPtr->setWingsStatus(true);
-
-        case AUTON_MOVE_WINGS_CLOSE:
-            DEBUGLOG("AUTO RUN: Wings Close");
-            return aiPtr->setWingsStatus(false);
+        case AUTON_MOVE_WING_SET_STATE:
+            DEBUGLOG("AUTO RUN: Wing Set State");
+            wingStateMachine.setState(movement.val);
+            vex::wait(600, vex::timeUnits::msec);
+            return true;
 
         default:
             return false;

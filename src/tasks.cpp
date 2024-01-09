@@ -7,26 +7,6 @@
 
 using namespace vex;
 
-// Debug Functions
-void rightPressed() {
-
-};
-void leftPressed() {
-  while (true) {
-    cataSystem.reset();
-    cataSystem.launch();
-    if (mainController.ButtonRight.pressing()) {
-      break;
-    }
-  }
-};
-void upPressed() {
-  //botAI.gotoLoc(botAI.getStartPos());
-  
-}
-void downPressed() {
-
-}
 
 // Setup callbacks and initialize auton
 void pre_auton(void) {
@@ -42,11 +22,6 @@ void pre_auton(void) {
   altController.ButtonDown.pressed(debugDisable);
   altController.ButtonLeft.pressed(debugAuton);
   altController.ButtonRight.pressed(debugDriver);
-
-  mainController.ButtonRight.pressed(rightPressed);
-  mainController.ButtonLeft.pressed(leftPressed);
-  mainController.ButtonUp.pressed(upPressed);
-  mainController.ButtonDown.pressed(downPressed);
 
   startTasks();
   inertialSensor.startCalibration(); // Start the calibration right away
@@ -72,9 +47,7 @@ void autonomous(void) {
 
 void usercontrol(void) {
   brainFancyDebug("UserControl Started", vex::color::green, true);
-  
   botAI.setForceStop(true);
-  frontArmHolder.setRunning(false);
 }
 
 void whenStarted(void) {

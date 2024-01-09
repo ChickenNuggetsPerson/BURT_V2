@@ -2,6 +2,14 @@
 #include "vex.h"
 #include "vector"
 
+/*
+
+Mostly redundant code. Refer to stateMachine.h for updated code 
+
+*/
+
+
+
 namespace controlSystem {
 
     enum MovementType {
@@ -152,9 +160,12 @@ namespace controlSystem {
             double rotation = 0.00;
             bool running = false;
 
+            vex::controller* controllerPtr;
+
         public:
-            CatapultSystem(vex::motor* ptr) {
+            CatapultSystem(vex::motor* ptr, vex::controller* controllerPtr) {
                 this->motorPtr = ptr;
+                this->controllerPtr = controllerPtr;
             }
 
             void setSpeed(double volts) {
@@ -163,7 +174,9 @@ namespace controlSystem {
             }
 
             void reset() {
-                DEBUGLOG("Reset");
+                // DEBUGLOG("Reset");
+
+                if (this->running) { return; }
 
                 this->running = true;
                 this->motorPtr->spin(vex::directionType::fwd, 8, vex::voltageUnits::volt);
@@ -171,21 +184,72 @@ namespace controlSystem {
                 while (this->motorPtr->torque(vex::torqueUnits::Nm) < 0.3 || countDown > 0) {
                     wait(3, vex::timeUnits::msec);
                     countDown--;
+
+                    if (controllerPtr->ButtonRight.pressing()) {
+                        this->running = false;
+                        this->motorPtr->spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+                        return;        
+                    }
                 }
                 this->motorPtr->spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
                 this->motorPtr->resetPosition();
                 this->running = false;
             }
             void launch() {
-                DEBUGLOG("Launch");
+                if (this->running) { return; }
 
                 this->running = true;
                 this->motorPtr->spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
                 while ((int)this->motorPtr->position(vex::rotationUnits::deg) % 360 < 180) {
                     wait(3, vex::timeUnits::msec);
+
+                    if (controllerPtr->ButtonRight.pressing()) {
+                        this->running = false;
+                        this->motorPtr->spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+                        return;        
+                    }
                 }
                 this->motorPtr->spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
                 this->running = false;
             }
+
+            void holdDown() {
+                if (this->running) { return; }
+
+                this->running = true;
+
+
+                this->motorPtr->spin(vex::directionType::rev, 8, vex::voltageUnits::volt);
+                while (fabs(this->motorPtr->torque(vex::torqueUnits::Nm)) < 1) {
+                    wait(3, vex::timeUnits::msec);
+                    
+                    if (controllerPtr->ButtonRight.pressing()) {
+                        this->running = false;
+                        this->motorPtr->spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+                        return;        
+                    }
+                }
+                this->motorPtr->spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+
+
+                wait(100, vex::timeUnits::msec);
+
+
+                this->motorPtr->setPosition(0, vex::rotationUnits::deg);
+                this->motorPtr->spin(vex::directionType::fwd, 8, vex::voltageUnits::volt);
+                while ((int)this->motorPtr->position(vex::rotationUnits::deg) < 366) {
+                    wait(1, vex::timeUnits::msec);
+
+                    if (controllerPtr->ButtonRight.pressing()) {
+                        this->running = false;
+                        this->motorPtr->spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+                        return;        
+                    }
+                }
+
+                this->motorPtr->spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
+                this->running = false;
+            }
+
     };
 };

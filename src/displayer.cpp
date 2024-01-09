@@ -48,8 +48,9 @@ int notificationCheck() {
     NotChecker.addMotor("RightMotorB", &rightMotorB);
     NotChecker.addMotor("LeftMotorA", &leftMotorA);
     NotChecker.addMotor("LeftMotorB", &leftMotorB);
-    NotChecker.addMotor("FrontArmMotor", &frontArmMotor);
-    NotChecker.addMotor("Catapult", &cataArmMotor);
+    NotChecker.addMotor("Catapult", &catapultMotor);
+    NotChecker.addMotor("Left Arm", &leftArmMotor);
+    NotChecker.addMotor("Right Arm", &rightArmMotor);
 
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
@@ -70,8 +71,6 @@ int updateHome(Page* self) {
     self->setProgressBarValue("battery", Brain.Battery.capacity());
     self->setLineGraphValue("batWatt", Brain.Battery.current(currentUnits::amp) * Brain.Battery.voltage(voltageUnits::volt));
     
-    setNewDriveMax(self->getAdjustNum("speedChange"));
-
     if ( botAI.isRunningSkills()) {
         self->setTextData("skillsStatus", color::green, "[ Running Skills ]");
     } else {
@@ -559,13 +558,13 @@ int updateMotorDebug(Page* self) {
     self->setProgressBarValue("efr", (int)rightMotorA.efficiency());
     self->setProgressBarValue("ebl", (int)leftMotorB.efficiency());
     self->setProgressBarValue("ebr", (int)rightMotorB.efficiency());
-    self->setProgressBarValue("cat", (int)cataArmMotor.efficiency());
+    self->setProgressBarValue("cat", (int)catapultMotor.efficiency());
 
     self->setTextData("tfl", (int)floor(leftMotorA.temperature(temperatureUnits::celsius)));
     self->setTextData("tfr", (int)floor(rightMotorA.temperature(temperatureUnits::celsius)));
     self->setTextData("tbl", (int)floor(leftMotorB.temperature(temperatureUnits::celsius)));
     self->setTextData("tbr", (int)floor(rightMotorB.temperature(temperatureUnits::celsius)));
-    self->setTextData("cat", (int)floor(cataArmMotor.temperature(temperatureUnits::celsius)));
+    self->setTextData("cat", (int)floor(catapultMotor.temperature(temperatureUnits::celsius)));
 
     return 1;
 }
@@ -621,7 +620,6 @@ int brainDisplayerInit() {
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
     homePage.addLineGraph("batWatt", "Watts: %dW", 325, 100, 150, 75, false, heatGradient.finalGradient, 100);
     homePage.addDataUpdaterCB(updateHome, 0.5);
-    homePage.addAdjustableNum("speedChange", 0.8, 0.05, 1, 0, 20, 120, 100, 30, fontType::mono20, true);
 
     // Configure the map page
     mapPage.addText("Feild Map", 20, 40, color::white, fontType::mono30, "title");
