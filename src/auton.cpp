@@ -77,7 +77,9 @@ void AutonSystem::init() {
     } else {
         brainError("No SD Card");
         odometrySystemPointer->restart();
-        queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST));
+        queueSystemPtr->clear();
+
+        // queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST));
         return;
     }
 
@@ -103,8 +105,9 @@ void AutonSystem::generatePath() {
         mainControllerMessage("Auton Disabled", 5);
     }
 
-
     // Old Path System
+    // Uses JSON Files
+
     /*runningSkills = getConfig("isSkills");
     if (runningSkills) {
         queueSystemPtr->addToQueue(buildPath(AUTON_PATH_SKILLS, this)); 
@@ -131,12 +134,11 @@ void AutonSystem::generatePath() {
         if (!getConfig("startSide")) {
             // result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_LEFT_JSON);
             result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_LEFT));
+            mainControllerMessage("Running Left", 5);
         } else {
             //result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_RIGHT_JSON);
             result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_RIGHT));
-        }
-        if (!Brain.SDcard.isInserted()) {
-            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST));
+            mainControllerMessage("Running Right", 5);
         }
     }
     if (!result) {
@@ -272,11 +274,10 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
     double heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
     double target = findNearestRot(heading, deg);
     pid::PID turnPID(AUTON_TURNTO_PID_CONFIG, target);
-
+    turnPID.addBrainPtr(&Brain);
 
     double accuracy = 1;
     int checks = 8;
-
 
     double lastRot = odometrySystemPointer->currentPos().rot;
     int totalChecks = 0;
@@ -296,7 +297,7 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
         // DEBUGLOG("TURNTO PID: ", power);
 
         double deltaHeading = lastRot - heading;
-        if (deltaHeading <= accuracy && deltaHeading >= -accuracy) {
+        if (fabs(deltaHeading) <= accuracy) {
             totalChecks++;
             if (totalChecks > checks) {
                 break;
@@ -359,6 +360,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     pid::PID turnPid(AUTON_GOTO_TURN_VEl_PID_CONFIG);
     turnPid.setMax(20);
     turnPid.setMin(-20);
+    turnPid.addBrainPtr(&Brain);
     double turnPower = 0.00;
 
     bool traveling = true;
@@ -368,6 +370,8 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     LeftDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
     RightDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
 
+    misc::ValueAverager<10> turnAvg = misc::ValueAverager<10>();
+
     // Main Driving Loop
     while (traveling) {
         CheckForceStop();
@@ -375,12 +379,12 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         currentPos = odometrySystemPointer->currentPos();
 
         travelDist = distBetweenPoints(currentPos, pos);
-        desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos));
+        desiredHeading = turnAvg.iterate(misc::radToDegree(angleBetweenPoints(currentPos, pos)));
 
         // Get speedprofile index
         int speedIndex = (int)floor(((Brain.Timer.system() - startTime) / 1000.00) / motionProfiling::timeIncrement);
 
-        // Set desired velocity from the speedProfile
+        // Check if we are done with the speed profile
         if (speedIndex >= speedProfile.get()->size()) {
             traveling = false;
             break;
@@ -388,10 +392,10 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         driveVelocity = speedProfile.get()->at(speedIndex);
 
         // Get turn power
-        if (speedIndex >= speedProfile.get()->size() / 2) {
-            turnPid.setMax(10);
-            turnPid.setMin(-10);
-        }
+        // if (speedIndex >= speedProfile.get()->size() / 2) {
+        //     turnPid.setMax(10);
+        //     turnPid.setMin(-10);
+        // }
 
         double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
@@ -417,9 +421,9 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         // DEBUGLOG("GOTO Out Motor Vel: ", leftMotorVel);
         // DEBUGLOG("GOTO TURN PID: ", turnPower);
         
-        if (speedIndex >= speedProfile.get()->size()) {
-            traveling = false;
-        }
+        // if (speedIndex >= speedProfile.get()->size()) {
+        //     traveling = false;
+        // }
 
         wait(0.05, seconds);
     }
@@ -452,9 +456,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     bool wasRunning = running;
     running = true;
     
-    target.x = pos.at(0).x;
-    target.y = pos.at(0).y;
-    target.rot = pos.at(0).rot;
+    target = pos.at(0);
 
     odom::Position currentPos = odometrySystemPointer->currentPos();
 
@@ -477,9 +479,10 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     pid::PID turnPid(AUTON_GOTO_TURN_VOLT_PID_CONFIG);
     turnPid.setMax(12);
     turnPid.setMin(-12);
+    turnPid.addBrainPtr(&Brain);
     double turnPower = 0.00;
 
-    misc::ValueAverager turnWantAvg = misc::ValueAverager();
+    misc::ValueAverager<10> turnWantAvg = misc::ValueAverager<10>();
 
     bool traveling = true;
 
@@ -510,7 +513,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
 
     
         // drivePower = drivePid.iterate(travelDist);
-        drivePower = 8;
+        drivePower = 8.5;
 
         double turnError = fabs(turnWant - turnCurrent);
         drivePower = drivePower * pow(0.98, turnError);

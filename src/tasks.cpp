@@ -7,7 +7,6 @@
 
 using namespace vex;
 
-
 // Setup callbacks and initialize auton
 void pre_auton(void) {
 
@@ -54,4 +53,17 @@ void whenStarted(void) {
 
   DEBUGLOG("BATTERY STATUS: ", Brain.Battery.capacity());
 
+  return;
+
+  wait(5, vex::timeUnits::sec);
+
+  botAI.setForceStop(false);
+
+  while (true) {
+    botAI.turnTo(90);
+    wait(1, vex::timeUnits::sec);
+    botAI.turnTo(-90);
+    wait(1, vex::timeUnits::sec);
+  }
+  
 }

@@ -3,17 +3,6 @@
 
 using namespace pid;
 
-PIDConfig::PIDConfig() {
-    P = 0.00;
-    I = 0.00;
-    D = 0.00;
-};
-PIDConfig::PIDConfig(double p, double i, double d) {
-    P = p;
-    I = i;
-    D = d;
-};
-
 
 PID::PID(PIDConfig config) {
     P = config.P;
@@ -49,10 +38,23 @@ double PID::iterate(double newVal, double newDesired) {
 double PID::iterate(double newVal) {
 
     error = newVal - desiredVal;
-    derivative = error - prevError;
-    totalError += error;
+
+    if (isTimeScaling) {
+        double now = brainPtr->timer(timerUnits);
+        dt = now - lastTime;        
+
+        derivative = (error - prevError) / dt;
+        totalError += error * dt;
+
+        lastTime = now;
+
+    } else {
+        derivative = error - prevError;
+        totalError += error;
+    }
     
-    double result = error * P + derivative * D + totalError * I;
+    
+    double result = (error * P) + (derivative * D) + (totalError * I);
 
     prevError = error;
 

@@ -144,6 +144,14 @@ bool misc::fileExists(const char* name) {
   }   
 }
 
+// Returns true if the SD Card is being weird
+bool misc::isSDCardBeingWeird() {
+  int randomNum = rand() % 1000000;
+  misc::writeFile("./SDCardTest.txt", randomNum);
+  vex::wait(50, vex::timeUnits::msec);
+  return misc::readFile("./SDCardTest.txt") != randomNum;
+};
+
 
 
 double misc::degreeToRad(double degree) {

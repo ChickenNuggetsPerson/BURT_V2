@@ -67,7 +67,7 @@ namespace odom {
             TilePosition currentTilePosition;
             void updateTilePos();
 
-            misc::ValueAverager inertialAverager = misc::ValueAverager();
+            misc::ValueAverager<10> inertialAverager = misc::ValueAverager<10>();
 
             // Tracks changes in position between odom steps
             odomRawData lastData; 

@@ -8,7 +8,7 @@ using namespace vex;
 const double Wing_rotationOne = 30;
 const double Wing_rotationTwo = 445;
 const double Wing_rotationThree = 870;
-const double Wing_rotationClose = 1010;
+const double Wing_rotationClose = 1000;
 const double Wing_Speed = 2000;
 
 #define WingBtnCheck() { int btn = getBtnPressed(); if (btn != -1) { return btn; } };
@@ -94,11 +94,9 @@ int wingCataAlignState() {
   return W_CataAlign;
 }
 int wingLeftAutonState() {
-  
-  // Also fix this
 
-  rightArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  rightArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(750, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
 
   WingBtnCheck()
 
@@ -123,7 +121,7 @@ void catapultCheck() {
     leftBtn.check();
 
     if (cata_autoLaunch) {
-        catapultMotor.spin(vex::directionType::fwd, 10, vex::voltageUnits::volt);
+        catapultMotor.spin(vex::directionType::fwd, 12, vex::voltageUnits::volt);
     } else {
         catapultMotor.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
     }

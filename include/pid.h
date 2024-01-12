@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vex.h"
+
 // Usefull resouce for PID tunning 
 // https://www.thorlabs.com/newgrouppage9.cfm?objectgroup_id=9013#:~:text=To%20tune%20your%20PID%20controller,to%20roughly%20half%20this%20value.
 
@@ -11,7 +13,7 @@ namespace pid {
         double D;
 
         PIDConfig();
-        PIDConfig(double p, double i, double d);
+        PIDConfig(double p, double i, double d) : P(p), I(i), D(d) {};
     };
 
     // Define the PID class
@@ -19,6 +21,13 @@ namespace pid {
     class PID {
 
         private:
+
+            vex::brain* brainPtr = nullptr;
+
+            vex::timeUnits timerUnits = vex::timeUnits::sec;
+            bool isTimeScaling = false;
+            double lastTime = 0.0;
+            double dt;
 
             double P = 0.0;
             double I = 0.0;
@@ -43,6 +52,14 @@ namespace pid {
             PID() {};
             PID(PIDConfig config);
             PID(PIDConfig config, double desired);
+
+            // By adding a pointer to the VEX brain, the PID system will
+            // scale the Integral and Derivative responses based on time
+            void addBrainPtr(vex::brain* brainPtr) { 
+                this->brainPtr = brainPtr; 
+                this->isTimeScaling = true; 
+                lastTime = brainPtr->timer(timerUnits); 
+            };
 
             void changeConfig(PIDConfig newConfig);
 

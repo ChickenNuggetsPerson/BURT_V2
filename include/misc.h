@@ -6,12 +6,11 @@ extern int isWriting;
 
 namespace misc {
 
+    template<unsigned int arrraySize>
     class ValueAverager {
         private:
 
             int count = 0;
-
-            static const int arrraySize = 10; 
             double prevVals[arrraySize] = { 0 };
             
         public:
@@ -42,6 +41,8 @@ namespace misc {
 
     bool copyFile(const char* file, const char* dest);
     bool fileExists(const char* name);
+
+    bool isSDCardBeingWeird();
 
     DynamicJsonDocument* readJsonFromFile(const std::string& filePath);
     bool writeJsonToFile(const std::string& filePath, const DynamicJsonDocument& jsonData);

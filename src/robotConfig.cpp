@@ -32,7 +32,7 @@ smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSens
 motor leftArmMotor = motor(leftArmMotorPort, ratio36_1, true);
 motor rightArmMotor = motor(rightArmMotorPort, ratio36_1, false);
 
-motor catapultMotor = motor(cataMotorPort, ratio36_1, false);
+motor catapultMotor = motor(cataMotorPort, ratio36_1, true);
 StateMachine wingStateMachine;
 
 controller mainController = controller(primary);

@@ -11,9 +11,9 @@
   - [X] Redo Auton Functions
   - [X] Redo Auton Logic ( Catapult Logic, Wing Logic )
 - [ ] Simplify Auton Selector System
-- [ ] Have Auton Verification sent to controller
-- [ ] Implement new controller layout
-- [ ] Maybe switch catapult to flywheel system ( Regardless, use state machine )
+- [X] Have Auton Verification sent to controller
+- [X] Implement new controller layout
+- [X] Maybe switch catapult to flywheel system ( Regardless, use state machine )
 
 <br>
 

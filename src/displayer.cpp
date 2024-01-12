@@ -48,7 +48,7 @@ int notificationCheck() {
     NotChecker.addMotor("RightMotorB", &rightMotorB);
     NotChecker.addMotor("LeftMotorA", &leftMotorA);
     NotChecker.addMotor("LeftMotorB", &leftMotorB);
-    NotChecker.addMotor("Catapult", &catapultMotor);
+    NotChecker.addMotor("Flywheel", &catapultMotor);
     NotChecker.addMotor("Left Arm", &leftArmMotor);
     NotChecker.addMotor("Right Arm", &rightArmMotor);
 
