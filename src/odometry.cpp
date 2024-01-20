@@ -66,8 +66,6 @@ int mainTrackingTask(void* system) {
     // Determine if the encoders are responding
     systemPointer->usingDrive = !(leftEncoder.installed() && rightEncoder.installed());
 
-    double updateSpeed = 10; // In msec 
-
     brainFancyDebug("Starting Calibration", color::yellow, true);
     if (!systemPointer->firstTime) {
         inertialSensor.startCalibration();
@@ -93,7 +91,7 @@ int mainTrackingTask(void* system) {
 
     while (true) {
         systemPointer->track(); // Find main tracking calculations here 
-        wait(updateSpeed, msec);
+        wait(systemPointer->timeBetweenTrack, sec);
     }
     
     return 1;
@@ -141,7 +139,9 @@ Position OdometrySystem::currentPos() {
 TilePosition OdometrySystem::currentTilePos() {
     return currentTilePosition;
 };
-
+double OdometrySystem::getVelocity() {
+    return velocity;
+};
 
 
 void OdometrySystem::updateTilePos() {
@@ -186,10 +186,8 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     newData.deltaRight = newRightEncoder - oldData.rightEncoder;
     newData.deltaLeft = newLeftEncoder - oldData.leftEncoder;
 
-
     newData.heading = inertialAverager.iterate(misc::degreeToRad(inertialSensor.rotation(rotationUnits::deg)));    
     newData.deltaHeading = newData.heading - oldData.heading;
-
 
     // Set the current data
     newData.rightEncoder = newRightEncoder; // Right encoder
@@ -212,6 +210,7 @@ void OdometrySystem::track() {
 
     // Change in distance
     double deltaDist = (currentData.deltaLeft + currentData.deltaRight) / 2.0;
+    velocity = deltaDist / timeBetweenTrack;
 
     // Use Trig to find change in X and Y
     // Apply deltas to the global positions

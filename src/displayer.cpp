@@ -26,17 +26,10 @@ MenuSystem mainRenderer(true, 600);
 void screenPressed() {mainRenderer.screenPressed();}
 
 // Define Notification Checks
-bool checkSDCard() {return Brain.SDcard.isInserted();}
-bool checkMainController() {return mainController.installed();}
-bool checkFeild() {return Competition.isFieldControl();}
-bool checkBattery() {
-    if (Brain.Battery.capacity(percentUnits::pct) < 20) {
-        //mainControllerMessage("Battery Low", 4);
-        return false;
-    } else {
-        return true;
-    }
-}
+bool checkSDCard() {          return Brain.SDcard.isInserted();                         }
+bool checkMainController() {  return mainController.installed();                        }
+bool checkFeild() {           return Competition.isFieldControl();                      }
+bool checkBattery() {         return !(Brain.Battery.capacity(percentUnits::pct) < 20); }
 
 int notificationCheck() {
 

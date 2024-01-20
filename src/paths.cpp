@@ -21,10 +21,8 @@ autonPath buildPath(int pathID) {
             
             path.addMovement(auton::autonMovement(AUTON_MOVE_WING_SET_STATE, W_close));
 
-            path.addMovement(auton::autonMovement(AUTON_MOVE_LONGGOTO, {
-                odom::TilePosition(1.1, 1),
-                odom::TilePosition(1.5, 1.75)
-            }));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1.1, 1)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1.5, 1.75)));
 
             path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -90));
 
@@ -84,27 +82,27 @@ autonPath buildPath(int pathID) {
             // Go infront of matchload
             path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(1, 0.75, -135)));
             path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 26));
-            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -120));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, -100));
 
             // Touch bar and start catapulting
-            path.addMovement(auton::autonMovement(AUTON_MOVE_CATAPULT, 70));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_CATAPULT, 35));
 
             // Backup
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
             
             // // Goto start pos
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(0.9, -1)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(0.9, -1)));
 
             // // Drive across area
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(5, -0.1)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(4.75, -0.1)));
             // path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(4, 1)));
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(3, 2.5)));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_GOTO, odom::TilePosition(3, 2.25)));
 
             // // Open wings and push
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, 90));
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos2));
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 36));
-            // path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_REVERSE, 12));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_TURNTO, 90));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos2));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 36));
+            path.addMovement(auton::autonMovement(AUTON_MOVE_DRIVE_REVERSE, 12));
             
             break;
         }         

@@ -21,7 +21,7 @@ motionProfiling::Profile motionProfiling::genVelProfile(double dist) {
     double time = motionProfiling::baseMoveTime;
 
     motionProfiling::Profile curve(new std::vector<double>);
-    double baseDist = 12; // Inches
+    double baseDist = 6; // Inches
     double scaleDown = 0.97;
 
     while (true) {

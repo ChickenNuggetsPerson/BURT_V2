@@ -69,17 +69,6 @@ static const int32_t rightArmMotorPort = vex::PORT10;
 // Odom Constants
 static odom::TilePosition ODOM_DEFAULT_RESET_POS(0, 0, 0);
 
-
-// Auton Constants For Main Bot
-
-static pid::PIDConfig AUTON_TURNTO_PID_CONFIG(0.1, 0.01, 0.0); 
-
-static pid::PIDConfig AUTON_GOTO_DRIVE_PID_CONFIG(0.5, 0.01, 0.0);       // LongGoto Function
-static pid::PIDConfig AUTON_GOTO_TURN_VOLT_PID_CONFIG(0.05, 0.0, 0.0);  // LongGoto Function
-
-static pid::PIDConfig AUTON_GOTO_TURN_VEl_PID_CONFIG(0.05, 0.01, 0.0);   // Single goto function
-
-
 // Auton Start Positions
 static odom::TilePosition AUTON_START_LEFT(1,   0, 0);
 static odom::TilePosition AUTON_START_RIGHT(4,  0, 0);

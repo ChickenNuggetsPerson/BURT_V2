@@ -29,6 +29,23 @@ namespace misc {
             }
     };
 
+    class RampUp {
+        private:
+
+            int speedUpTime = 0;
+            int count = 0;
+
+        public:
+            RampUp(int speedupCount) { this->speedUpTime = speedupCount; }
+            double iterate(double in) {
+                if (count > speedUpTime) { return in; }
+                count++;
+
+                return (double)in * ( (double)count / (double)speedUpTime );
+            }
+            bool isSpeadingUp() { return count < speedUpTime; }
+    };
+
     int readFile(const char* fileName);
     double readFileDouble(const char* fileName);
 

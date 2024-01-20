@@ -6,9 +6,9 @@ using namespace vex;
 
 //  Wing State Machine Functions
 const double Wing_rotationOne = 30;
-const double Wing_rotationTwo = 445;
-const double Wing_rotationThree = 870;
-const double Wing_rotationClose = 1000;
+const double Wing_rotationTwo = 430;
+const double Wing_rotationThree = 820;
+const double Wing_rotationClose = 990;
 const double Wing_Speed = 2000;
 
 #define WingBtnCheck() { int btn = getBtnPressed(); if (btn != -1) { return btn; } };
@@ -86,8 +86,8 @@ int wingCloseState() {
 int wingCataAlignState() {
   // Fix this
 
-  rightArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  rightArmMotor.spinToPosition(750, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
 
   WingBtnCheck()
 
@@ -179,7 +179,6 @@ int controllerTask() {
   // if (Brain.SDcard.isInserted()) {
     // tankDrive = (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 0);
   // }
-  //reversedDrive = false;
 
   int frontArmVal = 0;
   int cataArmMove = 0;
@@ -303,7 +302,9 @@ void mainControllerRender() {
   mainController.Screen.newLine();
   mainController.Screen.print("Rot: ");
   mainController.Screen.print(misc::limitAngle(misc::radToDegree(currentPos.rot)));            
-  //mainController.Screen.print((int)cataArmMotor.position(rotationUnits::deg) % 360);
+
+  mainController.Screen.setCursor(3, 15);
+  mainController.Screen.print(Odometry.getVelocity());
 
 
   rendering = false;

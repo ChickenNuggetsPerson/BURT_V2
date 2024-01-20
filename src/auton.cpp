@@ -273,11 +273,11 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
 
     double heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
     double target = findNearestRot(heading, deg);
-    pid::PID turnPID(AUTON_TURNTO_PID_CONFIG, target);
+    pid::PID turnPID(pid::PIDConfig(0.1, 0.01, 0.01), target);
     turnPID.addBrainPtr(&Brain);
 
-    double accuracy = 1;
-    int checks = 8;
+    double accuracy = 5;
+    int checks = 15;
 
     double lastRot = odometrySystemPointer->currentPos().rot;
     int totalChecks = 0;
@@ -324,6 +324,14 @@ bool AutonSystem::gotoLoc(odom::TilePosition pos) {
     return gotoLoc(odom::Position(pos));
 };
 
+
+double voltFromDist(double dist) {
+    return (atan((dist / 4.00) - 2.5) * (2 / PI) * 7) + 5.5;
+}
+double turnScaleFromDeg(double deltaDeg) {
+    return ((-atan((deltaDeg / 4.00) - 5) * (2 / PI)) + 1) / 2;
+}
+
 // Motion Profiling System
 bool AutonSystem::gotoLoc(odom::Position pos) {
     
@@ -334,6 +342,8 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     running = true;
     
     target = pos;
+    
+    DEBUGLOG("X: ", pos.x, " Y: ", pos.y)
 
     odom::Position currentPos = odometrySystemPointer->currentPos();
 
@@ -343,7 +353,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     // Turn to point to the location
     // Only do it if the robot has to turn more than 10 degrees
     if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 10)) {
-        turnTo(desiredHeading, 2.5);
+        turnTo(desiredHeading, 2.0);
     }
 
     // Generate Velocity Profile
@@ -357,7 +367,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     double gearRatio = motorGear / wheelGear;
 
     // PID to keep the robot driving straight
-    pid::PID turnPid(AUTON_GOTO_TURN_VEl_PID_CONFIG);
+    pid::PID turnPid(pid::PIDConfig(0.05, 0.01, 0.0));
     turnPid.setMax(20);
     turnPid.setMin(-20);
     turnPid.addBrainPtr(&Brain);
@@ -385,11 +395,11 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         int speedIndex = (int)floor(((Brain.Timer.system() - startTime) / 1000.00) / motionProfiling::timeIncrement);
 
         // Check if we are done with the speed profile
-        if (speedIndex >= speedProfile.get()->size()) {
+        if (speedIndex >= speedProfile->size()) {
             traveling = false;
             break;
         }
-        driveVelocity = speedProfile.get()->at(speedIndex);
+        driveVelocity = speedProfile->at(speedIndex);
 
         // Get turn power
         // if (speedIndex >= speedProfile.get()->size() / 2) {
@@ -428,7 +438,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         wait(0.05, seconds);
     }
 
-    wait(0.1, seconds);
+    // wait(0.1, seconds);
 
     if (!std::isnan(pos.rot)) {
         turnTo(pos.rot, 2.5);
@@ -470,13 +480,13 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
     }
 
     // PID to control drive speed
-    pid::PID drivePid(AUTON_GOTO_DRIVE_PID_CONFIG, 0);
+    pid::PID drivePid(pid::PIDConfig(0.5, 0.01, 0.0), 0);
     drivePid.setMax(11);
     drivePid.setMin(-11);
     double drivePower = 0.00;
 
     // PID to keep the robot driving straight
-    pid::PID turnPid(AUTON_GOTO_TURN_VOLT_PID_CONFIG);
+    pid::PID turnPid(pid::PIDConfig(0.05, 0.0, 0.0));
     turnPid.setMax(12);
     turnPid.setMin(-12);
     turnPid.addBrainPtr(&Brain);

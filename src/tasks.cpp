@@ -7,8 +7,21 @@
 
 using namespace vex;
 
+
+void rightPressed() {
+
+  botAI.setForceStop(false);
+
+  botAI.gotoLoc(odom::TilePosition(1, 1));
+  botAI.gotoLoc(odom::TilePosition(0, 1));
+  botAI.gotoLoc(odom::TilePosition(0, 0));
+  botAI.gotoLoc(odom::TilePosition(1, 0));
+}
+
 // Setup callbacks and initialize auton
 void pre_auton(void) {
+
+  // mainController.ButtonRight.pressed(rightPressed);
 
   // Imedietely stop the motors so then they don't spin when the robot boots up
   leftMotorA.spin(fwd);  leftMotorA.setVelocity(0, percent);
@@ -53,17 +66,5 @@ void whenStarted(void) {
 
   DEBUGLOG("BATTERY STATUS: ", Brain.Battery.capacity());
 
-  return;
 
-  wait(5, vex::timeUnits::sec);
-
-  botAI.setForceStop(false);
-
-  while (true) {
-    botAI.turnTo(90);
-    wait(1, vex::timeUnits::sec);
-    botAI.turnTo(-90);
-    wait(1, vex::timeUnits::sec);
-  }
-  
 }

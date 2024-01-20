@@ -63,11 +63,13 @@ namespace odom {
             double globalY = 0.00;
             double globalRot = 0.00;
 
+            double velocity = 0.00; // In inches per second
+
             // Internal storage for the tile position
             TilePosition currentTilePosition;
             void updateTilePos();
 
-            misc::ValueAverager<10> inertialAverager = misc::ValueAverager<10>();
+            misc::ValueAverager<5> inertialAverager = misc::ValueAverager<5>();
 
             // Tracks changes in position between odom steps
             odomRawData lastData; 
@@ -82,6 +84,8 @@ namespace odom {
             bool firstTime = true;
             bool usingDrive = false;
 
+            double timeBetweenTrack = 0.02; // In seconds
+
             void restart();
             void restart(Position currentPos);
             void restart(TilePosition currentPos);
@@ -92,6 +96,8 @@ namespace odom {
             void track();
             Position currentPos();
             TilePosition currentTilePos();
+
+            double getVelocity();
             
             void resetEncoders();
     };
