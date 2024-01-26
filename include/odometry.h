@@ -14,10 +14,12 @@ namespace odom {
         double x = 0.00;   // In Inches
         double y = 0.00;   // In Inches
         double rot = 0.00; 
-        Position(double xPos, double yPos, double rotation);
-        Position(double xPos, double yPos);
+        Position(double xPos, double yPos, double rotation = NAN) : x(xPos), y(yPos), rot(rotation) {};
         Position(TilePosition pos);
-        Position();
+        Position() {};
+        friend std::ostream& operator<<(std::ostream &os, const Position& p) {
+            return os << "{ x: " << p.x << ", y: " << p.y << ", rot: " << p.rot << " }";
+        }
     };
     
 
@@ -26,10 +28,12 @@ namespace odom {
         double x = 0;   // In Tiles
         double y = 0;   // In Tiles
         double rot = 0.00; // In Degrees
-        TilePosition(double xPos, double yPos, double rotation);
-        TilePosition(double xPos, double yPos);
+        TilePosition(double xPos, double yPos, double rotation = NAN) : x(xPos), y(yPos), rot(rotation) {};
         TilePosition(Position pos);
-        TilePosition();
+        TilePosition() {};
+        friend std::ostream& operator<<(std::ostream &os, const TilePosition& p) {
+            return os << "{ x: " << p.x << ", y: " << p.y << ", rot: " << p.rot << " }";
+        }
     };
 
 

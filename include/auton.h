@@ -70,15 +70,17 @@ namespace auton {
     autonMovement() {};
   };
 
+
   class autonPath {
     private:
       std::vector<autonMovement> movements;
     public:
       odom::Position startPos;
-      autonPath();
-      void addMovement(autonMovement movement);
-      autonMovement getStep(int stepCount);
-      int getSize();
+      autonPath() {};
+      
+      inline void add(autonMovement movement) { movements.push_back(movement); };
+      inline int size() { return movements.size(); };
+      inline autonMovement operator[](int i) { return i >= movements.size() ? autonMovement(AUTON_MOVE_END) : movements.at(i); };
   };
 
 

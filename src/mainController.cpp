@@ -96,13 +96,21 @@ int wingCataAlignState() {
 int wingLeftAutonState() {
 
   rightArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(750, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(480, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
 
   WingBtnCheck()
 
   return W_LeftAutonPoleTouch;
 }
+int wingLeftAutonStateSwipe() {
 
+  rightArmMotor.spinToPosition(480, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+
+  WingBtnCheck()
+
+  return W_LeftAutonSwipeTriball;
+}
 
 bool cata_autoLaunch = false;
 void startCatapult() {
@@ -143,6 +151,7 @@ int controllerTask() {
   wingStateMachine.addState(W_close, wingCloseState);
   wingStateMachine.addState(W_CataAlign, wingCataAlignState);
   wingStateMachine.addState(W_LeftAutonPoleTouch, wingLeftAutonState);
+  wingStateMachine.addState(W_LeftAutonSwipeTriball, wingLeftAutonStateSwipe);
   wingStateMachine.start(W_pos1);
 
 

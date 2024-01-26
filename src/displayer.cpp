@@ -384,7 +384,7 @@ int updateQueuePage(Page* self) {
     
     std::vector<auton::autonMovement> movements = queuingSystem.getQueue();
     for (auto movement: movements) {
-        path.addMovement(movement);
+        path.add(movement);
     }
     self->setTextData("size", (int)movements.size());
     plotPtr->showPath(path);
@@ -454,7 +454,7 @@ int mapShowPath(Page* self) {
         
         std::vector<auton::autonMovement> movements = queuingSystem.getQueue();
         for (auto movement: movements) {
-            path.addMovement(movement);
+            path.add(movement);
         }
 
         plotPtr->showPath(path);
@@ -728,7 +728,7 @@ int brainDisplayer() {
     BrainLogs.init();
     
     double deltaTime = 0.00;
-    while(true) {
+    while(true) {  // Main render loop
         double startTime = Brain.timer(msec);
         Brain.Screen.clearScreen();
         mainRenderer.render(); // Render the screen
@@ -811,7 +811,6 @@ int controllerDisplay() {
 
         // Main Controller Displayer
         if (mainController.installed()) {
-            
             mainControllerRender();
         }
 

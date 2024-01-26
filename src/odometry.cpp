@@ -21,17 +21,6 @@ Position odom::tilePosToPos(TilePosition tilePos) {
 
 
 // Position Constructor
-Position::Position(double xPos, double yPos, double rotation) {
-    x = xPos;
-    y = yPos;
-    rot = rotation;
-};
-Position::Position(double xPos, double yPos) {
-    x = xPos;
-    y = yPos;
-    rot = NAN;
-};
-Position::Position() {};
 Position::Position(TilePosition pos) {
     Position tmp = tilePosToPos(pos);
     this->x = tmp.x;
@@ -40,17 +29,6 @@ Position::Position(TilePosition pos) {
 };
 
 // TilePosition Constructor
-TilePosition::TilePosition(double xPos, double yPos, double rotation) {
-    x = xPos;
-    y = yPos;
-    rot = rotation;
-};
-TilePosition::TilePosition(double xPos, double yPos) {
-    x = xPos;
-    y = yPos;
-    rot = NAN;
-};
-TilePosition::TilePosition() {};
 TilePosition::TilePosition(Position pos) {
     TilePosition tmp = posToTilePos(pos);
     this->x = tmp.x;

@@ -18,22 +18,6 @@
 using namespace vex;
 using namespace auton;
 
-autonPath::autonPath() {};
-void autonPath::addMovement(autonMovement movement) {
-    movements.push_back(movement);
-};
-
-int autonPath::getSize() {
-    return movements.size();
-}
-autonMovement autonPath::getStep(int stepCount) {
-    if (stepCount >= movements.size()) {
-        return autonMovement(AUTON_MOVE_END);
-    } else {
-        return movements.at(stepCount);
-    }
-};
-
 
 
 AutonSystem::AutonSystem(odom::OdometrySystem* systemPointer, aiQueueSystem* queuePtr) {
@@ -343,7 +327,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     
     target = pos;
     
-    DEBUGLOG("X: ", pos.x, " Y: ", pos.y)
+    DEBUGLOG("Target: ", pos)
 
     odom::Position currentPos = odometrySystemPointer->currentPos();
 
@@ -424,16 +408,6 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         // Apply Velocities
         LeftDriveSmart.setVelocity(leftMotorVel   * 1.1, vex::velocityUnits::rpm);
         RightDriveSmart.setVelocity(rightMotorVel * 1.1, vex::velocityUnits::rpm);
-
-        // DEBUGLOG("");
-        // DEBUGLOG("GOTO DIST: ", travelDist);
-        // DEBUGLOG("GOTO DRIVE Profile: ", driveVelocity);
-        // DEBUGLOG("GOTO Out Motor Vel: ", leftMotorVel);
-        // DEBUGLOG("GOTO TURN PID: ", turnPower);
-        
-        // if (speedIndex >= speedProfile.get()->size()) {
-        //     traveling = false;
-        // }
 
         wait(0.05, seconds);
     }
@@ -616,6 +590,10 @@ bool AutonSystem::catapult(int launchTime) {
 };
 
 
+
+
+// Queuing System Functions
+
 #include "libs/spline.h"
 void aiQueueSystem::addPtrs(AutonSystem* botAIPtr, odom::OdometrySystem* odometryPointer) {
     aiPtr = botAIPtr;
@@ -645,10 +623,10 @@ std::vector<autonMovement> aiQueueSystem::getQueue() {
 };
 bool aiQueueSystem::addToQueue(autonPath path) {
     loaded = false;
-    for (int i = 0; i < path.getSize(); i++) {
-        this->addToQueue(path.getStep(i));
+    for (int i = 0; i < path.size(); i++) {
+        this->addToQueue(path[i]); // Extract the movements from the path
     }
-    aiPtr->setStartPos(odom::posToTilePos(path.startPos));
+    aiPtr->setStartPos(odom::posToTilePos(path.startPos)); // Set the starting pos
     loaded = true;
     return true;
 }
@@ -754,14 +732,14 @@ autonPath aiQueueSystem::getPathFromJSON(std::string jsonPath) {
             }
         }
 
-        readPath.addMovement(tmpMove);
+        readPath.add(tmpMove);
     }
 
     DEBUGLOG("Finished Reading: ", jsonPath);
-    DEBUGLOG("Parsed Size: ", readPath.getSize());
+    DEBUGLOG("Parsed Size: ", readPath.size());
     DEBUGLOG("Read Size: ", length);
 
-    if (length != readPath.getSize()) {
+    if (length != readPath.size()) {
         brainError("Error Reading Json", true);
     }
 
@@ -809,7 +787,7 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
         case AUTON_MOVE_WING_SET_STATE:
             DEBUGLOG("AUTO RUN: Wing Set State");
             wingStateMachine.setState(movement.val);
-            vex::wait(600, vex::timeUnits::msec);
+            vex::wait(400, vex::timeUnits::msec);
             return true;
 
         default:

@@ -564,7 +564,7 @@ void Plot::draw() {
         odom::Position currentPos = path.startPos;
         int i = 0;
         while (true) {
-            auton::autonMovement move = path.getStep(i);
+            auton::autonMovement move = path[i];
             if (move.movementType == AUTON_MOVE_END) { break; }
             odom::Position newPos;
             switch (move.movementType) {
