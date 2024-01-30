@@ -89,23 +89,6 @@ void AutonSystem::generatePath() {
         mainControllerMessage("Auton Disabled", 5);
     }
 
-    // Old Path System
-    // Uses JSON Files
-
-    /*runningSkills = getConfig("isSkills");
-    if (runningSkills) {
-        queueSystemPtr->addToQueue(buildPath(AUTON_PATH_SKILLS, this)); 
-    } else {
-        if (!getConfig("startSide")) {
-            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_LEFT, this));
-        } else {
-            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_RIGHT, this));
-        }
-        if (!Brain.SDcard.isInserted()) {
-            queueSystemPtr->addToQueue(buildPath(AUTON_PATH_TEST, this));
-        }
-    }*/
-
     // New Path System
     bool result = false;
     if (runningSkills) {
@@ -266,8 +249,7 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
     double lastRot = odometrySystemPointer->currentPos().rot;
     int totalChecks = 0;
 
-    LeftDriveSmart.spin(directionType::fwd, 0, volt);
-    RightDriveSmart.spin(directionType::fwd, 0, volt);
+    setMotors(0, 0, voltageUnits::volt);
 
     while (true) {
         CheckForceStop();
@@ -275,8 +257,7 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
         heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double power = turnPID.iterate(heading);
 
-        LeftDriveSmart.spin(directionType::fwd, -power, volt);
-        RightDriveSmart.spin(directionType::fwd, power, volt);
+        setMotors(-power, power, voltageUnits::volt);
 
         // DEBUGLOG("TURNTO PID: ", power);
 
@@ -297,8 +278,7 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
         wait(0.05, seconds);
     }
 
-    LeftDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
-    RightDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
+    setMotors(0, 0, voltageUnits::volt);
 
     running = wasRunning;
     return true;
@@ -361,8 +341,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
 
     double startTime = Brain.Timer.system();
 
-    LeftDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
-    RightDriveSmart.spin(directionType::fwd, 1, percentUnits::pct);
+    setMotors(0, 0, voltageUnits::volt);
 
     misc::ValueAverager<10> turnAvg = misc::ValueAverager<10>();
 
@@ -406,8 +385,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         double rightMotorVel = (60 * rightVelocity) / (gearRatio * wheelCircumference);
 
         // Apply Velocities
-        LeftDriveSmart.setVelocity(leftMotorVel   * 1.1, vex::velocityUnits::rpm);
-        RightDriveSmart.setVelocity(rightMotorVel * 1.1, vex::velocityUnits::rpm);
+        setMotors(leftMotorVel * 1, rightMotorVel * 1, velocityUnits::rpm);
 
         wait(0.05, seconds);
     }
@@ -515,10 +493,7 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
         double leftPower = drivePower - turnPower;
         double rightPower = drivePower + turnPower;
 
-        LeftDriveSmart.spin(directionType::fwd, leftPower, voltageUnits::volt);
-        RightDriveSmart.spin(directionType::fwd, rightPower, voltageUnits::volt);
-
-
+        setMotors(leftPower, rightPower, voltageUnits::volt);
 
         // If robot is close to the point, increase point index
         // If done with path, exit loop
@@ -538,8 +513,8 @@ bool AutonSystem::longGoto(std::vector<odom::Position> pos) {
         wait(0.05, seconds);
     }
 
-    LeftDriveSmart.spin(directionType::fwd, 0, voltageUnits::volt);
-    RightDriveSmart.spin(directionType::fwd, 0, voltageUnits::volt);
+    setMotors(0, 0, voltageUnits::volt);
+    
 
     if (!std::isnan(pos.at(pos.size() - 1).rot)) {
         turnTo(pos.at(pos.size() - 1).rot, 2);
@@ -560,9 +535,8 @@ bool AutonSystem::reverseDrive(double distance) {
 
     odom::Position movementStartPos = odometrySystemPointer->currentPos();
     double deltaDist = distBetweenPoints(movementStartPos, odometrySystemPointer->currentPos());
-    
-    RightDriveSmart.spin(directionType::fwd, -5, voltageUnits::volt);
-    LeftDriveSmart.spin(directionType::fwd, -5, voltageUnits::volt);
+
+    setMotors(-5, -5, voltageUnits::volt);
 
     while (deltaDist < distance) { 
         CheckForceStop();
@@ -570,8 +544,7 @@ bool AutonSystem::reverseDrive(double distance) {
         wait(10, timeUnits::msec); 
     }
 
-    LeftDriveSmart.spin(directionType::fwd, 0, volt);
-    RightDriveSmart.spin(directionType::fwd, 0, volt);
+    setMotors(0, 0, voltageUnits::volt);
 
     running = wasrunning;
     return true;

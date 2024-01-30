@@ -15,6 +15,9 @@
 - [X] Implement new controller layout
 - [X] Maybe switch catapult to flywheel system ( Regardless, use state machine )
 
+## TODO:
+- [ ] Configurable AUTON: Choose what it does
+
 <br>
 
 [BURT Path Builder](https://github.com/ChickenNuggetsPerson/BURT_V2_Path_Visualizer)

@@ -22,20 +22,21 @@ autonPath buildPath(int pathID) {
             
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_close));
 
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0, 0.75, 0)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0, 0.7, 0)));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos1));
 
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 10));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 6));
             path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 6));
 
             path.add(autonMovement(AUTON_MOVE_TURNTO, 170));
 
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_LeftAutonSwipeTriball));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.15, -0.5)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.3, 0.15, 90)));
+            path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_loose));
 
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1, -0.1, 90)));
-            path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos1));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1.75, 0)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1, -0.1)));
+            // path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_loose));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1.78, 0)));
 
             path.add(autonMovement(AUTON_MOVE_DELAY, 200));
 
@@ -73,17 +74,35 @@ autonPath buildPath(int pathID) {
 
 
             // TODO: Add auton win-point
-            path.add(autonMovement(AUTON_MOVE_LONGGOTO, {
-                TilePosition(4, 0.1),
-                TilePosition(4, 0.4),
-                TilePosition(5, 1, 0),
-            }));
+            // path.add(autonMovement(AUTON_MOVE_LONGGOTO, {
+            //     TilePosition(4, 0.1),
+            //     TilePosition(4, 0.4),
+            //     TilePosition(5, 1, 0),
+            // }));
             
-            path.add(autonMovement(AUTON_MOVE_TURNTO, 0));
-            path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos1));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 10));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 20));
+            // path.add(autonMovement(AUTON_MOVE_TURNTO, 0));
+            // path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos1));
+            // path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 10));
+            // path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 20));
 
+
+            // Score preload
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4.9, 1, 0)));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 12));
+            path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos3));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
+
+            // Grab another triball
+            path.add(autonMovement(AUTON_MOVE_TURNTO, -90));
+            // path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4, 1)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(2.9, 1.25)));
+            path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_close));
+            // path.add(autonMovement(AUTON_MOVE_TURNTO, 90));
+
+            // Score
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4.5, 2)));
+            path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos3));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
 
             /*
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4, 1)));
@@ -104,7 +123,7 @@ autonPath buildPath(int pathID) {
             // Go infront of matchload
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1, 0.75, -135)));
             path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 26));
-            path.add(autonMovement(AUTON_MOVE_TURNTO, -108));
+            path.add(autonMovement(AUTON_MOVE_TURNTO, -102));
 
             // Touch bar and start catapulting
             path.add(autonMovement(AUTON_MOVE_CATAPULT, 35));
@@ -132,13 +151,13 @@ autonPath buildPath(int pathID) {
             path.startPos = tilePosToPos(TilePosition(1,0));
             brainFancyDebug("Building AUTON_PATH_TEST", vex::color::cyan);
 
-            
-            path.add(autonMovement(AUTON_MOVE_LONGGOTO, {
-                TilePosition(4, 0),
-                TilePosition(4, 0),
-                TilePosition(4, 0),
-            }));
-            
+            // path.add(autonMovement(AUTON_MOVE_LONGGOTO, {
+            //     TilePosition(4, 0),
+            //     TilePosition(4, 0),
+            //     TilePosition(4, 0),
+            // }));
+
+            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 24));
             
             break;
         }

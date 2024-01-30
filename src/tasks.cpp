@@ -24,10 +24,7 @@ void pre_auton(void) {
   // mainController.ButtonRight.pressed(rightPressed);
 
   // Imedietely stop the motors so then they don't spin when the robot boots up
-  leftMotorA.spin(fwd);  leftMotorA.setVelocity(0, percent);
-  leftMotorB.spin(fwd);  leftMotorB.setVelocity(0, percent);
-  rightMotorA.spin(fwd); rightMotorA.setVelocity(0, percent);
-  rightMotorB.spin(fwd); rightMotorB.setVelocity(0, percent);
+  setMotors(0, 0, velocityUnits::pct);
 
   brainDebug("Initializing Burt", true);
 

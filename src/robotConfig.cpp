@@ -20,13 +20,11 @@ rotation rightEncoder = rotation(rightEncoderPort, true);
 
 motor leftMotorA = motor(leftMotorAPort, ratio18_1, !devRobot);
 motor leftMotorB = motor(leftMotorBPort, ratio18_1, !devRobot);
-motor_group LeftDriveSmart = motor_group(leftMotorA, leftMotorB);
+motor leftMotorC = motor(leftMotorCPort, ratio18_1, !devRobot);
 
 motor rightMotorA = motor(rightMotorAPort, ratio18_1, devRobot);
 motor rightMotorB = motor(rightMotorBPort, ratio18_1, devRobot);
-motor_group RightDriveSmart = motor_group(rightMotorA, rightMotorB);
-
-smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, inertialSensor, 319.19, 254, 254, mm, 1);
+motor rightMotorC = motor(leftMotorCPort, ratio18_1, !devRobot);
 
 
 motor leftArmMotor = motor(leftArmMotorPort, ratio36_1, true);

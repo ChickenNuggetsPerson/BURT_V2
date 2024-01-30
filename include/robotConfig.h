@@ -30,13 +30,11 @@ extern auton::AutonSystem botAI;
 
 extern motor leftMotorA;
 extern motor leftMotorB;
-extern motor_group LeftDriveSmart;
+extern motor leftMotorC;
 
 extern motor rightMotorA;
 extern motor rightMotorB;
-extern motor_group RightDriveSmart;
-
-extern smartdrive Drivetrain;
+extern motor rightMotorC;
 
 extern motor leftArmMotor;
 extern motor rightArmMotor;

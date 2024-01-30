@@ -51,8 +51,11 @@ static double motorWarnTemp = 50; // The temp in c
 // Define Ports
 static const int32_t leftMotorAPort = vex::PORT6;
 static const int32_t leftMotorBPort = vex::PORT3;
+static const int32_t leftMotorCPort = vex::PORT11;
+
 static const int32_t rightMotorAPort = vex::PORT9;
 static const int32_t rightMotorBPort = vex::PORT2;
+static const int32_t rightMotorCPort = vex::PORT12;
 
 static const int32_t inertialPort = vex::PORT16;
 

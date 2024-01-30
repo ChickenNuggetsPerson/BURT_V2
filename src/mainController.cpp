@@ -96,7 +96,7 @@ int wingCataAlignState() {
 int wingLeftAutonState() {
 
   rightArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(480, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
+  leftArmMotor.spinToPosition(560, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
 
   WingBtnCheck()
 
@@ -138,7 +138,32 @@ void catapultCheck() {
 
 
 
+void setMotors(double leftAmt, double rightAmt, vex::velocityUnits units) {
+  leftMotorA.spin(fwd);
+  leftMotorB.spin(fwd);
+  leftMotorC.spin(fwd);
 
+  rightMotorA.spin(fwd);
+  rightMotorB.spin(fwd);
+  rightMotorC.spin(fwd);
+  
+  leftMotorA.setVelocity(leftAmt, units);
+  leftMotorB.setVelocity(leftAmt, units);
+  leftMotorC.setVelocity(leftAmt, units);
+
+  rightMotorA.setVelocity(rightAmt, units);
+  rightMotorB.setVelocity(rightAmt, units);
+  rightMotorC.setVelocity(rightAmt, units);
+}
+void setMotors(double leftAmt, double rightAmt, vex::voltageUnits units) {
+  leftMotorA.spin(fwd, leftAmt, units);
+  leftMotorB.spin(fwd, leftAmt, units);
+  leftMotorC.spin(fwd, leftAmt, units);
+
+  rightMotorA.spin(fwd, rightAmt, units);
+  rightMotorB.spin(fwd, rightAmt, units);
+  rightMotorC.spin(fwd, rightAmt, units);
+}
 
 
 bool questioning = false;
@@ -156,10 +181,8 @@ int controllerTask() {
 
 
   // Set up variables
-  double motorFL = 0;
-  double motorFR = 0;
-  double motorBL = 0;
-  double motorBR = 0;
+  double leftMotors = 0;
+  double rightMotors = 0;
 
   double leftFB = 0;
   double rightFB = 0;
@@ -171,15 +194,7 @@ int controllerTask() {
   // process the controller input every 20 milliseconds
   // update the motors based on the input values
 
-  leftMotorA.spin(fwd);
-  leftMotorB.spin(fwd);
-  rightMotorA.spin(fwd);
-  rightMotorB.spin(fwd);
-
-  leftMotorA.setVelocity(0, percent);
-  leftMotorB.setVelocity(0, percent);
-  rightMotorA.setVelocity(0, percent);
-  rightMotorB.setVelocity(0, percent);
+  setMotors(0, 0, velocityUnits::pct);
 
 
   bool wasStopped = false;
@@ -228,43 +243,26 @@ int controllerTask() {
     }
     
     if (tankDrive) { // Andrew Drive
-      motorFL = leftFB;
-      motorFR = rightFB;
-
-      motorBL = leftFB;
-      motorBR = rightFB;
+      leftMotors = leftFB;
+      rightMotors = rightFB;
 
     } else { // Hayden Drive
 
-      motorFL = leftFB + turn;
-      motorFR = leftFB - turn;
-
-      motorBL = leftFB + turn;
-      motorBR = leftFB - turn;   
-      
+      leftMotors = leftFB + turn;
+      rightMotors = leftFB - turn;   
     }
 
 
     if ( !botAI.running || botAI.getForceStop()) {
 
       if (wasStopped) { // Refresh the motors after auton
-        leftMotorA.spin(fwd);
-        leftMotorB.spin(fwd);
-        rightMotorA.spin(fwd);
-        rightMotorB.spin(fwd);
 
-        leftMotorA.setVelocity(0, percent);
-        leftMotorB.setVelocity(0, percent);
-        rightMotorA.setVelocity(0, percent);
-        rightMotorB.setVelocity(0, percent);
+        setMotors(0, 0, velocityUnits::pct);
 
         wasStopped = false;
       }
 
-      leftMotorA.setVelocity(motorFL, percentUnits::pct);
-      leftMotorB.setVelocity(motorBL, percentUnits::pct);
-      rightMotorA.setVelocity(motorFR, percentUnits::pct);
-      rightMotorB.setVelocity(motorBR, percentUnits::pct);
+      setMotors(leftMotors, rightMotors, velocityUnits::pct);
 
     } else {
       wasStopped = true;
@@ -305,6 +303,10 @@ void mainControllerRender() {
 
   mainController.Screen.print("X: ");
   mainController.Screen.print(currentPos.x);
+
+  mainController.Screen.print("   ");
+  mainController.Screen.print(floor(Brain.timer(vex::timeUnits::sec)));
+
   mainController.Screen.newLine();
   mainController.Screen.print("Y: ");
   mainController.Screen.print(currentPos.y);

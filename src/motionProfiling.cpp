@@ -18,44 +18,33 @@ double velFunction(double x, double d, double t) {
 
 // Make sure to de-allocate vector when done
 motionProfiling::Profile motionProfiling::genVelProfile(double dist) {
-    double time = motionProfiling::baseMoveTime;
+    double time = motionProfiling::accelerationTime;
 
     motionProfiling::Profile curve(new std::vector<double>);
-    double baseDist = 6; // Inches
-    double scaleDown = 0.97;
+    // Total acceleration and deceleration distance
+    double baseDist = accelerationDist; 
+    
+    double distTraveled = baseDist;
+    double scaleDown = 1;
 
-    while (true) {
-        if (velFunction(time/2, baseDist, time) > motionProfiling::maxVel) {
-            time += timeIncrement;
-            continue;
-        }
-        // Add to the curve
-        for (double i = 0.00; i <= time; i+= timeIncrement) {
-            curve->push_back(velFunction(i, baseDist, time));
-        }
-        break;
+
+    // Add acceleration curve
+    for (double i = 0.00; i <= time/2; i += timeIncrement) {
+        curve->push_back(velFunction(i, baseDist, time) * scaleDown);
     }
 
-    int length = curve.get()->size();
-    double middleSpeed = curve.get()->at(length/2);
-
-    motionProfiling::Profile finalCurve(new std::vector<double>);
-    // Add the first half of the curve
-    for (int i = 0; i < length / 2; i++) {
-        finalCurve.get()->push_back(curve.get()->at(i) * scaleDown);
+    // Integrate up to the max
+    double maxVel = velFunction(time/2, baseDist, time)  * scaleDown;
+    while (dist > distTraveled) {
+        curve->push_back(maxVel);
+        distTraveled += maxVel * timeIncrement;
     }
 
-    // Integrate the max velocity until the distance is correct
-    while (baseDist < dist) {
-        double deltaDist = middleSpeed * timeIncrement;
-        finalCurve.get()->push_back(middleSpeed * scaleDown);
-        baseDist += deltaDist;
+    // Add deceleration curve
+    for (double i = time/2; i <= time; i += timeIncrement) {
+        curve->push_back(velFunction(i, baseDist, time)  * scaleDown);
     }
 
-    // Add the end of the curve
-    for (int i = length / 2; i < length; i++) {
-        finalCurve.get()->push_back(curve.get()->at(i) * scaleDown);
-    }
+    return curve;
 
-    return finalCurve;
 }

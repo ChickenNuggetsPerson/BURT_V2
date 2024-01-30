@@ -8,6 +8,9 @@ enum WingStates {
 void startCatapult();
 void stopCatapult();
 
+void setMotors(double leftAmt, double rightAmt, vex::velocityUnits units);
+void setMotors(double leftAmt, double rightAmt, vex::voltageUnits units);
+
 int controllerTask();
 void mainControllerRender();
 void mainControllerMessage(const char* text, int timeout);
