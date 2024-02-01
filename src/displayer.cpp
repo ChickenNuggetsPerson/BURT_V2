@@ -121,10 +121,6 @@ int gotoDevicesDebugPageButton(Page* self) {
     self->menuSystemPointer->gotoPage("deviceDebug");
     return 1;
 }
-int gotoMotorDebugPageButton(Page* self) {
-    self->menuSystemPointer->gotoPage("motorsDebug");
-    return 1;
-}
 
 // Config Page Functions
 void configPageInit(Page* currentPage, auton::AutonSystem* robotAI) {
@@ -478,36 +474,89 @@ int mapShowPath(Page* self) {
 }
 
 
-void buildDeviceDebugPage(Page* self) {
-    self->addText("Left  Motor A", 20, 60, color::white, fontType::mono20, "LeftMotorA");
-    self->addText("Left  Motor B", 20, 80, color::white, fontType::mono20, "LeftMotorB");
-    self->addText("Right Motor A", 20, 100, color::white, fontType::mono20, "RightMotorA");
-    self->addText("Right Motor B", 20, 120, color::white, fontType::mono20, "RightMotorB");
-    self->addText("Inertial Sensor", 20, 140, color::white, fontType::mono20, "InertialSensor");
-    self->addText("Left  Encoder", 20, 160, color::white, fontType::mono20, "LeftEncoder");
-    self->addText("Right Encoder", 20, 180, color::white, fontType::mono20, "RightEncoder");
-    self->addText("Vision Sensor", 20, 200, color::white, fontType::mono20, "VisionSensor");
-    self->addText("Controller", 20, 220, color::white, fontType::mono20, "Controller");
+void addDrivetrain(Page* self, int x, int y) {
+    int width = 85;
+    int height = 110;
+
+    self->addDisplayBox("", x, y, width, height, color::black);
+    self->addDisplayBox("", x + 5, y + 5, width - 10, height - 10, color::black);
+
+    self->addDisplayBox("lmA", x, y + 10, 20, 20, color::red);
+    self->addDisplayBox("lmB", x, y + 35, 20, 20, color::red);
+    self->addDisplayBox("lmC", x, y + 70, 20, 20, color::red);
+
+    self->addDisplayBox("rmA", x + 65, y + 10, 20, 20, color::red);
+    self->addDisplayBox("rmB", x + 65, y + 35, 20, 20, color::red);
+    self->addDisplayBox("rmC", x + 65, y + 70, 20, 20, color::red);
+
+
+    // x = 110
+    // y = 60
+
+    self->addLine(Line(x - 30, y + 10, x - 10, y + 20));
+    self->addLine(Line(x - 60, y + 10, x - 30, y + 10));
+    self->addText("%d C", x - 60, y + 5, color::white, fontType::mono15, "lmA");
+
+    self->addLine(Line(x - 50, y + 35, x - 10, y + 45));
+    self->addLine(Line(x - 80, y + 35, x - 50, y + 35));
+    self->addText("%d C", x - 80, y + 30, color::white, fontType::mono15, "lmB");
+
+    self->addLine(Line(x - 30, y + 90, x - 10, y + 80));
+    self->addLine(Line(x - 60, y + 90, x - 30, y + 90));
+    self->addText("%d C", x - 60, y + 85, color::white, fontType::mono15, "lmC");
+
+
+    self->addLine(Line(x + 115, y + 10, x + 100, y + 20));
+    self->addLine(Line(x + 145, y + 10, x + 115, y + 10));
+    self->addText("%d C", x + 120, y + 5, color::white, fontType::mono15, "rmA");
+
+    self->addLine(Line(x + 135, y + 35, x + 100, y + 45));
+    self->addLine(Line(x + 165, y + 35, x + 135, y + 35));
+    self->addText("%d C", x + 140, y + 30, color::white, fontType::mono15, "rmB");
+
+    self->addLine(Line(x + 115, y + 90, x + 100, y + 80));
+    self->addLine(Line(x + 145, y + 90, x + 115, y + 90));
+    self->addText("%d C", x + 120, y + 85, color::white, fontType::mono15, "rmC");
+}
+void addSideView(Page* self, int x, int y) {
+
     
-    self->addText("Port %d", 180, 60, color::white, fontType::mono20, "lma");
-    self->setTextData("lma", (int)leftMotorAPort + 1);
-    self->addText("Port %d", 180, 80, color::white, fontType::mono20, "lmb");
-    self->setTextData("lmb", (int)leftMotorBPort + 1);
-    self->addText("Port %d", 180, 100, color::white, fontType::mono20, "rma");
-    self->setTextData("rma", (int)rightMotorAPort + 1);
-    self->addText("Port %d", 180, 120, color::white, fontType::mono20, "rmb");
-    self->setTextData("rmb", (int)rightMotorBPort + 1);
+    self->addDisplayBox("", x + 5, y + 30, 10, 30, color::black); // Brain
 
-    self->addText("Port %d", 180, 140, color::white, fontType::mono20, "inertial");
-    self->setTextData("inertial", (int)inertialPort + 1);
-    self->addText("Port %d", 180, 160, color::white, fontType::mono20, "lep");
-    self->setTextData("lep", (int)leftEncoderPort + 1);
-    self->addText("Port %d", 180, 180, color::white, fontType::mono20, "rep");
-    self->setTextData("rep", (int)rightEncoderPort + 1);
+    // Wheels
+    self->addDisplayBox("", x + 5, y + 50, 20, 20, vex::color(200, 200, 200));
+    self->addDisplayBox("", x + 30, y + 50, 20, 20, vex::color(200, 200, 200));
+    self->addDisplayBox("", x + 55, y + 50, 20, 20, vex::color(200, 200, 200));
+    self->addDisplayBox("", x + 80, y + 50, 20, 20, vex::color(200, 200, 200));
 
-    self->addText("-", 180, 200, color::white, fontType::mono20, "VisionSensor");
-    self->addText("-", 180, 220, color::white, fontType::mono20, "Controller");
+    // Flywheel
+    self->addDisplayBox("", x + 38, y + 20, 20, 40, color::black);
+    self->addCircle(Circle(x + 48, y + 10, 15, color(230, 230, 230)));
+    self->addDisplayBox("flywheel", x + 40, y, 15, 30, color::black);
+    
+    // Drivetrain
+    self->addDisplayBox("", x, y + 50, 110, 15, color::black);
 
+    // Add intake
+    self->addLine(Line(x + 60, y + 50, x + 120, y + 5));
+    self->addLine(Line(x + 80, y + 50, x + 120, y + 20));
+    self->addLine(Line(x + 120, y + 5, x + 120, y + 20));
+
+    self->addCircle(Circle(x + 128, y + 14, 19, color(230, 230, 230)));
+    self->addDisplayBox("intake", x + 120, y, 15, 30, color::black);
+
+
+    self->addText("Flywheel: %d C", x - 120, y + 20, color::white, fontType::mono15, "flywheel");
+    self->addText("Intake: %d C", x - 120, y + 40, color::white, fontType::mono15, "intake");
+}
+
+void buildDeviceDebugPage(Page* self) {
+    
+    // self->addLine(Line(100, 100, 400, 200, 5, vex::color::blue));
+
+    // Make Bot Visualization
+    addDrivetrain(self, 90, 55);
+    addSideView(self, 190, 170);
 
     self->addText("Feild Status", 340, 60, white, fontType::mono20, "filed");
     self->addText("Odom System", 340, 80, white, fontType::mono20, "odom");
@@ -515,19 +564,40 @@ void buildDeviceDebugPage(Page* self) {
     self->addText("Auton System", 340, 120, white, fontType::mono20, "auton");
     self->addText("SD Card", 340, 140, white, fontType::mono20, "sd");
 }
+void updateMotorBox(Page* self, const char* id, vex::motor* mtr) {
+
+    if (!mtr->installed()) {
+        self->setTextData(id, 0);
+        self->setDisplayBoxData(id, color::black);
+        return;
+    }
+
+    self->setTextData(id, (int)mtr->temperature(temperatureUnits::celsius));
+
+    if (mtr->temperature(temperatureUnits::celsius) < 40) {
+        self->setDisplayBoxData(id, color::green);
+    } else {
+        if (mtr->temperature(temperatureUnits::celsius) > 50) {
+            self->setDisplayBoxData(id, color::red);
+        } else {
+            self->setDisplayBoxData(id, color::orange);
+        }
+    }
+}
+
 int updateDeviceDebug(Page* self) {
-       
-    self->setTextData("LeftMotorA", leftMotorA.installed() ? green : red);
-    self->setTextData("LeftMotorB", leftMotorB.installed() ? green : red);
-    self->setTextData("RightMotorA", rightMotorA.installed() ? green : red);
-    self->setTextData("RightMotorB", rightMotorB.installed() ? green : red);
+    
+    // Set Motor temps and colors
+    updateMotorBox(self, "lmA", &leftMotorA);
+    updateMotorBox(self, "lmB", &leftMotorB);
+    updateMotorBox(self, "lmC", &leftMotorC);
 
-    self->setTextData("InertialSensor", inertialSensor.installed() ? green : red);
-    self->setTextData("LeftEncoder", leftEncoder.installed() ? green : red);
-    self->setTextData("RightEncoder", rightEncoder.installed() ? green : red);
-    self->setTextData("Controller", mainController.installed() ? green : red);
+    updateMotorBox(self, "rmA", &rightMotorA);
+    updateMotorBox(self, "rmB", &rightMotorB);
+    updateMotorBox(self, "rmC", &rightMotorC);
 
-    self->setTextData("VisionSensor", visionSensor.installed() ? green : red);
+    updateMotorBox(self, "flywheel", &catapultMotor);
+
 
     self->setTextData("filed", Competition.isFieldControl() ? green : red);
     if (Odometry.isTracking) {
@@ -544,25 +614,6 @@ int updateDeviceDebug(Page* self) {
     self->setTextData("sd", Brain.SDcard.isInserted() ? green : red);
     return 1;
 }
-
-
-int updateMotorDebug(Page* self) {
-
-    self->setProgressBarValue("efl", (int)leftMotorA.efficiency());
-    self->setProgressBarValue("efr", (int)rightMotorA.efficiency());
-    self->setProgressBarValue("ebl", (int)leftMotorB.efficiency());
-    self->setProgressBarValue("ebr", (int)rightMotorB.efficiency());
-    self->setProgressBarValue("cat", (int)catapultMotor.efficiency());
-
-    self->setTextData("tfl", (int)floor(leftMotorA.temperature(temperatureUnits::celsius)));
-    self->setTextData("tfr", (int)floor(rightMotorA.temperature(temperatureUnits::celsius)));
-    self->setTextData("tbl", (int)floor(leftMotorB.temperature(temperatureUnits::celsius)));
-    self->setTextData("tbr", (int)floor(rightMotorB.temperature(temperatureUnits::celsius)));
-    self->setTextData("cat", (int)floor(catapultMotor.temperature(temperatureUnits::celsius)));
-
-    return 1;
-}
-
 
 
 // Initialize All The Pages
@@ -591,7 +642,6 @@ int brainDisplayerInit() {
     Page autonConfigPage;
     Page systemConfigPage;
     Page devicesDebug;
-    Page motorsDebug;
 
     // Configure the loading page
     loadingPage.addText("BURT OS", 140, 100, color::white, fontType::mono60);
@@ -608,7 +658,6 @@ int brainDisplayerInit() {
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
     homePage.addButton("Devies", 80, 210, 100, 30, gotoDevicesDebugPageButton, "systemButton");
-    homePage.addButton("Motors", 80, 170, 100, 30, gotoMotorDebugPageButton, "systemButton");
     homePage.addHorzProgressBar("battery", 325, 15, 150, 30, "Battery: %d%%", false, false, batteryGradient.finalGradient);
     homePage.addText("Status: ", 325, 70, color::white, fontType::prop20);
     homePage.addText("YEET", 390, 70, color::white, fontType::prop20, "batStatus");
@@ -676,32 +725,13 @@ int brainDisplayerInit() {
 
 
     // Device Debug
-    devicesDebug.addText("Installed Devices: ", 20, 35, color::white, fontType::mono30, "title");
+    devicesDebug.addText("System Status: ", 20, 35, color::white, fontType::mono30, "title");
     devicesDebug.addText("Systems: ", 340, 35, color::white, fontType::mono30, "altTitle");
 
     buildDeviceDebugPage(&devicesDebug);
 
     devicesDebug.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton, "prevPageButton");
     devicesDebug.addDataUpdaterCB(updateDeviceDebug, 1);
-
-
-    // Configure the motor debug page
-    motorsDebug.addText("Efficiency", 20, 30, color::white, fontType::mono30);
-    motorsDebug.addHorzProgressBar("efl", 20, 55, 175, 15, "FL %d%%", false, false, batteryGradient.finalGradient);
-    motorsDebug.addHorzProgressBar("efr", 20, 93, 175, 15, "FR %d%%", false, false, batteryGradient.finalGradient);
-    motorsDebug.addHorzProgressBar("ebl", 20, 131, 175, 15, "BL %d%%", false, false, batteryGradient.finalGradient);
-    motorsDebug.addHorzProgressBar("ebr", 20, 169, 175, 15, "BR %d%%", false, false, batteryGradient.finalGradient);
-
-    motorsDebug.addHorzProgressBar("cat", 220, 55, 175, 15, "Catapult %d%%", false, false, batteryGradient.finalGradient);
-    motorsDebug.addText("Temp: %d C", 360, 55, color::white, fontType::mono15, "cat");
-
-    motorsDebug.addText("Temp: %d C", 110, 55, color::white, fontType::mono15, "tfl");
-    motorsDebug.addText("Temp: %d C", 110, 93, color::white, fontType::mono15, "tfr");
-    motorsDebug.addText("Temp: %d C", 110, 131, color::white, fontType::mono15, "tbl");
-    motorsDebug.addText("Temp: %d C", 110, 169, color::white, fontType::mono15, "tbr");
-
-    motorsDebug.addButton("Back", 380, 210, 100, 30, gotoPrevPageButton);
-    motorsDebug.addDataUpdaterCB(updateMotorDebug, 0.1);
 
     // Add pages to the main renderer
     mainRenderer.addPage("loading", loadingPage);
@@ -712,7 +742,6 @@ int brainDisplayerInit() {
     mainRenderer.addPage("queue", queuePage);
     mainRenderer.addPage("map", mapPage);
     mainRenderer.addPage("deviceDebug", devicesDebug);
-    mainRenderer.addPage("motorsDebug", motorsDebug);
 
     return 1;
 };

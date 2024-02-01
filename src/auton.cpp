@@ -324,7 +324,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     motionProfiling::Profile speedProfile = motionProfiling::genVelProfile(distBetweenPoints(odometrySystemPointer->currentPos(), pos));
     double driveVelocity = 0.00;
 
-    double wheelCircumference = 2 * PI * (wheelDiameter / 2);
+    double wheelCircumference = PI * wheelDiameter;
     double motorGear = 72;
     double wheelGear = 36;
 
@@ -381,6 +381,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
 
 
         // Convert Velocity ( in/s ) to rpm of motor
+        // Times by 60 to get rpm from rps
         double leftMotorVel = (60 * leftVelocity) / (gearRatio * wheelCircumference);
         double rightMotorVel = (60 * rightVelocity) / (gearRatio * wheelCircumference);
 

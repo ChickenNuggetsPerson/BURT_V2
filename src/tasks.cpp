@@ -12,10 +12,35 @@ void rightPressed() {
 
   botAI.setForceStop(false);
 
-  botAI.gotoLoc(odom::TilePosition(1, 1));
-  botAI.gotoLoc(odom::TilePosition(0, 1));
-  botAI.gotoLoc(odom::TilePosition(0, 0));
-  botAI.gotoLoc(odom::TilePosition(1, 0));
+  leftMotorA.spin(fwd, 10, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+  leftMotorA.spin(fwd, 0, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+
+  leftMotorB.spin(fwd, 10, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+  leftMotorB.spin(fwd, 0, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+
+  leftMotorC.spin(fwd, 10, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+  leftMotorC.spin(fwd, 0, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+
+  rightMotorA.spin(fwd, 10, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+  rightMotorA.spin(fwd, 0, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+
+  rightMotorB.spin(fwd, 10, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+  rightMotorB.spin(fwd, 0, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+
+  rightMotorC.spin(fwd, 10, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
+  rightMotorC.spin(fwd, 0, voltageUnits::volt);
+  vex::wait(1, timeUnits::sec);
 }
 
 // Setup callbacks and initialize auton
@@ -62,6 +87,5 @@ void usercontrol(void) {
 void whenStarted(void) {
 
   DEBUGLOG("BATTERY STATUS: ", Brain.Battery.capacity());
-
 
 }

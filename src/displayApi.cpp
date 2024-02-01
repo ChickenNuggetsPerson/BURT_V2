@@ -930,6 +930,17 @@ void Page::render() {
         Brain.Screen.setFont(fontType::mono20);
     }
 
+    // Render Circles
+    for (auto circle: circleStorage) {
+        Brain.Screen.setPenWidth(circle.thickness);
+        Brain.Screen.setPenColor(circle.strokeColor);
+        Brain.Screen.setFillColor(circle.fillColor);
+        Brain.Screen.drawCircle(circle.x, circle.y, circle.radius);
+    }
+    
+    Brain.Screen.setFillColor(color::white);
+    Brain.Screen.setPenColor(color::white);
+
     // Render Display Boxes
     for (auto displayBox: displayBoxStorage) {
         drawDisplayBox(displayBox);
@@ -969,6 +980,16 @@ void Page::render() {
     for (auto adjustNum: adjustNumStorage) {
         adjustNum.render();
     }
+
+    for (auto line: lineStorage) {
+        Brain.Screen.setPenWidth(line.thickness);
+        Brain.Screen.setPenColor(line.displayColor);
+        Brain.Screen.drawLine(line.x1, line.y1, line.x2, line.y2);
+    }
+
+    Brain.Screen.setPenWidth(1);
+    Brain.Screen.setPenColor(vex::color::white);
+    Brain.Screen.setFillColor(vex::color::black);
 
     // Render Overlay
     if (showOverlay) {

@@ -24,7 +24,7 @@ motor leftMotorC = motor(leftMotorCPort, ratio18_1, !devRobot);
 
 motor rightMotorA = motor(rightMotorAPort, ratio18_1, devRobot);
 motor rightMotorB = motor(rightMotorBPort, ratio18_1, devRobot);
-motor rightMotorC = motor(leftMotorCPort, ratio18_1, !devRobot);
+motor rightMotorC = motor(rightMotorCPort, ratio18_1, devRobot);
 
 
 motor leftArmMotor = motor(leftArmMotorPort, ratio36_1, true);

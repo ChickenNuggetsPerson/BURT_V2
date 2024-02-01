@@ -453,6 +453,23 @@ namespace display {
             void showPath(auton::autonPath displayPath);
     };
 
+    struct Line {
+        int x1, x2, y1, y2 = 0;
+        int thickness = 2;
+        vex::color displayColor = vex::color::white;
+        Line(int x1, int y1, int x2, int y2) : x1(x1), y1(y1), x2(x2), y2(y2) {};
+        Line(int x1, int y1, int x2, int y2, int thickness, vex::color displayColor) : x1(x1), y1(y1), x2(x2), y2(y2), thickness(thickness), displayColor(displayColor) {};
+    };
+    struct Circle {
+        int x, y, radius = 0;
+        int thickness = 2;
+        vex::color fillColor = vex::color::white;
+        vex::color strokeColor = vex::color::white;
+        Circle(int x, int y, int radius) : x(x), y(y), radius(radius) {}
+        Circle(int x, int y, int radius, vex::color fillColor) : x(x), y(y), radius(radius), fillColor(fillColor) {}
+        Circle(int x, int y, int radius, vex::color fillColor, vex::color strokeColor) : x(x), y(y), radius(radius), fillColor(fillColor), strokeColor(strokeColor) {}
+    };
+
     class Page {
         private:
 
@@ -472,6 +489,8 @@ namespace display {
             std::vector<DisplayBox> displayBoxStorage;
             std::vector<Toggle> toggleStorage;
             std::vector<Plot> plotStorage;
+            std::vector<Line> lineStorage;
+            std::vector<Circle> circleStorage;
 
             int activeAdjustNum = NAN;
             std::vector<AdjustableNum> adjustNumStorage;
@@ -562,7 +581,12 @@ namespace display {
                 this->backgroundColor = backgroundColor;
                 this->backgroundVexColor.rgb(backgroundColor.r, backgroundColor.g, backgroundColor.b);
             }
-
+            void addLine(Line line) {
+                lineStorage.push_back(line);
+            }
+            void addCircle(Circle circle) {
+                circleStorage.push_back(circle);
+            }
 
             void setProgressBarValue(const char* barId, int value);
             void setLineGraphValue(const char* graphId, int value);
