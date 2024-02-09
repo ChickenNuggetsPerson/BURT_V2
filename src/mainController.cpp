@@ -13,18 +13,18 @@ const double Wing_Speed = 2000;
 
 #define WingBtnCheck() { int btn = getBtnPressed(); if (btn != -1) { return btn; } };
 int getBtnPressed() {
-  if (mainController.ButtonB.pressing()) // B
+  if (mainController.ButtonL2.pressing()) // B
       return W_pos1;
-  if (mainController.ButtonA.pressing()) // A
+  if (mainController.ButtonL1.pressing()) // A
       return W_pos2;
-  if (mainController.ButtonY.pressing()) // Y
+  if (mainController.ButtonR2.pressing()) // Y
       return W_pos3;
-  if (mainController.ButtonX.pressing()) // X
+  if (mainController.ButtonR1.pressing()) // X
       return W_close;
   if (mainController.ButtonDown.pressing()) // Down
       return W_CataAlign;
 
-  if (mainController.ButtonR1.pressing() || mainController.ButtonR2.pressing() || mainController.ButtonL1.pressing() || mainController.ButtonL2.pressing())
+  if (mainController.ButtonA.pressing() || mainController.ButtonB.pressing() || mainController.ButtonY.pressing() || mainController.ButtonX.pressing())
       return W_loose;
 
   return -1;
@@ -34,14 +34,14 @@ int wingLooseState() {
   int leftDir = 0;
   int rightDir = 0;
 
-  if (mainController.ButtonR1.pressing()) 
+  if (mainController.ButtonA.pressing()) 
       rightDir++;
-  if (mainController.ButtonR2.pressing()) 
+  if (mainController.ButtonB.pressing()) 
       rightDir--;
 
-  if (mainController.ButtonL1.pressing()) 
+  if (mainController.ButtonX.pressing()) 
       leftDir++;
-  if (mainController.ButtonL2.pressing()) 
+  if (mainController.ButtonY.pressing()) 
       leftDir--;
 
   leftArmMotor.spin(vex::directionType::fwd, 10 * leftDir, vex::voltageUnits::volt);
@@ -166,6 +166,7 @@ void setMotors(double leftAmt, double rightAmt, vex::voltageUnits units) {
 }
 
 
+DriveSystem driveSystem = DriveSystem(&Brain, 8, 15);
 bool questioning = false;
 int controllerTask() {
 
@@ -220,7 +221,6 @@ int controllerTask() {
 	leftArmMotor.setPosition(0, vex::rotationUnits::deg);
   rightArmMotor.setPosition(0, vex::rotationUnits::deg);
 
-
   // Main driving loop
   while(true) {
 
@@ -230,9 +230,11 @@ int controllerTask() {
 
       // Main Loop for geting controller input
       if (!inertialSensor.isCalibrating()) {
+
         leftFB = mainController.Axis3.position();
         rightFB = mainController.Axis2.position();
         turn = mainController.Axis1.position();
+
       }
 
       cataArmMove = 0;
@@ -262,7 +264,7 @@ int controllerTask() {
         wasStopped = false;
       }
 
-      setMotors(leftMotors, rightMotors, velocityUnits::pct);
+      driveSystem.iterate(leftMotors, rightMotors);
 
     } else {
       wasStopped = true;

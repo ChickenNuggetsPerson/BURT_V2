@@ -33,8 +33,8 @@ void variablePrint(const T& arg, const Args&... args) {
 // Set the ratio to 1/1 if using shaft encoders
 
 static double wheelDiameter = 2.75;
-static double motorRatio = 1;
-static double wheelRatio = 1;
+static double motorGearTeeth = 2;
+static double wheelGearTeeth = 1;
 
 static double encoderDist = 4;
 static double backEncoderDist = 4.5; // use if we decide to use back encoders
@@ -45,7 +45,7 @@ static double backEncoderDist = 4.5; // use if we decide to use back encoders
 static double PI = M_PI; // PI variable used for all methods
 
 
-static double motorWarnTemp = 50; // The temp in c
+static double motorWarnTemp = 55; // The temp in c
 
 
 // Define Ports
@@ -55,14 +55,13 @@ static const int32_t leftMotorCPort = vex::PORT11;
 
 static const int32_t rightMotorAPort = vex::PORT9;
 static const int32_t rightMotorBPort = vex::PORT2;
-static const int32_t rightMotorCPort = vex::PORT12;
+static const int32_t rightMotorCPort = vex::PORT20;
 
-static const int32_t inertialPort = vex::PORT16;
+static const int32_t inertialPort = vex::PORT12;
 
 static const int32_t leftEncoderPort = vex::PORT17;
-static const int32_t rightEncoderPort = vex::PORT18;
+static const int32_t rightEncoderPort = vex::PORT7;
 
-static const int32_t frontArmMotorPort = vex::PORT10;
 static const int32_t cataMotorPort = vex::PORT5;
 
 static const int32_t leftArmMotorPort = vex::PORT8;

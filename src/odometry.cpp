@@ -42,7 +42,19 @@ int mainTrackingTask(void* system) {
     OdometrySystem* systemPointer = (OdometrySystem*)system;
 
     // Determine if the encoders are responding
-    systemPointer->usingDrive = !(leftEncoder.installed() && rightEncoder.installed());
+    if (rightEncoder.installed()) {
+        if (leftEncoder.installed()) {
+            systemPointer->usingDrive = false;
+            systemPointer->usingOneOdom = false;
+        } else {
+            systemPointer->usingDrive = false;
+            systemPointer->usingOneOdom = true;
+        }
+    } else {
+        systemPointer->usingDrive = true;
+        systemPointer->usingOneOdom = false;
+    }
+
 
     brainFancyDebug("Starting Calibration", color::yellow, true);
     if (!systemPointer->firstTime) {
@@ -148,11 +160,16 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     double newLeftEncoder; 
 
     if (usingDrive) {
-        newRightEncoder = (rightMotorB.position(rotationUnits::rev) / wheelRatio ) * motorRatio * circumference;
-        newLeftEncoder = (leftMotorB.position(rotationUnits::rev) / wheelRatio ) * motorRatio * circumference;
+        newRightEncoder = (rightMotorB.position(rotationUnits::rev) / wheelGearTeeth ) * motorGearTeeth * circumference;
+        newLeftEncoder = (leftMotorB.position(rotationUnits::rev) / wheelGearTeeth ) * motorGearTeeth * circumference;
     } else {
-        newRightEncoder = rightEncoder.position(rotationUnits::rev) * circumference;
-        newLeftEncoder = leftEncoder.position(rotationUnits::rev) * circumference;
+        if (usingOneOdom) {
+            newRightEncoder = rightEncoder.position(rotationUnits::rev) * circumference;
+            newLeftEncoder = newRightEncoder;
+        } else {
+            newRightEncoder = rightEncoder.position(rotationUnits::rev) * circumference;
+            newLeftEncoder = leftEncoder.position(rotationUnits::rev) * circumference;
+        }
     }
     // Use all four drivetrain wheels
     //double newRightEncoder = ((rightMotorA.position(rotationUnits::rev) + rightMotorB.position(rotationUnits::rev)) / 2) * circumference;
@@ -194,7 +211,7 @@ void OdometrySystem::track() {
     // Apply deltas to the global positions
     globalX += deltaDist * sin(currentData.heading);
     globalY += deltaDist * cos(currentData.heading);    
-
+    
     lastData = currentData;
 
     // Make sure to update the tile position

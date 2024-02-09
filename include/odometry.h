@@ -87,6 +87,7 @@ namespace odom {
             bool isTracking = false;
             bool firstTime = true;
             bool usingDrive = false;
+            bool usingOneOdom = false;
 
             double timeBetweenTrack = 0.02; // In seconds
 

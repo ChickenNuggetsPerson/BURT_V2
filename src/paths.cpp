@@ -22,23 +22,24 @@ autonPath buildPath(int pathID) {
             
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_close));
 
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0, 0.7, 0)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0, 0.64, 0)));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos1));
 
             path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 6));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 6));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 2));
 
-            path.add(autonMovement(AUTON_MOVE_TURNTO, 170));
+            // path.add(autonMovement(AUTON_MOVE_TURNTO, 170));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.02, 0.55)));
 
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_LeftAutonSwipeTriball));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.3, 0.15, 90)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.45, -0.1, 90)));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_loose));
 
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1, -0.1)));
+            // path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1, -0.1)));
             // path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_loose));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1.78, 0)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1.72, -0.1)));
 
-            path.add(autonMovement(AUTON_MOVE_DELAY, 200));
+            path.add(autonMovement(AUTON_MOVE_DELAY, 100));
 
             path.add(autonMovement(AUTON_MOVE_CATAPULT, 1));
 
@@ -93,14 +94,14 @@ autonPath buildPath(int pathID) {
             path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
 
             // Grab another triball
-            path.add(autonMovement(AUTON_MOVE_TURNTO, -90));
+            // path.add(autonMovement(AUTON_MOVE_TURNTO, -90));
             // path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4, 1)));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(2.9, 1.25)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(2.85, 1.3)));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_close));
             // path.add(autonMovement(AUTON_MOVE_TURNTO, 90));
 
             // Score
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4.5, 2)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4.5, 2, 90)));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos3));
             path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
 
@@ -129,7 +130,7 @@ autonPath buildPath(int pathID) {
             path.add(autonMovement(AUTON_MOVE_CATAPULT, 35));
 
             // Backup
-            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 6));
             
             // // Goto start pos
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.9, -1)));

@@ -325,10 +325,10 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     double driveVelocity = 0.00;
 
     double wheelCircumference = PI * wheelDiameter;
-    double motorGear = 72;
-    double wheelGear = 36;
+    double motorGear = 54;
+    double wheelGear = 18;
 
-    double gearRatio = motorGear / wheelGear;
+    double ratio = motorGear / wheelGear;
 
     // PID to keep the robot driving straight
     pid::PID turnPid(pid::PIDConfig(0.05, 0.01, 0.0));
@@ -382,11 +382,13 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
 
         // Convert Velocity ( in/s ) to rpm of motor
         // Times by 60 to get rpm from rps
-        double leftMotorVel = (60 * leftVelocity) / (gearRatio * wheelCircumference);
-        double rightMotorVel = (60 * rightVelocity) / (gearRatio * wheelCircumference);
+        double leftMotorVel = leftVelocity / ( ratio * wheelCircumference * (1.00/60.00) );
+        double rightMotorVel = rightVelocity / ( ratio * wheelCircumference * (1.00/60.00) );
+
+        // DEBUGLOG(leftMotorVel)
 
         // Apply Velocities
-        setMotors(leftMotorVel * 1, rightMotorVel * 1, velocityUnits::rpm);
+        setMotors(leftMotorVel * 0.97, rightMotorVel * 0.97, velocityUnits::rpm);
 
         wait(0.05, seconds);
     }

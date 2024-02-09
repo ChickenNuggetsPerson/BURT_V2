@@ -6,44 +6,33 @@ extern int isWriting;
 
 namespace misc {
 
-    template<unsigned int arrraySize>
+    template<unsigned int arraySize>
     class ValueAverager {
         private:
 
             int count = 0;
-            double prevVals[arrraySize] = { 0 };
+            double prevVals[arraySize] = { 0 };
             
         public:
 
             ValueAverager() {}
 
             double iterate(double newVal) {
-                prevVals[ count % arrraySize ] = newVal;
+                prevVals[ count % arraySize ] = newVal;
                 count++;
                 
                 double combined = 0.00;
-                for (int i = 0; i < arrraySize; i++) {
+                for (int i = 0; i < arraySize; i++) {
                     combined += prevVals[i];
                 }
-                return combined / (double)arrraySize;
+                return combined / (double)arraySize;
             }
-    };
 
-    class RampUp {
-        private:
-
-            int speedUpTime = 0;
-            int count = 0;
-
-        public:
-            RampUp(int speedupCount) { this->speedUpTime = speedupCount; }
-            double iterate(double in) {
-                if (count > speedUpTime) { return in; }
-                count++;
-
-                return (double)in * ( (double)count / (double)speedUpTime );
+            void reset() {
+                for (int i = 0; i < arraySize; i++) {
+                    prevVals[i] = 0.0;
+                }
             }
-            bool isSpeadingUp() { return count < speedUpTime; }
     };
 
     int readFile(const char* fileName);

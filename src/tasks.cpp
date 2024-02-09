@@ -10,37 +10,47 @@ using namespace vex;
 
 void rightPressed() {
 
+
+  queuingSystem.clear();
+  queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 24));
+  queuingSystem.runQueue();
+
+  return;
+
   botAI.setForceStop(false);
+  botAI.running = true;
 
-  leftMotorA.spin(fwd, 10, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  leftMotorA.spin(fwd, 13, voltageUnits::volt);
+  vex::wait(2, timeUnits::sec);
   leftMotorA.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  vex::wait(2, timeUnits::sec);
 
-  leftMotorB.spin(fwd, 10, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  leftMotorB.spin(fwd, 13, voltageUnits::volt);
+  vex::wait(2, timeUnits::sec);
   leftMotorB.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  vex::wait(2, timeUnits::sec);
 
-  leftMotorC.spin(fwd, 10, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  leftMotorC.spin(fwd, 13, voltageUnits::volt);
+  vex::wait(2, timeUnits::sec);
   leftMotorC.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  vex::wait(2, timeUnits::sec);
 
-  rightMotorA.spin(fwd, 10, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  rightMotorA.spin(fwd, 13, voltageUnits::volt);
+  vex::wait(2, timeUnits::sec);
   rightMotorA.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  vex::wait(2, timeUnits::sec);
 
-  rightMotorB.spin(fwd, 10, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  rightMotorB.spin(fwd, 13, voltageUnits::volt);
+  vex::wait(2, timeUnits::sec);
   rightMotorB.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  vex::wait(2, timeUnits::sec);
 
-  rightMotorC.spin(fwd, 10, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  rightMotorC.spin(fwd, 13, voltageUnits::volt);
+  vex::wait(2, timeUnits::sec);
   rightMotorC.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(1, timeUnits::sec);
+  vex::wait(2, timeUnits::sec);
+
+  botAI.running = false;
 }
 
 // Setup callbacks and initialize auton
@@ -84,8 +94,11 @@ void usercontrol(void) {
   botAI.setForceStop(true);
 }
 
+
 void whenStarted(void) {
 
   DEBUGLOG("BATTERY STATUS: ", Brain.Battery.capacity());
 
 }
+
+

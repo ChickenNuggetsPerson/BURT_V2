@@ -3,7 +3,7 @@
 #include "robotConfig.h"
 #include "displayApi.h"
 #include "visionSensorConfig.h"
-
+#include "mainController.h"
 
 #include "string"
 
@@ -39,8 +39,10 @@ int notificationCheck() {
 
     NotChecker.addMotor("RightMotorA", &rightMotorA);
     NotChecker.addMotor("RightMotorB", &rightMotorB);
+    NotChecker.addMotor("RightMotorC", &rightMotorC);
     NotChecker.addMotor("LeftMotorA", &leftMotorA);
     NotChecker.addMotor("LeftMotorB", &leftMotorB);
+    NotChecker.addMotor("LeftMotorC", &leftMotorC);
     
     NotChecker.addMotor("Flywheel", &catapultMotor);
     NotChecker.addMotor("Left Arm", &leftArmMotor);
@@ -64,11 +66,16 @@ int notificationCheck() {
 int updateHome(Page* self) {
     self->setProgressBarValue("battery", Brain.Battery.capacity());
     self->setLineGraphValue("batWatt", Brain.Battery.current(currentUnits::amp) * Brain.Battery.voltage(voltageUnits::volt));
-    
+
     if ( botAI.isRunningSkills()) {
         self->setTextData("skillsStatus", color::green, "[ Running Skills ]");
     } else {
-        self->setTextData("skillsStatus", color::white, " ");
+        if (!botAI.getConfig("startSide")) {
+            self->setTextData("skillsStatus", color::yellow, "[ Running Left ]");
+        } else {
+            self->setTextData("skillsStatus", color::yellow, "[ Running Right ]");
+        }
+
     }
     
     if (Brain.Battery.capacity() > 50) {
