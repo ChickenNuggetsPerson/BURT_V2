@@ -122,7 +122,7 @@ autonPath buildPath(int pathID) {
             brainFancyDebug("Building AUTON_PATH_SKILLS", vex::color::cyan);
             
             // Go infront of matchload
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1, 0.75, -135)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.9, 0.8, -130)));
             path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 26));
             path.add(autonMovement(AUTON_MOVE_TURNTO, -102));
 
@@ -136,14 +136,15 @@ autonPath buildPath(int pathID) {
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.9, -1)));
 
             // // Drive across area
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4.75, -0.1)));
-            // path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4, 1)));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(3, 2.25)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4.25, -0.2)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4, 1)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(3, 2.3)));
 
             // // Open wings and push
             path.add(autonMovement(AUTON_MOVE_TURNTO, 90));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 6));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_pos2));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 36));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 48));
             path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 12));
             
             break;

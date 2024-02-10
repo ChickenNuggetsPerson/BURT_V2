@@ -624,7 +624,7 @@ namespace display {
     };
 
     struct Notification {
-        const char* text;
+        std::string text;
         vex::color displayColor = color::white;
         double disapearTime;
         Notification(const char* displayText, int time, vex::color showColor = color::white) {

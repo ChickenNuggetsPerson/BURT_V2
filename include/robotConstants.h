@@ -45,7 +45,7 @@ static double backEncoderDist = 4.5; // use if we decide to use back encoders
 static double PI = M_PI; // PI variable used for all methods
 
 
-static double motorWarnTemp = 55; // The temp in c
+static double motorWarnTemp = 60; // The temp in c
 
 
 // Define Ports

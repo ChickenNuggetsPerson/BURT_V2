@@ -45,11 +45,11 @@ class DriveSystem {
         inline double getMaxVoltage() { return maxDriveVolt; }
 
 };
-extern DriveSystem driveSystem;
+// extern DriveSystem driveSystem;
 
 
 int controllerTask();
 void mainControllerRender();
-void mainControllerMessage(const char* text, int timeout);
+void mainControllerMessage(std::string text, int timeout);
 bool mainControllerOverlay(const char* question, const char* trueOption, const char* falseOption);
 int mainControllerPickOption(std::vector <const char*> options);

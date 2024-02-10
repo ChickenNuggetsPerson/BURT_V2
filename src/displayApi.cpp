@@ -1269,13 +1269,13 @@ void MenuSystem::stopUpdaterTask() {
 void MenuSystem::drawNotification(int rowNum, Notification notif) {
     int screenXSize = 480;
     //int width = 100;
-    int width = Brain.Screen.getStringWidth(notif.text) + 20;
+    int width = Brain.Screen.getStringWidth(notif.text.c_str()) + 20;
     //int height = 40;
-    int height = Brain.Screen.getStringHeight(notif.text) + 10;
+    int height = Brain.Screen.getStringHeight(notif.text.c_str()) + 10;
 
     Brain.Screen.drawRectangle(screenXSize - width, (rowNum * height), width, height);
     Brain.Screen.setPenColor(notif.displayColor);
-    Brain.Screen.printAt(screenXSize - (width / 2) - (Brain.Screen.getStringWidth(notif.text) / 2), (rowNum * height) + (height / 2) + (Brain.Screen.getStringHeight(notif.text) / 4), notif.text);
+    Brain.Screen.printAt(screenXSize - (width / 2) - (Brain.Screen.getStringWidth(notif.text.c_str()) / 2), (rowNum * height) + (height / 2) + (Brain.Screen.getStringHeight(notif.text.c_str()) / 4), notif.text.c_str());
     Brain.Screen.setPenColor(color::white);
 }
 void MenuSystem::render() {
@@ -1408,7 +1408,7 @@ void NotificationChecker::check() {
             } 
         }
         check.lastVal = newVal;
-        wait(0.2, timeUnits::sec);
+        wait(0.5, timeUnits::sec);
     }
     for (auto &check: motorCheckStorage) {
         if (checkMotor(check) && check.lastWarn < Brain.timer(timeUnits::msec)) {
@@ -1416,10 +1416,10 @@ void NotificationChecker::check() {
             std::stringstream tmpString;
             tmpString << check.motorName << " Overheated";
 
-            brainError(tmpString.str().c_str(), true);
+            mainControllerMessage(tmpString.str(), 4);
 
             check.lastWarn = Brain.timer(timeUnits::msec) + (check.warnTimeout * 1000);
         }
-        wait(0.2, timeUnits::sec);
+        wait(0.5, timeUnits::sec);
     }
 }

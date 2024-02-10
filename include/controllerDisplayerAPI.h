@@ -6,7 +6,7 @@
 #include "vector"
 
 struct ControllerMessage {
-    const char* text = "";
+    std::string text = "";
     double endTime = 0;
 };
 

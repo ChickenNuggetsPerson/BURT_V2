@@ -317,7 +317,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     // Turn to point to the location
     // Only do it if the robot has to turn more than 10 degrees
     if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 10)) {
-        turnTo(desiredHeading, 2.0);
+        turnTo(desiredHeading, 4);
     }
 
     // Generate Velocity Profile

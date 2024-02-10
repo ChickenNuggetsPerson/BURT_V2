@@ -8,7 +8,7 @@ using namespace vex;
 const double Wing_rotationOne = 30;
 const double Wing_rotationTwo = 430;
 const double Wing_rotationThree = 820;
-const double Wing_rotationClose = 990;
+const double Wing_rotationClose = 1030;
 const double Wing_Speed = 2000;
 
 #define WingBtnCheck() { int btn = getBtnPressed(); if (btn != -1) { return btn; } };
@@ -164,9 +164,9 @@ void setMotors(double leftAmt, double rightAmt, vex::voltageUnits units) {
   rightMotorB.spin(fwd, rightAmt, units);
   rightMotorC.spin(fwd, rightAmt, units);
 }
+inline double lerp(double start, double end, double amt) { return start + ((end - start) * amt); };
 
-
-DriveSystem driveSystem = DriveSystem(&Brain, 8, 15);
+// DriveSystem driveSystem = DriveSystem(&Brain, 8, 15);
 bool questioning = false;
 int controllerTask() {
 
@@ -264,7 +264,16 @@ int controllerTask() {
         wasStopped = false;
       }
 
-      driveSystem.iterate(leftMotors, rightMotors);
+      double avgTemp = (leftMotorA.temperature(temperatureUnits::celsius) + leftMotorA.temperature(temperatureUnits::celsius)) / 2;
+      double maxVolt = 10;
+      if (avgTemp > 55) {
+        maxVolt = 14;
+      }
+      setMotors(
+        lerp(0, maxVolt, leftMotors / 100.0), 
+        lerp(0, maxVolt, rightMotors / 100.0), 
+        vex::voltageUnits::volt
+      );
 
     } else {
       wasStopped = true;
@@ -299,7 +308,7 @@ void mainControllerRender() {
   odom::TilePosition currentPos = Odometry.currentTilePos();
 
   if (displayMessage.endTime > Brain.timer(timeUnits::msec)) {
-    mainController.Screen.print(displayMessage.text);
+    mainController.Screen.print(displayMessage.text.c_str());
     return;
   }
 
@@ -327,10 +336,10 @@ void mainControllerRender() {
 
 
 
-void mainControllerMessage(const char* text, int timeout) {
+void mainControllerMessage(std::string text, int timeout) {
   displayMessage.text = text;
   displayMessage.endTime = Brain.timer(timeUnits::msec) + (1000 * timeout);
-  mainController.rumble("..");
+  mainController.rumble(".");
 };
 bool mainControllerOverlay(const char* question, const char* trueOption, const char* falseOption) {
   if (!mainController.installed()) { return false; }
