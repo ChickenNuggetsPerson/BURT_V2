@@ -27,10 +27,11 @@ AutonSystem::AutonSystem(odom::OdometrySystem* systemPointer, aiQueueSystem* que
 
     // Define the Config
     configStorage = {
-        autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247)),
         autonConfig("startSide", "Left", "Right", false, vex::color(50, 50, 50), vex::color(0, 0, 0)),
+        autonConfig("isFinals", "Finals", false),
         autonConfig("isSkills", "Match", "Skills", false),
-        autonConfig("isDisabled", "Is Disabled", false)
+        autonConfig("isDisabled", "Is Disabled", false),
+        autonConfig("teamColor", "Red", "Blue", false, vex::color(247, 30, 54), vex::color(62, 133, 247))
     };    
 }
 
@@ -70,6 +71,7 @@ void AutonSystem::init() {
     odometrySystemPointer->restart();
 
     runningSkills = getConfig("isSkills");
+    runningFinals = getConfig("isFinals");
 
     // Initalize Auton Variables
     if (getConfig("teamColor")) {
@@ -91,25 +93,34 @@ void AutonSystem::generatePath() {
 
     // New Path System
     bool result = false;
+
+    bool isFinals = getConfig("isFinals");
+    std::string message = "Running ";
+
     if (runningSkills) {
         // result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_SKILLS_JSON);
 
-        mainControllerMessage("Running Skills", 5);
+        message += "Skills ";
+        result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_SKILLS, isFinals));
 
-        result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_SKILLS));
     } else {
         if (!getConfig("startSide")) {
             // result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_LEFT_JSON);
-            result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_LEFT));
-            mainControllerMessage("Running Left", 5);
+            result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_LEFT, isFinals));
+            message += "Left ";
         } else {
             //result = queueSystemPtr->addToQueue(AUTON_PATH_FOLDER + AUTON_PATH_RIGHT_JSON);
-            result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_RIGHT));
-            mainControllerMessage("Running Right", 5);
+            result = queueSystemPtr->addToQueue(buildPath(AUTON_PATH_RIGHT, isFinals));
+            message += "Right ";
         }
     }
     if (!result) {
         brainError("Error Reading JSON");
+    } else {
+        if (isFinals) {
+            message += "Finals";
+        }
+        mainControllerMessage(message, 5);
     }
     odometrySystemPointer->setPos(getStartPos());
 }
@@ -170,6 +181,8 @@ bool AutonSystem::isReady() {return loaded;};
 
 // Returns if the auton is configures for skills
 bool AutonSystem::isRunningSkills() {return runningSkills;}
+
+bool AutonSystem::isFinals() { return runningFinals; };
 
 // Finds the nearest rotation based on the provided target absolute rotation
 // USES DEGREES AND NOT RADIANS
@@ -240,11 +253,11 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
 
     double heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
     double target = findNearestRot(heading, deg);
-    pid::PID turnPID(pid::PIDConfig(0.1, 0.01, 0.01), target);
+    pid::PID turnPID(pid::PIDConfig(0.12, 0.02, 0.01), target);
     turnPID.addBrainPtr(&Brain);
 
-    double accuracy = 5;
-    int checks = 15;
+    double accuracy = 3;
+    int checks = 10;
 
     double lastRot = odometrySystemPointer->currentPos().rot;
     int totalChecks = 0;
@@ -261,8 +274,8 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
 
         // DEBUGLOG("TURNTO PID: ", power);
 
-        double deltaHeading = lastRot - heading;
-        if (fabs(deltaHeading) <= accuracy) {
+        double headingError = target - heading;
+        if (fabs(power) <= accuracy && fabs(headingError) <= 3) {
             totalChecks++;
             if (totalChecks > checks) {
                 break;
@@ -317,7 +330,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     // Turn to point to the location
     // Only do it if the robot has to turn more than 10 degrees
     if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 10)) {
-        turnTo(desiredHeading, 4);
+        turnTo(desiredHeading, 0.8);
     }
 
     // Generate Velocity Profile
@@ -396,7 +409,7 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
     // wait(0.1, seconds);
 
     if (!std::isnan(pos.rot)) {
-        turnTo(pos.rot, 2.5);
+        turnTo(pos.rot, 1.5);
     }
 
     wait(0.1, seconds);
@@ -539,11 +552,29 @@ bool AutonSystem::reverseDrive(double distance) {
     odom::Position movementStartPos = odometrySystemPointer->currentPos();
     double deltaDist = distBetweenPoints(movementStartPos, odometrySystemPointer->currentPos());
 
-    setMotors(-5, -5, voltageUnits::volt);
+    pid::PID drivePid = pid::PID(pid::PIDConfig(0.3, 0.0, 0), distance);
 
-    while (deltaDist < distance) { 
+    setMotors(0, 0, voltageUnits::volt);
+
+    double endTime = Brain.timer(timeUnits::msec) + 1000;
+
+    int checks = 0;
+    bool running = true;
+    while (running) { 
         CheckForceStop();
         deltaDist = distBetweenPoints(movementStartPos, odometrySystemPointer->currentPos()); 
+
+        double power = drivePid.iterate(deltaDist);
+        setMotors(power, power, voltageUnits::volt);
+
+        if (fabs(odometrySystemPointer->getVelocity()) < 1 && Brain.timer(timeUnits::msec) > endTime) {
+            checks ++;
+        }
+
+        if (checks > 10) {
+            running = false;
+        }
+
         wait(10, timeUnits::msec); 
     }
 
@@ -754,7 +785,7 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
 
         case AUTON_MOVE_TURNTO:
             DEBUGLOG("AUTO RUN: Turn To");
-            return aiPtr->turnTo(movement.val);
+            return aiPtr->turnTo(movement.val, 1);
 
         case AUTON_MOVE_CATAPULT:
             DEBUGLOG("AUTO RUN: Catapult");
@@ -762,9 +793,13 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
 
         case AUTON_MOVE_WING_SET_STATE:
             DEBUGLOG("AUTO RUN: Wing Set State");
-            wingStateMachine.setState(movement.val);
+            setWings((WingStates)movement.val);
             vex::wait(400, vex::timeUnits::msec);
             return true;
+        
+        case AUTON_MOVE_INTAKE_SET:
+            DEBUGLOG("AUTO RUN: Intake Direction Set");
+            setIntakeDir(movement.val);
 
         default:
             return false;

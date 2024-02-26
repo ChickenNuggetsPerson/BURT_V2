@@ -4,114 +4,7 @@
 using namespace vex;
 
 
-//  Wing State Machine Functions
-const double Wing_rotationOne = 30;
-const double Wing_rotationTwo = 430;
-const double Wing_rotationThree = 820;
-const double Wing_rotationClose = 1030;
-const double Wing_Speed = 2000;
-
-#define WingBtnCheck() { int btn = getBtnPressed(); if (btn != -1) { return btn; } };
-int getBtnPressed() {
-  if (mainController.ButtonL2.pressing()) // B
-      return W_pos1;
-  if (mainController.ButtonL1.pressing()) // A
-      return W_pos2;
-  if (mainController.ButtonR2.pressing()) // Y
-      return W_pos3;
-  if (mainController.ButtonR1.pressing()) // X
-      return W_close;
-  if (mainController.ButtonDown.pressing()) // Down
-      return W_CataAlign;
-
-  if (mainController.ButtonA.pressing() || mainController.ButtonB.pressing() || mainController.ButtonY.pressing() || mainController.ButtonX.pressing())
-      return W_loose;
-
-  return -1;
-}
-int wingLooseState() {
-
-  int leftDir = 0;
-  int rightDir = 0;
-
-  if (mainController.ButtonA.pressing()) 
-      rightDir++;
-  if (mainController.ButtonB.pressing()) 
-      rightDir--;
-
-  if (mainController.ButtonX.pressing()) 
-      leftDir++;
-  if (mainController.ButtonY.pressing()) 
-      leftDir--;
-
-  leftArmMotor.spin(vex::directionType::fwd, 10 * leftDir, vex::voltageUnits::volt);
-  rightArmMotor.spin(vex::directionType::fwd, 10 * rightDir, vex::voltageUnits::volt);
-
-  WingBtnCheck()
-
-  return W_loose;
-}
-int wingPos1State() {
-  rightArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-
-  WingBtnCheck()
-
-  return W_pos1;
-}
-int wingPos2State() {
-  rightArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(Wing_rotationTwo, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-
-  WingBtnCheck()
-
-  return W_pos2;
-}
-int wingPos3State() {
-  rightArmMotor.spinToPosition(Wing_rotationThree, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(Wing_rotationThree, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-
-  WingBtnCheck()
-
-  return W_pos3;
-}
-int wingCloseState() {
-  rightArmMotor.spinToPosition(Wing_rotationClose, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(Wing_rotationClose, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-
-  WingBtnCheck()
-
-  return W_close;
-}
-int wingCataAlignState() {
-  // Fix this
-
-  rightArmMotor.spinToPosition(750, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-
-  WingBtnCheck()
-
-  return W_CataAlign;
-}
-int wingLeftAutonState() {
-
-  rightArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(560, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-
-  WingBtnCheck()
-
-  return W_LeftAutonPoleTouch;
-}
-int wingLeftAutonStateSwipe() {
-
-  rightArmMotor.spinToPosition(480, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-  leftArmMotor.spinToPosition(Wing_rotationOne, vex::rotationUnits::deg, Wing_Speed, vex::velocityUnits::rpm, false);
-
-  WingBtnCheck()
-
-  return W_LeftAutonSwipeTriball;
-}
-
+// Catapult Code
 bool cata_autoLaunch = false;
 void startCatapult() {
     cata_autoLaunch = true;
@@ -136,7 +29,73 @@ void catapultCheck() {
 }
 
 
+// Wing Code
+bool leftWing = false;
+bool rightWing = false;
+void toggleWings() {
+  leftWing = !leftWing;
+  rightWing = leftWing;
+}
+void toggleLeft() {
+  leftWing = !leftWing;
+}
+void toggleRight() {
+  rightWing = !rightWing;
+}
+void setWings(WingStates state) {
+  switch (state) {
+    case WingStates::W_Close:
+      leftWing = false;
+      rightWing = false;
+      break;
 
+    case WingStates::W_All_Open:
+      leftWing = true;
+      rightWing = true;
+      break;
+
+    case WingStates::W_L_Open:
+      leftWing = true;
+      rightWing = false;
+      break;
+
+    case WingStates::W_R_Open:
+      leftWing = false;
+      rightWing = true;
+      break;
+  }
+}
+auto L1Btn = ButtonSystem(&Brain, &mainController, ButtonSystem_Btn::L1, false, toggleWings, nullptr, 10);
+auto YBtn = ButtonSystem(&Brain, &mainController, ButtonSystem_Btn::Y, false, toggleLeft, nullptr, 10);
+auto ABtn = ButtonSystem(&Brain, &mainController, ButtonSystem_Btn::A, false, toggleRight, nullptr, 10);
+void wingCheck() {
+  L1Btn.check();
+  YBtn.check();
+  ABtn.check();
+}
+
+
+// Intake Code
+int intakeDir = 0;
+void intakeForward() {
+  intakeDir = 1;
+}
+void intakeOutward() {
+  intakeDir = -1;
+}
+void stopIntake() {
+  intakeDir = 0;
+}
+void setIntakeDir(int dir) {
+  intakeDir = dir;
+}
+auto R1Btn = ButtonSystem(&Brain, &mainController, ButtonSystem_Btn::R1, false, intakeForward, stopIntake, 100);
+auto R2Btn = ButtonSystem(&Brain, &mainController, ButtonSystem_Btn::R2, false, intakeOutward, stopIntake, 100);
+void intakeCheck() {
+  R1Btn.check();
+  R2Btn.check();
+  intakeMotor.spin(vex::directionType::fwd, 10 * intakeDir, vex::voltageUnits::volt);
+}
 
 void setMotors(double leftAmt, double rightAmt, vex::velocityUnits units) {
   leftMotorA.spin(fwd);
@@ -170,16 +129,8 @@ inline double lerp(double start, double end, double amt) { return start + ((end 
 bool questioning = false;
 int controllerTask() {
 
-  wingStateMachine.addState(W_loose, wingLooseState);
-  wingStateMachine.addState(W_pos1, wingPos1State);
-  wingStateMachine.addState(W_pos2, wingPos2State);
-  wingStateMachine.addState(W_pos3, wingPos3State);
-  wingStateMachine.addState(W_close, wingCloseState);
-  wingStateMachine.addState(W_CataAlign, wingCataAlignState);
-  wingStateMachine.addState(W_LeftAutonPoleTouch, wingLeftAutonState);
-  wingStateMachine.addState(W_LeftAutonSwipeTriball, wingLeftAutonStateSwipe);
-  wingStateMachine.start(W_pos1);
-
+  vex::digital_out leftWingSolenoid = vex::digital_out(Brain.ThreeWirePort.A);
+  vex::digital_out rightWingSolenoid = vex::digital_out(Brain.ThreeWirePort.B);
 
   // Set up variables
   double leftMotors = 0;
@@ -207,19 +158,6 @@ int controllerTask() {
 
   int frontArmVal = 0;
   int cataArmMove = 0;
-
-
-  // Set up the wings
-  leftArmMotor.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
-  rightArmMotor.spin(vex::directionType::rev, 10, vex::voltageUnits::volt);
-
-	vex::wait(800, vex::timeUnits::msec);
-
-	leftArmMotor.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-  rightArmMotor.spin(vex::directionType::fwd, 0, vex::voltageUnits::volt);
-
-	leftArmMotor.setPosition(0, vex::rotationUnits::deg);
-  rightArmMotor.setPosition(0, vex::rotationUnits::deg);
 
   // Main driving loop
   while(true) {
@@ -280,7 +218,10 @@ int controllerTask() {
     }
 
     // iterate over systems
-    wingStateMachine.iterate();
+    wingCheck();
+    leftWingSolenoid.set(leftWing);
+    rightWingSolenoid.set(rightWing);
+    intakeCheck();
     catapultCheck();
 
 

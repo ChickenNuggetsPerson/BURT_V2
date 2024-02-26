@@ -33,6 +33,7 @@ static const int AUTON_MOVE_CATAPULT = 12;
 // static const int AUTON_MOVE_ARM_CALIBRATE = 13;
 
 static const int AUTON_MOVE_WING_SET_STATE = 14;
+static const int AUTON_MOVE_INTAKE_SET = 15;
 
 namespace auton {
 
@@ -124,6 +125,7 @@ namespace auton {
 
       bool loaded = false;
       bool runningSkills = false;
+      bool runningFinals = false;
 
       double findNearestRot(double currentRot, double targetRot);
       inline double angleBetweenPoints(odom::Position pos1, odom::Position pos2);
@@ -156,6 +158,7 @@ namespace auton {
 
       bool isReady();
       bool isRunningSkills();
+      bool isFinals();
 
       void setStartPos();
       void setStartPos(odom::TilePosition pos);

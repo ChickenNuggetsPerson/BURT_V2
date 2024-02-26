@@ -17,6 +17,7 @@
 
 ## TODO:
 - [ ] Configurable AUTON: Choose what it does
+- [ ] Configurable AUTON: Have finals auton
 
 <br>
 

@@ -27,8 +27,7 @@ int main() {
   Competition.drivercontrol(usercontrol);
 
   
-  pre_auton();
-
+  initializeSystems();
   whenStarted();
 
   // Prevent main from exiting with an infinite loop.

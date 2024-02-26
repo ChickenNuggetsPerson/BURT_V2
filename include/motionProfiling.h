@@ -8,7 +8,7 @@ namespace motionProfiling {
     using Profile = std::unique_ptr<std::vector<double>>;
 
     // Adjust vel function in desmos to get correct max speed
-    static double accelerationTime = 0.45; // Results in max speed of 48in/sec
+    static double accelerationTime = 0.35; // Results in max speed of 48in/sec
     static double accelerationDist = 6.0;
 
     static double timeIncrement = 0.1;

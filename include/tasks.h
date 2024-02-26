@@ -1,6 +1,6 @@
 #pragma once
 
-void pre_auton(void);
+void initializeSystems(void);
 
 void autonomous(void);
 

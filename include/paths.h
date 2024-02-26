@@ -2,4 +2,4 @@
 
 #include "auton.h"
 
-auton::autonPath buildPath(int pathID);
+auton::autonPath buildPath(int pathID, bool isFinals);

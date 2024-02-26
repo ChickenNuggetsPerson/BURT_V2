@@ -50,23 +50,20 @@ static double motorWarnTemp = 60; // The temp in c
 
 // Define Ports
 static const int32_t leftMotorAPort = vex::PORT6;
-static const int32_t leftMotorBPort = vex::PORT3;
-static const int32_t leftMotorCPort = vex::PORT11;
+static const int32_t leftMotorBPort = vex::PORT5;
+static const int32_t leftMotorCPort = vex::PORT1;
 
-static const int32_t rightMotorAPort = vex::PORT9;
-static const int32_t rightMotorBPort = vex::PORT2;
-static const int32_t rightMotorCPort = vex::PORT20;
+static const int32_t rightMotorAPort = vex::PORT8;
+static const int32_t rightMotorBPort = vex::PORT9;
+static const int32_t rightMotorCPort = vex::PORT10;
 
-static const int32_t inertialPort = vex::PORT12;
+static const int32_t inertialPort = vex::PORT18;
 
 static const int32_t leftEncoderPort = vex::PORT17;
 static const int32_t rightEncoderPort = vex::PORT7;
 
-static const int32_t cataMotorPort = vex::PORT5;
-
-static const int32_t leftArmMotorPort = vex::PORT8;
-static const int32_t rightArmMotorPort = vex::PORT10;
-
+static const int32_t cataMotorPort = vex::PORT2;
+static const int32_t intakeMotorPort = vex::PORT3; // Change this
 
 // Odom Constants
 static odom::TilePosition ODOM_DEFAULT_RESET_POS(0, 0, 0);

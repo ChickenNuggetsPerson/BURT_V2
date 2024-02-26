@@ -16,7 +16,7 @@ auton::AutonSystem botAI = auton::AutonSystem(&Odometry, &queuingSystem);
 inertial inertialSensor = inertial(inertialPort);
 
 rotation leftEncoder = rotation(leftEncoderPort, false);
-rotation rightEncoder = rotation(rightEncoderPort, true);
+rotation rightEncoder = rotation(rightEncoderPort, false);
 
 motor leftMotorA = motor(leftMotorAPort, ratio18_1, !devRobot);
 motor leftMotorB = motor(leftMotorBPort, ratio18_1, !devRobot);
@@ -26,12 +26,8 @@ motor rightMotorA = motor(rightMotorAPort, ratio18_1, devRobot);
 motor rightMotorB = motor(rightMotorBPort, ratio18_1, devRobot);
 motor rightMotorC = motor(rightMotorCPort, ratio18_1, devRobot);
 
-
-motor leftArmMotor = motor(leftArmMotorPort, ratio36_1, true);
-motor rightArmMotor = motor(rightArmMotorPort, ratio36_1, false);
-
 motor catapultMotor = motor(cataMotorPort, ratio36_1, true);
-StateMachine wingStateMachine;
+motor intakeMotor = motor(intakeMotorPort, ratio18_1, true);
 
 controller mainController = controller(primary);
 controller altController = controller(partner);

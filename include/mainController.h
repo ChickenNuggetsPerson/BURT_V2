@@ -1,11 +1,13 @@
 #pragma once
 
 enum WingStates {
-    W_loose, W_pos1, W_pos2, W_pos3, W_close, W_CataAlign, W_LeftAutonPoleTouch, W_LeftAutonSwipeTriball
+    W_Close, W_All_Open, W_L_Open, W_R_Open
 };
 
 void startCatapult();
 void stopCatapult();
+void setIntakeDir(int dir);
+void setWings(WingStates state);
 
 void setMotors(double leftAmt, double rightAmt, vex::velocityUnits units);
 void setMotors(double leftAmt, double rightAmt, vex::voltageUnits units);

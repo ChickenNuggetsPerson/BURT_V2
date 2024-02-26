@@ -9,57 +9,31 @@ using namespace vex;
 
 
 void rightPressed() {
-
-
-  queuingSystem.clear();
-  queuingSystem.addToQueue(auton::autonMovement(AUTON_MOVE_DRIVE_DIST, 24));
-  queuingSystem.runQueue();
-
-  return;
-
   botAI.setForceStop(false);
-  botAI.running = true;
-
-  leftMotorA.spin(fwd, 13, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-  leftMotorA.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-
-  leftMotorB.spin(fwd, 13, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-  leftMotorB.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-
-  leftMotorC.spin(fwd, 13, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-  leftMotorC.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-
-  rightMotorA.spin(fwd, 13, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-  rightMotorA.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-
-  rightMotorB.spin(fwd, 13, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-  rightMotorB.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-
-  rightMotorC.spin(fwd, 13, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-  rightMotorC.spin(fwd, 0, voltageUnits::volt);
-  vex::wait(2, timeUnits::sec);
-
-  botAI.running = false;
+  // botAI.gotoLoc(odom::TilePosition(0, 1));
+  // botAI.turnTo(-90, 10);
+  botAI.reverseDrive(24);
+  botAI.setForceStop(true);
 }
 
 // Setup callbacks and initialize auton
-void pre_auton(void) {
+void initializeSystems(void) {
 
-  // mainController.ButtonRight.pressed(rightPressed);
+  mainController.ButtonRight.pressed(rightPressed);
 
   // Imedietely stop the motors so then they don't spin when the robot boots up
   setMotors(0, 0, velocityUnits::pct);
+
+  // Set brake modes
+  leftMotorA.setBrake(vex::brakeType::coast);
+  leftMotorB.setBrake(vex::brakeType::coast);
+  leftMotorC.setBrake(vex::brakeType::coast);
+  rightMotorA.setBrake(vex::brakeType::coast);
+  rightMotorB.setBrake(vex::brakeType::coast);
+  rightMotorC.setBrake(vex::brakeType::coast);
+
+  catapultMotor.setBrake(vex::brakeType::coast);
+  intakeMotor.setBrake(vex::brakeType::brake);
 
   brainDebug("Initializing Burt", true);
 

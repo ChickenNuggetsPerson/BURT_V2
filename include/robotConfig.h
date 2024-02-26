@@ -36,10 +36,8 @@ extern motor rightMotorA;
 extern motor rightMotorB;
 extern motor rightMotorC;
 
-extern motor leftArmMotor;
-extern motor rightArmMotor;
 extern motor catapultMotor;
-extern StateMachine wingStateMachine;
+extern motor intakeMotor;
 
 extern controller mainController;
 extern controller altController;

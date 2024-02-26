@@ -45,8 +45,6 @@ int notificationCheck() {
     NotChecker.addMotor("LeftMotorC", &leftMotorC);
     
     NotChecker.addMotor("Flywheel", &catapultMotor);
-    NotChecker.addMotor("Left Arm", &leftArmMotor);
-    NotChecker.addMotor("Right Arm", &rightArmMotor);
 
     NotChecker.addCheck("SD Card Inserted", "SD Card Removed", checkSDCard, true);
     NotChecker.addCheck("Controller Connected", "Controller Disconnected", checkMainController, false, green, red, true);
@@ -75,8 +73,8 @@ int updateHome(Page* self) {
         } else {
             self->setTextData("skillsStatus", color::yellow, "[ Running Right ]");
         }
-
     }
+    self->setTextData("finalsStatus", color::green, botAI.isFinals() ? "Finals" : " ");
     
     if (Brain.Battery.capacity() > 50) {
         self->setTextData("batStatus", color::green, "OK");
@@ -604,6 +602,7 @@ int updateDeviceDebug(Page* self) {
     updateMotorBox(self, "rmC", &rightMotorC);
 
     updateMotorBox(self, "flywheel", &catapultMotor);
+    updateMotorBox(self, "intake", &intakeMotor);
 
 
     self->setTextData("filed", Competition.isFieldControl() ? green : red);
@@ -661,6 +660,7 @@ int brainDisplayerInit() {
     homePage.addText("BURT OS", 20, 50, color::white, fontType::mono40);
     homePage.addText("Developed by Hayden Steele", 22, 75, color::white, fontType::mono15);
     homePage.addText("Skills Status", 22, 110, color::white, fontType::mono20, "skillsStatus");
+    homePage.addText("Skills Status", 22, 130, color::white, fontType::mono20, "finalsStatus");
     homePage.addButton("Debug", 380, 210, 100, 30, gotoDebugPageButton, "debugPageButton");
     homePage.addButton("Config", 280, 210, 100, 30, gotoConfigPageButton, "configPageButton");
     homePage.addButton("Map", 180, 210, 100, 30, gotoMapPageButton, "mapPageButton");
@@ -763,7 +763,7 @@ int brainDisplayer() {
     brainDisplayerInit();
     mainRenderer.ready();
     BrainLogs.init();
-    
+
     double deltaTime = 0.00;
     while(true) {  // Main render loop
         double startTime = Brain.timer(msec);
@@ -785,52 +785,52 @@ int brainDisplayer() {
     }
 
 
-    motionProfiling::Profile result = motionProfiling::genVelProfile(24*5);
+    // motionProfiling::Profile result = motionProfiling::genVelProfile(24*5);
 
-    Brain.Screen.clearScreen();
+    // Brain.Screen.clearScreen();
     
-    int screenXSize = 480;
-    int screenYSize = 240;
+    // int screenXSize = 480;
+    // int screenYSize = 240;
 
-    Brain.Screen.setFillColor(color::transparent);
-    Brain.Screen.setPenColor(color::white);
-    Brain.Screen.setPenWidth(1);
+    // Brain.Screen.setFillColor(color::transparent);
+    // Brain.Screen.setPenColor(color::white);
+    // Brain.Screen.setPenWidth(1);
 
-    Brain.Screen.drawRectangle(screenXSize * 0.1, screenYSize * 0.1, screenXSize * 0.8, screenYSize * 0.8);
+    // Brain.Screen.drawRectangle(screenXSize * 0.1, screenYSize * 0.1, screenXSize * 0.8, screenYSize * 0.8);
 
-    Brain.Screen.setPenWidth(2);
+    // Brain.Screen.setPenWidth(2);
 
-    double prevX = screenXSize * 0.1;
-    double prevY = screenYSize * 0.9;
+    // double prevX = screenXSize * 0.1;
+    // double prevY = screenYSize * 0.9;
 
-    double x = 0.00;
-    double y = 0.00;
+    // double x = 0.00;
+    // double y = 0.00;
 
-    double wStep = ((screenXSize * 0.8) / 10) * motionProfiling::timeIncrement;
-    for (int i = 0; i < result.get()->size(); i++) {
+    // double wStep = ((screenXSize * 0.8) / 10) * motionProfiling::timeIncrement;
+    // for (int i = 0; i < result.get()->size(); i++) {
         
-        double val = (screenYSize * 0.9) - result.get()->at(i);
-        Brain.Screen.setPenColor(color::red);
-        Brain.Screen.drawLine(prevX, prevY, (screenXSize * 0.1) + i * wStep, val);
+    //     double val = (screenYSize * 0.9) - result.get()->at(i);
+    //     Brain.Screen.setPenColor(color::red);
+    //     Brain.Screen.drawLine(prevX, prevY, (screenXSize * 0.1) + i * wStep, val);
 
-        prevX = (screenXSize * 0.1) + i * wStep;
-        prevY = val;
+    //     prevX = (screenXSize * 0.1) + i * wStep;
+    //     prevY = val;
 
 
-        double otherY = y;
+    //     double otherY = y;
 
-        x += motionProfiling::timeIncrement;
-        y += result.get()->at(i) * motionProfiling::timeIncrement;
+    //     x += motionProfiling::timeIncrement;
+    //     y += result.get()->at(i) * motionProfiling::timeIncrement;
 
-        Brain.Screen.setPenColor(color::green);
-        Brain.Screen.drawLine(
-            (screenXSize * 0.1) + (i-1) * wStep, 
-            (screenYSize * 0.9) - otherY, 
-            (screenXSize * 0.1) + i * wStep, 
-            (screenYSize * 0.9) - y);
-    }
+    //     Brain.Screen.setPenColor(color::green);
+    //     Brain.Screen.drawLine(
+    //         (screenXSize * 0.1) + (i-1) * wStep, 
+    //         (screenYSize * 0.9) - otherY, 
+    //         (screenXSize * 0.1) + i * wStep, 
+    //         (screenYSize * 0.9) - y);
+    // }
 
-    DEBUGLOG("Final Y: ", y);
+    // DEBUGLOG("Final Y: ", y);
 
     return 1;
 }

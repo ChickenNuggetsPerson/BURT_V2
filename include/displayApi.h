@@ -745,4 +745,42 @@ namespace display {
             void addMotor(const char* motorName, motor* motorPtr, int warnTime);
             void check();
     };
+
+
+    /*
+    #define YSIZE 240
+    #define XSIZE 240
+    uint32_t  buffer[YSIZE * XSIZE];
+    // lets create a ramp
+    for (int y=0; y < YSIZE; y++ ) {
+        for (int x = 0; x < XSIZE; x++ ) {
+            // create rgb value
+            int32_t rgb = (x << 16) + (x << 8) + x;
+            buffer[ y * XSIZE + x ] = rgb;
+        }
+    }
+
+    Brain.Screen.clearScreen();
+    Brain.Screen.drawImageFromBuffer( buffer, 1, 1, YSIZE, YSIZE );
+    */
+
+    // template<unsigned int width, unsigned int height>
+    // struct Image {
+    //     std::unique_ptr<uint32_t[width * height]> buffer = std::unique_ptr>uint32_t[width * height];
+    //     int width = width;
+    //     int height = height;
+
+    //     void buildGradient() {
+
+
+    //         for (int y = 0; y < height; y++) {
+    //             for (int x = 0; x < width; x++) {
+
+
+    //             }
+    //         }
+
+    //     }
+    // };
+
 }
