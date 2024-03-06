@@ -230,11 +230,11 @@ odom::Position AutonSystem::getTargetPos() {
 
 // Drives the distance
 // Math Visualization: https://www.desmos.com/calculator/uywraxwtws
-bool AutonSystem::driveDist(double dist) {
+bool AutonSystem::driveDist(double dist, bool precise) {
     odom::Position currentPosition = odometrySystemPointer->currentPos();
     double desiredX = currentPosition.x + dist * cos(2.5*PI - currentPosition.rot);
     double desiredY = currentPosition.y + dist * sin(2.5*PI - currentPosition.rot);
-    return gotoLoc(odom::Position(desiredX, desiredY, NAN));
+    return gotoLoc(odom::Position(desiredX, desiredY, NAN), precise);
 }
 // Turns to the desired rotation in degrees
 bool AutonSystem::turnTo(double deg) {
@@ -253,10 +253,11 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
 
     double heading = misc::radToDegree(odometrySystemPointer->currentPos().rot);
     double target = findNearestRot(heading, deg);
-    pid::PID turnPID(pid::PIDConfig(0.12, 0.02, 0.01), target);
+    pid::PID turnPID(pid::PIDConfig(0.12, 0.0, 0.0), target);
     turnPID.addBrainPtr(&Brain);
+    turnPID.setIntegralLimit(-12, 12);
 
-    double accuracy = 3;
+    // double accuracy = 3;
     int checks = 10;
 
     double lastRot = odometrySystemPointer->currentPos().rot;
@@ -275,7 +276,8 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
         // DEBUGLOG("TURNTO PID: ", power);
 
         double headingError = target - heading;
-        if (fabs(power) <= accuracy && fabs(headingError) <= 3) {
+        double deltaHeading = heading - lastRot;
+        if (fabs(headingError) <= 3 || fabs(deltaHeading) < 2) {
             totalChecks++;
             if (totalChecks > checks) {
                 break;
@@ -297,8 +299,8 @@ bool AutonSystem::turnTo(double deg, double turnTimeout) {
     return true;
 };
 
-bool AutonSystem::gotoLoc(odom::TilePosition pos) {
-    return gotoLoc(odom::Position(pos));
+bool AutonSystem::gotoLoc(odom::TilePosition pos, bool precise) {
+    return gotoLoc(odom::Position(pos), precise);
 };
 
 
@@ -310,7 +312,7 @@ double turnScaleFromDeg(double deltaDeg) {
 }
 
 // Motion Profiling System
-bool AutonSystem::gotoLoc(odom::Position pos) {
+bool AutonSystem::gotoLoc(odom::Position pos, bool precise) {
     
     CheckOdomStatus();
     CheckForceStop();
@@ -329,34 +331,35 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
 
     // Turn to point to the location
     // Only do it if the robot has to turn more than 10 degrees
-    if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 10)) {
-        turnTo(desiredHeading, 0.8);
+    if (!(fabs(misc::radToDegree(currentPos.rot) - findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading)) <= 20)) {
+        turnTo(desiredHeading, 1);
     }
-
-    // Generate Velocity Profile
-    motionProfiling::Profile speedProfile = motionProfiling::genVelProfile(distBetweenPoints(odometrySystemPointer->currentPos(), pos));
-    double driveVelocity = 0.00;
-
-    double wheelCircumference = PI * wheelDiameter;
-    double motorGear = 54;
-    double wheelGear = 18;
-
-    double ratio = motorGear / wheelGear;
+    double drivePower = 0.00;
 
     // PID to keep the robot driving straight
-    pid::PID turnPid(pid::PIDConfig(0.05, 0.01, 0.0));
-    turnPid.setMax(20);
-    turnPid.setMin(-20);
+    pid::PID turnPid(pid::PIDConfig(0.2, 0.0, 0.0));
+    turnPid.setMax(10);
+    turnPid.setMin(-10);
     turnPid.addBrainPtr(&Brain);
     double turnPower = 0.00;
 
-    bool traveling = true;
+    pid::PIDConfig driveConfig(0.0, 0.0, 0.0);
+    if (precise) {
+        driveConfig = pid::PIDConfig(0.3, 0.0, 0.0);
+    } else {
+        driveConfig = pid::PIDConfig(0.75, 0.0, 0.0);
+    }
+    pid::PID drivePid(driveConfig);
+    drivePid.setMax(11);
+    drivePid.setMin(-11);
+    odom::Position lastPos = odom::Position(0,0,0);
 
-    double startTime = Brain.Timer.system();
+    bool traveling = true;
+    int checks = 7;
+
+    // double startTime = Brain.Timer.system();
 
     setMotors(0, 0, voltageUnits::volt);
-
-    misc::ValueAverager<10> turnAvg = misc::ValueAverager<10>();
 
     // Main Driving Loop
     while (traveling) {
@@ -365,43 +368,29 @@ bool AutonSystem::gotoLoc(odom::Position pos) {
         currentPos = odometrySystemPointer->currentPos();
 
         travelDist = distBetweenPoints(currentPos, pos);
-        desiredHeading = turnAvg.iterate(misc::radToDegree(angleBetweenPoints(currentPos, pos)));
+        desiredHeading = misc::radToDegree(angleBetweenPoints(currentPos, pos));
 
-        // Get speedprofile index
-        int speedIndex = (int)floor(((Brain.Timer.system() - startTime) / 1000.00) / motionProfiling::timeIncrement);
-
-        // Check if we are done with the speed profile
-        if (speedIndex >= speedProfile->size()) {
-            traveling = false;
-            break;
-        }
-        driveVelocity = speedProfile->at(speedIndex);
-
-        // Get turn power
-        // if (speedIndex >= speedProfile.get()->size() / 2) {
-        //     turnPid.setMax(10);
-        //     turnPid.setMin(-10);
-        // }
+        drivePower = drivePid.iterate(travelDist, 0);
 
         double turnCurrent = misc::radToDegree(odometrySystemPointer->currentPos().rot);
         double turnWant = findNearestRot(misc::radToDegree(currentPos.rot), desiredHeading);
         turnPower = turnPid.iterate(turnCurrent, turnWant);
 
-
         // Calculate Desired Velocities
-        double leftVelocity = driveVelocity - turnPower;
-        double rightVelocity = driveVelocity + turnPower;
-
-
-        // Convert Velocity ( in/s ) to rpm of motor
-        // Times by 60 to get rpm from rps
-        double leftMotorVel = leftVelocity / ( ratio * wheelCircumference * (1.00/60.00) );
-        double rightMotorVel = rightVelocity / ( ratio * wheelCircumference * (1.00/60.00) );
-
-        // DEBUGLOG(leftMotorVel)
+        double leftVelocity = drivePower - turnPower;
+        double rightVelocity = drivePower + turnPower;
 
         // Apply Velocities
-        setMotors(leftMotorVel * 0.97, rightMotorVel * 0.97, velocityUnits::rpm);
+        setMotors(leftVelocity, rightVelocity, voltageUnits::volt);
+
+        if (travelDist < 1 || distBetweenPoints(lastPos, currentPos) < 0.5) {
+            checks--;
+            if (checks < 0) {
+                traveling = false;
+            }
+        }
+
+        lastPos = currentPos;
 
         wait(0.05, seconds);
     }
@@ -552,11 +541,11 @@ bool AutonSystem::reverseDrive(double distance) {
     odom::Position movementStartPos = odometrySystemPointer->currentPos();
     double deltaDist = distBetweenPoints(movementStartPos, odometrySystemPointer->currentPos());
 
-    pid::PID drivePid = pid::PID(pid::PIDConfig(0.3, 0.0, 0), distance);
+    pid::PID drivePid = pid::PID(pid::PIDConfig(0.55, 0.0, 0), distance);
 
     setMotors(0, 0, voltageUnits::volt);
 
-    double endTime = Brain.timer(timeUnits::msec) + 1000;
+    double endTime = Brain.timer(timeUnits::msec) + 500;
 
     int checks = 0;
     bool running = true;
@@ -567,7 +556,9 @@ bool AutonSystem::reverseDrive(double distance) {
         double power = drivePid.iterate(deltaDist);
         setMotors(power, power, voltageUnits::volt);
 
-        if (fabs(odometrySystemPointer->getVelocity()) < 1 && Brain.timer(timeUnits::msec) > endTime) {
+        if (
+            (fabs(odometrySystemPointer->getVelocity()) < 1 && Brain.timer(timeUnits::msec) > endTime)
+        ) {
             checks ++;
         }
 
@@ -765,14 +756,25 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
 
         case AUTON_MOVE_DRIVE_DIST:
             DEBUGLOG("AUTO RUN: Drive Dist");
-            return aiPtr->driveDist(movement.val);
+            return aiPtr->driveDist(movement.val, false);
+
+        case AUTON_MOVE_SLOW_DRIVE_DIST:
+            DEBUGLOG("AUTO RUN: Drive Dist");
+            return aiPtr->driveDist(movement.val, true);
 
         case AUTON_MOVE_GOTO:
             DEBUGLOG("AUTO RUN: Goto");
             if (movement.tilePosBool) {
-                return aiPtr->gotoLoc(movement.tilePos);
+                return aiPtr->gotoLoc(movement.tilePos, false);
             } else {
-                return aiPtr->gotoLoc(movement.pos);
+                return aiPtr->gotoLoc(movement.pos, false);
+            }
+        case AUTON_MOVE_SLOW_GOTO:
+            DEBUGLOG("AUTO RUN: Goto - slow");
+            if (movement.tilePosBool) {
+                return aiPtr->gotoLoc(movement.tilePos, true);
+            } else {
+                return aiPtr->gotoLoc(movement.pos, true);
             }
 
         case AUTON_MOVE_LONGGOTO:

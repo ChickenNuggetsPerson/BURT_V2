@@ -53,7 +53,18 @@ double PID::iterate(double newVal) {
         totalError += error;
     }
     
-    
+    if (hasIntegralLimit) {
+
+        if (totalError * I > maxI) {
+            totalError = maxI / I;
+        }
+        if (totalError * I < minI) {
+            totalError = minI / I;
+        }
+
+    }
+
+
     double result = (error * P) + (derivative * D) + (totalError * I);
 
     prevError = error;

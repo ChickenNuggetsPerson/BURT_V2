@@ -33,8 +33,8 @@ void variablePrint(const T& arg, const Args&... args) {
 // Set the ratio to 1/1 if using shaft encoders
 
 static double wheelDiameter = 2.75;
-static double motorGearTeeth = 2;
-static double wheelGearTeeth = 1;
+static double motorGearTeeth = 60;
+static double wheelGearTeeth = 36;
 
 static double encoderDist = 4;
 static double backEncoderDist = 4.5; // use if we decide to use back encoders
@@ -57,13 +57,13 @@ static const int32_t rightMotorAPort = vex::PORT8;
 static const int32_t rightMotorBPort = vex::PORT9;
 static const int32_t rightMotorCPort = vex::PORT10;
 
-static const int32_t inertialPort = vex::PORT18;
+static const int32_t inertialPort = vex::PORT15;
 
 static const int32_t leftEncoderPort = vex::PORT17;
 static const int32_t rightEncoderPort = vex::PORT7;
 
 static const int32_t cataMotorPort = vex::PORT2;
-static const int32_t intakeMotorPort = vex::PORT3; // Change this
+static const int32_t intakeMotorPort = vex::PORT3;
 
 // Odom Constants
 static odom::TilePosition ODOM_DEFAULT_RESET_POS(0, 0, 0);

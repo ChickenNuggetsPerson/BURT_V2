@@ -40,9 +40,9 @@ class ButtonSystem {
         // This function needs to be ran continually to keep checking for button presses
         // Run this in a while(true) loop
         void check() {
+            if (brainPtr->timer(vex::timeUnits::msec) < lastPress) { return; } 
+                
             bool currentState = getBtnState(buttonID);
-            
-            if (brainPtr->timer(vex::timeUnits::msec) < lastPress + pressTimout) { return; } 
 
             if (isToggle) { // Is toggle mode
 
@@ -71,13 +71,13 @@ class ButtonSystem {
             }
 
             if (prevState != currentState) {
-                lastPress = brainPtr->timer(vex::timeUnits::msec);
+                lastPress = brainPtr->timer(vex::timeUnits::msec) + pressTimout;
             }
             prevState = currentState;
         }
 
         // Gets the pressed status of the button
-        inline bool getStatus() const  { return pressed; }
+        inline bool getStatus() const { return pressed; }
 
     private:
         vex::brain* brainPtr;

@@ -34,6 +34,8 @@ static const int AUTON_MOVE_CATAPULT = 12;
 
 static const int AUTON_MOVE_WING_SET_STATE = 14;
 static const int AUTON_MOVE_INTAKE_SET = 15;
+static const int AUTON_MOVE_SLOW_GOTO = 16;
+static const int AUTON_MOVE_SLOW_DRIVE_DIST = 17;
 
 namespace auton {
 
@@ -168,13 +170,13 @@ namespace auton {
       inline void setForceStop(bool forceStop) { DEBUGLOG("Setting Force Stop: ", forceStop ? "true" : "false"); this->forceStop = forceStop; if (!forceStop) { running = false;} };
       inline bool getForceStop() { return this->forceStop; };
 
-      bool driveDist(double dist);
+      bool driveDist(double dist, bool precise);
 
       bool turnTo(double deg);
       bool turnTo(double deg, double turnTimeout);
       
-      bool gotoLoc(odom::TilePosition pos);
-      bool gotoLoc(odom::Position pos);
+      bool gotoLoc(odom::TilePosition pos, bool precise);
+      bool gotoLoc(odom::Position pos, bool precise);
       
       bool longGoto(std::vector<odom::TilePosition> pos);
       bool longGoto(std::vector<odom::Position> pos);

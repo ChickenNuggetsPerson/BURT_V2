@@ -46,6 +46,10 @@ namespace pid {
             double max;
             double min;
 
+            double hasIntegralLimit = false;
+            double maxI;
+            double minI;
+
 
         public:
 
@@ -65,6 +69,12 @@ namespace pid {
 
             void setMax(double maxVal);
             void setMin(double minVal);
+
+            void setIntegralLimit(double min, double max) {
+                hasIntegralLimit = true;
+                minI = min;
+                maxI = max;
+            };
 
             double iterate(double newVal);
             double iterate(double newVal, double newDesired);

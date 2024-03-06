@@ -9,10 +9,13 @@ using namespace vex;
 
 
 void rightPressed() {
+  queuingSystem.clear();
+  
+
   botAI.setForceStop(false);
-  // botAI.gotoLoc(odom::TilePosition(0, 1));
-  // botAI.turnTo(-90, 10);
-  botAI.reverseDrive(24);
+
+  botAI.turnTo(rand() % 360, 20);
+
   botAI.setForceStop(true);
 }
 

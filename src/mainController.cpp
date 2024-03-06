@@ -3,6 +3,9 @@
 #include "controllerDisplayerAPI.h"
 using namespace vex;
 
+#define tankDrive
+
+
 
 // Catapult Code
 bool cata_autoLaunch = false;
@@ -125,12 +128,21 @@ void setMotors(double leftAmt, double rightAmt, vex::voltageUnits units) {
 }
 inline double lerp(double start, double end, double amt) { return start + ((end - start) * amt); };
 
+
+inline int getPolarity(int in) {
+  if (in == 0) { return 0; }
+  if (in < 0) {
+    return -1;
+  }    
+  return 1;
+};
+
 // DriveSystem driveSystem = DriveSystem(&Brain, 8, 15);
 bool questioning = false;
 int controllerTask() {
 
-  vex::digital_out leftWingSolenoid = vex::digital_out(Brain.ThreeWirePort.A);
-  vex::digital_out rightWingSolenoid = vex::digital_out(Brain.ThreeWirePort.B);
+  vex::digital_out leftWingSolenoid = vex::digital_out(Brain.ThreeWirePort.B);
+  vex::digital_out rightWingSolenoid = vex::digital_out(Brain.ThreeWirePort.A);
 
   // Set up variables
   double leftMotors = 0;
@@ -148,69 +160,50 @@ int controllerTask() {
 
   setMotors(0, 0, velocityUnits::pct);
 
-
   bool wasStopped = false;
-
-  bool tankDrive = true;
-  // if (Brain.SDcard.isInserted()) {
-    // tankDrive = (misc::readFile(std::string(systemConfigFolder + systemDriveModePath).c_str()) == 0);
-  // }
-
-  int frontArmVal = 0;
-  int cataArmMove = 0;
+  double maxRPM = 300;
 
   // Main driving loop
   while(true) {
 
-    frontArmVal = 0;
+    // Main Loop for geting controller input
+    if (Odometry.isTracking) {
 
-    if (Competition.isDriverControl()) {
+      leftFB = mainController.Axis3.position();
+      rightFB = mainController.Axis2.position();
+      turn = mainController.Axis1.position();
 
-      // Main Loop for geting controller input
-      if (!inertialSensor.isCalibrating()) {
-
-        leftFB = mainController.Axis3.position();
-        rightFB = mainController.Axis2.position();
-        turn = mainController.Axis1.position();
-
-      }
-
-      cataArmMove = 0;
-      if (mainController.ButtonR1.pressing()) {
-        cataArmMove = 10;
-      }
-      
-    }
+    }      
     
-    if (tankDrive) { // Andrew Drive
+    #if defined(tankDrive) // Andrew Drive
+      
       leftMotors = leftFB;
       rightMotors = rightFB;
 
-    } else { // Hayden Drive
+      if (getPolarity(leftFB) != getPolarity(rightFB)) {
+        leftMotors *= 0.8;
+        rightMotors *= 0.8;
+      }
+
+    #else // Hayden Drive
 
       leftMotors = leftFB + turn;
-      rightMotors = leftFB - turn;   
-    }
+      rightMotors = leftFB - turn;  
+    
+    #endif
 
 
     if ( !botAI.running || botAI.getForceStop()) {
 
       if (wasStopped) { // Refresh the motors after auton
-
         setMotors(0, 0, velocityUnits::pct);
-
         wasStopped = false;
       }
 
-      double avgTemp = (leftMotorA.temperature(temperatureUnits::celsius) + leftMotorA.temperature(temperatureUnits::celsius)) / 2;
-      double maxVolt = 10;
-      if (avgTemp > 55) {
-        maxVolt = 14;
-      }
       setMotors(
-        lerp(0, maxVolt, leftMotors / 100.0), 
-        lerp(0, maxVolt, rightMotors / 100.0), 
-        vex::voltageUnits::volt
+        lerp(0, maxRPM, leftMotors / 100.0), 
+        lerp(0, maxRPM, rightMotors / 100.0), 
+        vex::velocityUnits::rpm
       );
 
     } else {
@@ -238,6 +231,7 @@ bool rendering = false;
 bool haltRender = false;
 
 // The main controller rendering task
+double ratio = motorGearTeeth / wheelGearTeeth;
 void mainControllerRender() {
 
   if (haltRender) { return; }
@@ -263,12 +257,12 @@ void mainControllerRender() {
   mainController.Screen.print("Y: ");
   mainController.Screen.print(currentPos.y);
   mainController.Screen.newLine();
+
   mainController.Screen.print("Rot: ");
   mainController.Screen.print(misc::limitAngle(misc::radToDegree(currentPos.rot)));            
 
   mainController.Screen.setCursor(3, 15);
   mainController.Screen.print(Odometry.getVelocity());
-
 
   rendering = false;
 }

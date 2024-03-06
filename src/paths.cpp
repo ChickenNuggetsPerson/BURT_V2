@@ -7,7 +7,11 @@
 using namespace auton;
 using namespace odom;
 
-#define releaseIntake() { path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1)); path.add(autonMovement(AUTON_MOVE_DELAY, 200)); path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0)); }
+// #define releaseIntake() { path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1)); path.add(autonMovement(AUTON_MOVE_DELAY, 200)); path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0)); }
+#define releaseIntake() { }
+
+#define suckTriball() { path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 1)); path.add(autonMovement(AUTON_MOVE_DELAY, 400)); path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));};
+
 
 autonPath buildPath(int pathID, bool isFinals) {
     autonPath path = autonPath();
@@ -22,15 +26,10 @@ autonPath buildPath(int pathID, bool isFinals) {
             brainFancyDebug("Building AUTON_PATH_LEFT", vex::color::cyan);
 
             releaseIntake()
-
-            // Pickup Triball
-            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 1));
-            path.add(autonMovement(AUTON_MOVE_DELAY, 400));
-            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
+            // suckTriball()
 
             // Score Triball
-            // path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_L_Open));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(-0.2, 1.1)));
+            path.add(autonMovement(AUTON_MOVE_SLOW_GOTO, TilePosition(-0.2, 1.2)));
             path.add(autonMovement(AUTON_MOVE_TURNTO, 0));
 
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_Close));
@@ -42,21 +41,19 @@ autonPath buildPath(int pathID, bool isFinals) {
             path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 8));
 
             // Face tribal
-            path.add(autonMovement(AUTON_MOVE_TURNTO, 150));
+            path.add(autonMovement(AUTON_MOVE_TURNTO, 145));
 
             // Swipe Triball
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 24));
+            path.add(autonMovement(AUTON_MOVE_SLOW_DRIVE_DIST, 30));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_L_Open));
-            path.add(autonMovement(AUTON_MOVE_TURNTO, 90));
+            path.add(autonMovement(AUTON_MOVE_TURNTO, 80));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_Close));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 4));
+            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1));
+            // path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 4));
 
             // Finish
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1, 1.1)));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(1.9, 0.9)));
-            path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_L_Open));
-            path.add(autonMovement(AUTON_MOVE_TURNTO, 20));
-
+            path.add(autonMovement(AUTON_MOVE_SLOW_GOTO, TilePosition(2.1, 0)));
+            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
 
             break;
         }
@@ -65,35 +62,29 @@ autonPath buildPath(int pathID, bool isFinals) {
             // Pick up triball, score it, maybe touch bar
             brainFancyDebug("Building AUTON_PATH_Right_Finals", vex::color::cyan);
 
-            // FINISH THIS LATER, MAKE MEASURE STICK
             releaseIntake()
-
-            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 1));
-            path.add(autonMovement(AUTON_MOVE_DELAY, 400));
-            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
-
+            // suckTriball()
 
             // Score matchload
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(5, 1, 0)));
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 12));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 7));
             path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 12));
 
             // Pickup second triball
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 1));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(2.8, 1.5)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(2.8, 1.4)));
             path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 4));
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
 
             // Score second triball
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(3.9, 2, 90)));
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 6));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 4));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 10));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
 
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
 
-            
             break;
         }
         case AUTON_PATH_RIGHT: { //  Normal Right route
@@ -103,22 +94,17 @@ autonPath buildPath(int pathID, bool isFinals) {
 
             // FINISH THIS LATER, MAKE MEASURE STICK
             releaseIntake()
+            // suckTriball()
 
-            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 1));
-            path.add(autonMovement(AUTON_MOVE_DELAY, 400));
-            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
-
-            // path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 30));
-            // path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 10));
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(5, 1, 0)));
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1));
             path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 12));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 6));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 12));
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
 
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(3.9, 1.3)));
-            path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_R_Open));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(3.2, 0.8, 0)));
+            path.add(autonMovement(AUTON_MOVE_SLOW_GOTO, TilePosition(4, -0.1)));
+            path.add(autonMovement(AUTON_MOVE_TURNTO, -90));
+            path.add(autonMovement(AUTON_MOVE_SLOW_GOTO, TilePosition(2.8, 0)));
             
             break;
         }          
@@ -130,8 +116,8 @@ autonPath buildPath(int pathID, bool isFinals) {
             releaseIntake()
             
             // Go infront of matchload
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.9, 0.6, -120)));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 35));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.4, 0.6, -120)));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 15));
             path.add(autonMovement(AUTON_MOVE_TURNTO, -110));
 
             // Touch bar and start catapulting
@@ -145,13 +131,13 @@ autonPath buildPath(int pathID, bool isFinals) {
             path.add(autonMovement(AUTON_MOVE_TURNTO, 90));
 
             // // Drive across area
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4.25, -0.2)));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4, 0.5)));
-            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(3, 2)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4.25, 0)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(4, 1)));
+            path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(3, 1.5)));
 
             // // Open wings and push
             path.add(autonMovement(AUTON_MOVE_TURNTO, -110));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 6));
+            // path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 6));
 
             // path.add(autonMovement(AUTON_MOVE_TURNTO, -135));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_All_Open));

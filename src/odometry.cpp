@@ -66,6 +66,7 @@ int mainTrackingTask(void* system) {
     while (inertialSensor.isCalibrating()) { // Wait for inertial sensor to calibrate
         wait(0.02, seconds);
     }
+    // inertialSensor.setRotation(180, vex::rotationUnits::deg);
     // brainFancyDebug("Calibrated", color::green, false);
 
     systemPointer->resetEncoders();
@@ -181,7 +182,9 @@ odomRawData OdometrySystem::getChanges(odomRawData oldData) {
     newData.deltaRight = newRightEncoder - oldData.rightEncoder;
     newData.deltaLeft = newLeftEncoder - oldData.leftEncoder;
 
-    newData.heading = inertialAverager.iterate(misc::degreeToRad(inertialSensor.rotation(rotationUnits::deg)));    
+    newData.heading = inertialAverager.iterate(
+        misc::degreeToRad(inertialSensor.rotation(rotationUnits::deg))
+    );    
     newData.deltaHeading = newData.heading - oldData.heading;
 
     // Set the current data

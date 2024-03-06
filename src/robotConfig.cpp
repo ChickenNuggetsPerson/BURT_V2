@@ -15,18 +15,18 @@ auton::AutonSystem botAI = auton::AutonSystem(&Odometry, &queuingSystem);
 
 inertial inertialSensor = inertial(inertialPort);
 
-rotation leftEncoder = rotation(leftEncoderPort, false);
-rotation rightEncoder = rotation(rightEncoderPort, false);
+rotation leftEncoder = rotation(leftEncoderPort, true);
+rotation rightEncoder = rotation(rightEncoderPort, true);
 
-motor leftMotorA = motor(leftMotorAPort, ratio18_1, !devRobot);
-motor leftMotorB = motor(leftMotorBPort, ratio18_1, !devRobot);
-motor leftMotorC = motor(leftMotorCPort, ratio18_1, !devRobot);
+motor leftMotorA = motor(leftMotorAPort, ratio18_1, true);
+motor leftMotorB = motor(leftMotorBPort, ratio18_1, true);
+motor leftMotorC = motor(leftMotorCPort, ratio18_1, false);
 
-motor rightMotorA = motor(rightMotorAPort, ratio18_1, devRobot);
-motor rightMotorB = motor(rightMotorBPort, ratio18_1, devRobot);
-motor rightMotorC = motor(rightMotorCPort, ratio18_1, devRobot);
+motor rightMotorA = motor(rightMotorAPort, ratio18_1, false);
+motor rightMotorB = motor(rightMotorBPort, ratio18_1, false);
+motor rightMotorC = motor(rightMotorCPort, ratio18_1, true);
 
-motor catapultMotor = motor(cataMotorPort, ratio36_1, true);
+motor catapultMotor = motor(cataMotorPort, ratio36_1, false);
 motor intakeMotor = motor(intakeMotorPort, ratio18_1, true);
 
 controller mainController = controller(primary);
@@ -36,11 +36,11 @@ controller altController = controller(partner);
 // Start all of the background tasks
 void startTasks( void ) {
 
-    task mainControllerTask(controllerTask);
+    task mainControllerTask(controllerTask, vex::task::taskPriorityHigh);
     
-    task brainDisplayerTask(brainDisplayer);
-    task controllerDisplayerTask(controllerDisplay);
+    task brainDisplayerTask(brainDisplayer, vex::task::taskPrioritylow);
+    task controllerDisplayerTask(controllerDisplay, vex::task::taskPriorityNormal);
 
-    brainFancyDebug("Tasks Started", vex::color::yellow);
+    // brainFancyDebug("Tasks Started", vex::color::yellow);
 
 }
