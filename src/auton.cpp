@@ -789,6 +789,10 @@ bool aiQueueSystem::runMovement(autonMovement movement) {
             DEBUGLOG("AUTO RUN: Turn To");
             return aiPtr->turnTo(movement.val, 1);
 
+        case AUTON_MOVE_SLOW_TURNTO:
+            DEBUGLOG("AUTO RUN: Turn To - slow");
+            return aiPtr->turnTo(movement.val, 2);
+
         case AUTON_MOVE_CATAPULT:
             DEBUGLOG("AUTO RUN: Catapult");
             return aiPtr->catapult(movement.val);

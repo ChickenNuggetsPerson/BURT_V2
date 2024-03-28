@@ -36,6 +36,7 @@ static const int AUTON_MOVE_WING_SET_STATE = 14;
 static const int AUTON_MOVE_INTAKE_SET = 15;
 static const int AUTON_MOVE_SLOW_GOTO = 16;
 static const int AUTON_MOVE_SLOW_DRIVE_DIST = 17;
+static const int AUTON_MOVE_SLOW_TURNTO = 18;
 
 namespace auton {
 

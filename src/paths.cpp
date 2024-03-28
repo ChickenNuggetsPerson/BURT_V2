@@ -7,9 +7,7 @@
 using namespace auton;
 using namespace odom;
 
-// #define releaseIntake() { path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1)); path.add(autonMovement(AUTON_MOVE_DELAY, 200)); path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0)); }
-#define releaseIntake() { }
-
+#define releaseIntake() { path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1)); path.add(autonMovement(AUTON_MOVE_DELAY, 200)); path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0)); }
 #define suckTriball() { path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 1)); path.add(autonMovement(AUTON_MOVE_DELAY, 400)); path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));};
 
 
@@ -25,35 +23,34 @@ autonPath buildPath(int pathID, bool isFinals) {
             // Pick up matchload and then touch bar
             brainFancyDebug("Building AUTON_PATH_LEFT", vex::color::cyan);
 
-            releaseIntake()
+            // releaseIntake()
             // suckTriball()
 
             // Score Triball
-            path.add(autonMovement(AUTON_MOVE_SLOW_GOTO, TilePosition(-0.2, 1.2)));
+            path.add(autonMovement(AUTON_MOVE_SLOW_GOTO, TilePosition(-0.2, 1.15)));
             path.add(autonMovement(AUTON_MOVE_TURNTO, 0));
 
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_Close));
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1));
 
     
-            path.add(autonMovement(AUTON_MOVE_DELAY, 1000));
+            path.add(autonMovement(AUTON_MOVE_DELAY, 700));
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 8));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 6));
 
             // Face tribal
-            path.add(autonMovement(AUTON_MOVE_TURNTO, 145));
+            path.add(autonMovement(AUTON_MOVE_SLOW_TURNTO, 143));
 
             // Swipe Triball
             path.add(autonMovement(AUTON_MOVE_SLOW_DRIVE_DIST, 30));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_L_Open));
-            path.add(autonMovement(AUTON_MOVE_TURNTO, 80));
+            path.add(autonMovement(AUTON_MOVE_TURNTO, 20));
             path.add(autonMovement(AUTON_MOVE_WING_SET_STATE, W_Close));
-            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1));
-            // path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 4));
+            // path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1));
 
             // Finish
-            path.add(autonMovement(AUTON_MOVE_SLOW_GOTO, TilePosition(2.1, 0)));
-            path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
+            path.add(autonMovement(AUTON_MOVE_SLOW_GOTO, TilePosition(2.2, -0.1)));
+            path.add(autonMovement(AUTON_MOVE_CATAPULT, 1));
 
             break;
         }
@@ -62,7 +59,7 @@ autonPath buildPath(int pathID, bool isFinals) {
             // Pick up triball, score it, maybe touch bar
             brainFancyDebug("Building AUTON_PATH_Right_Finals", vex::color::cyan);
 
-            releaseIntake()
+            // releaseIntake()
             // suckTriball()
 
             // Score matchload
@@ -80,7 +77,7 @@ autonPath buildPath(int pathID, bool isFinals) {
             // Score second triball
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(3.9, 2, 90)));
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, -1));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 10));
+            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 20));
             path.add(autonMovement(AUTON_MOVE_DRIVE_REVERSE, 10));
 
             path.add(autonMovement(AUTON_MOVE_INTAKE_SET, 0));
@@ -92,8 +89,7 @@ autonPath buildPath(int pathID, bool isFinals) {
             // Pick up triball, score it, maybe touch bar
             brainFancyDebug("Building AUTON_PATH_Right", vex::color::cyan);
 
-            // FINISH THIS LATER, MAKE MEASURE STICK
-            releaseIntake()
+            // releaseIntake()
             // suckTriball()
 
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(5, 1, 0)));
@@ -113,11 +109,11 @@ autonPath buildPath(int pathID, bool isFinals) {
             path.startPos = tilePosToPos(AUTON_START_SKILLS);
             brainFancyDebug("Building AUTON_PATH_SKILLS", vex::color::cyan);
 
-            releaseIntake()
+            // releaseIntake()
             
             // Go infront of matchload
             path.add(autonMovement(AUTON_MOVE_GOTO, TilePosition(0.4, 0.6, -120)));
-            path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 15));
+            path.add(autonMovement(AUTON_MOVE_SLOW_DRIVE_DIST, 15));
             path.add(autonMovement(AUTON_MOVE_TURNTO, -110));
 
             // Touch bar and start catapulting
@@ -159,7 +155,7 @@ autonPath buildPath(int pathID, bool isFinals) {
             path.startPos = tilePosToPos(TilePosition(1,0));
             brainFancyDebug("Building AUTON_PATH_TEST", vex::color::cyan);
             
-            releaseIntake()
+            // releaseIntake()
 
             path.add(autonMovement(AUTON_MOVE_DRIVE_DIST, 24));
             
